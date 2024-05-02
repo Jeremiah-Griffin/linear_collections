@@ -1,0 +1,12 @@
+[package]
+name = "linear_collections"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde = { version = "1.*.*", optional = true, default-features = false, features = ["std"]}
+
+[features]
+default = []
+#Adds support for ser/deserialization with serde.
+serde = ["dep:serde"]
