@@ -1,6 +1,6 @@
 [package]
 name = "linear_collections"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 description = "Map and Set types backed by linear data structures."
 license = "MIT"
