@@ -15,6 +15,16 @@ impl<K: Eq, V: Sized + PartialEq, const LENGTH: usize> ArrayMap<K, V, LENGTH> {
         ArrayMap { array }
     }
 
+    ///Returns the number of items in this ArrayMap
+    pub const fn len(&self) -> usize {
+        self.array.len()
+    }
+
+    ///Returns true if the store is empty, false otherwise.
+    pub const fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     ///Replaces a values all  key value pairs matching an element from iter with
     ///that element from iter.
     ///

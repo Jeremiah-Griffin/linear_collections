@@ -111,14 +111,4 @@ pub trait LinearMap<K: Eq, V: Sized + PartialEq>: AsMutSlice<K, V> {
             .find(|(k, _)| k == key)
             .map(|(_, v)| *v = value);
     }
-
-    ///The length of the map.
-    fn len(&self) -> usize {
-        self.as_slice().len()
-    }
-
-    ///Returns true if the store is empty, false otherwise.
-    fn is_empty(&self) -> bool {
-        self.len() == 0
-    }
 }

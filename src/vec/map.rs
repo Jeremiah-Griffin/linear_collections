@@ -18,6 +18,16 @@ impl<K: Eq, V: Sized + PartialEq> VecMap<K, V> {
         }
     }
 
+    ///Returns the number of entries in the map
+    pub fn len(&self) -> usize {
+        self.vector.len()
+    }
+
+    ///Returns true if the store is empty, false otherwise.
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     ///Tries to remove the value associated with the given key, returning None if it is not found.
     pub fn remove(&mut self, key: &K) -> Option<V> {
         self.remove_entry(key).map(|(_, v)| v)

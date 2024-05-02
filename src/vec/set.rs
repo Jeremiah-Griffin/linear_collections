@@ -12,6 +12,16 @@ impl<T: Eq> VecSet<T> {
         }
     }
 
+    ///Returns the number of items in of the set
+    pub fn len(&self) -> usize {
+        self.map.len()
+    }
+
+    ///Returns true if the store is empty, false otherwise.
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
     ///Adds a value to the set.
     ///If the set did not previously contain this value, true is returned.
     ///If the set already contained this value, false is returned, and the set is not modified: original value is not replaced, and the value passed as argument is dropped.   
