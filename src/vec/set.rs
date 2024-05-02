@@ -5,6 +5,7 @@ pub struct VecSet<T: Eq> {
 }
 
 impl<T: Eq> VecSet<T> {
+    ///Creates the VecMap by calling with_capacity
     pub fn with_capacity(capacity: usize) -> Self {
         VecSet {
             map: VecMap::with_capacity(capacity),
