@@ -11,6 +11,8 @@ impl<K: Eq, V: Sized + PartialEq, const LENGTH: usize> ArrayMap<K, V, LENGTH> {
     ///Don't be afraid by the unsafe marker: improper use of this method will NOT create memory unsafety,
     ///but will result in every identical key beyond the first never getting accessed as LinearMaps short circuit
     ///on the first matching key.
+    ///
+    ///For a (safe) compile time checked version of this function, enable the macros feature and use the "new" function.
     pub const unsafe fn new_unchecked(array: [(K, V); LENGTH]) -> ArrayMap<K, V, LENGTH> {
         ArrayMap { array }
     }
