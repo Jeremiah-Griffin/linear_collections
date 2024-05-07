@@ -1,5 +1,8 @@
 use crate::{AsMutSlice, LinearMap};
 
+#[cfg(feature = "macros")]
+pub use macros::array_map;
+
 #[derive(Copy, Clone)]
 pub struct ArrayMap<K: Eq, V: Sized + PartialEq, const LENGTH: usize> {
     array: [(K, V); LENGTH],

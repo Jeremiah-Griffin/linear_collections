@@ -16,7 +16,7 @@ serde = { version = "1.*.*", optional = true, default-features = false, features
 macros = {path = "macros", optional = true}
 
 [features]
-default = []
+default = ["macros"]
 #Adds support for ser/deserialization with serde.
 serde = ["dep:serde"]
 #Linear-collections can use macros to validate literals structures at compile time. 

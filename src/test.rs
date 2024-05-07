@@ -6,7 +6,6 @@
 ///These are all ripped from std::collections::HashMap. Credit to the rust developers.
 use crate::LinearMap;
 use crate::VecMap;
-
 #[test]
 fn test_create_capacity_zero() {
     let mut m = crate::VecMap::with_capacity(0);
@@ -320,3 +319,40 @@ fn test_eq() {
 
     assert_eq!(m1, m2);
 }*/
+
+#[cfg(feature = "macros")]
+pub mod macro_tests {
+    #[cfg(test)]
+    use crate::array_map;
+    use macros::array_map;
+
+    #[cfg(test)]
+    #[test]
+    fn array_map_empty() {}
+
+    #[test]
+    fn array_map_one() {}
+
+    #[test]
+    fn array_map_many() {}
+
+    #[test]
+    #[should_panic]
+    fn array_map_one_duplicate() {}
+
+    #[test]
+    #[should_panic]
+    fn array_map_many_duplicates() {}
+
+    #[test]
+    #[should_panic]
+    ///numeric types can have suffixes, and these should not affect parsing
+    fn array_map_numeric_with_type() {}
+
+    #[test]
+    #[should_panic]
+    fn array_map_numeric_with_seperator() {}
+
+    #[test]
+    fn array_map_string_literal_with_prefix() {}
+}
