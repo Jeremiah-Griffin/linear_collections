@@ -322,13 +322,16 @@ fn test_eq() {
 
 #[cfg(feature = "macros")]
 pub mod macro_tests {
+    //the as binding is to simulate the name of the crate
+    //be called in a consuming crate. linear_collections otherwise will not resolve
+    use crate as linear_collections;
+    use crate::array::map::ArrayMap;
     #[cfg(test)]
-    use crate::array_map;
     use macros::array_map;
-
-    #[cfg(test)]
     #[test]
-    fn array_map_empty() {}
+    fn array_map_empty() {
+        array_map!([("k", "v"),]);
+    }
 
     #[test]
     fn array_map_one() {}

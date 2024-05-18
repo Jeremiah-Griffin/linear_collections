@@ -1,44 +1,75 @@
+use std::collections::{BTreeSet, HashSet};
+
 use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
-use std::collections::{BTreeSet, HashMap, HashSet};
-use syn::{parse_macro_input, Expr, ExprArray};
+use syn::{parse_macro_input, Expr, ExprArray, ExprTuple};
 
 #[proc_macro]
 pub fn array_map(tokens: TokenStream) -> TokenStream {
     let input = parse_macro_input!(tokens as ExprArray);
+    let elements = input.elems;
+    let iter = elements.iter();
+    let length = elements.len();
 
     //TODO: need to parse elements as tuples, forgor
-    let input_length = input.elems.len();
 
-    let mut elems = BTreeSet::new();
+    let mut duplicates: Vec<String> = Vec::new();
+    let mut keys: BTreeSet<String> = BTreeSet::new();
 
-    let mut duplicates = BTreeSet::new();
+    for e in iter.clone() {
+        let element_string = e.to_token_stream().to_string();
+        let Expr::Tuple(e) = e else {
+            panic!(
+                "All elements input to this macro should be tuples, but {element_string} is not."
+            );
+        };
 
-    input
-        .elems
-        .into_pairs()
-        .map(|p| p.into_value().into_token_stream())
-        .map(|t| proc_macro::TokenStream::from(t).to_string())
-        //TODO: this breaks in cases like numerical type suffixes and string prefixes
-        //as those will convert to "to_string" uniquely from each other, despite the types and
-        //values being identical. As such, we can do like a regex thing to extract the leading prefix
-        //from string literals and the type suffix from numerics
-        .for_each(|s| {
-            if elems.insert(s.clone()) == false {
-                duplicates.insert(s);
-            }
-        });
+        let tuple_pair_count = e.elems.len();
 
+        if tuple_pair_count != 2 {
+            panic!("All elements should have a length of 2 ( a key and a value) but {element_string} is {tuple_pair_count}")
+        }
+
+        let pairs = e.elems.clone().into_pairs().collect::<Vec<_>>();
+
+        let key = pairs[0].clone().into_value().to_token_stream().to_string();
+
+        if keys.insert(key.clone()) == false {
+            duplicates.push(key)
+        }
+    }
     if duplicates.len() > 0 {
-        panic!("Duplicate elements found: {duplicates:?}")
+        panic!("Values with duplicate keys found: {duplicates:?}")
     }
 
     quote! {
         #[allow(unsafe_code)]
         ///SAFETY: the macro guarantees that we supply no duplicate elements to this function.
         unsafe {
-            linear_collections::ArrayMap::new_unchecked([#(#elems),* ; #input_length]){
-        }}
+            linear_collections::ArrayMap::new_unchecked([#(#iter),*; #length])
+        }
     }
     .into()
 }
+
+/*
+#[proc_macro]
+pub fn vec_map(tokens: TokenStream) -> TokenStream {
+    unimplemented!()
+}
+
+#[proc_macro]
+pub fn vec_set(tokens: TokenStream) -> TokenStream {
+    unimplemented!()
+}
+
+#[proc_macro]
+pub fn vecdeque_map(tokens: TokenStream) -> TokenStream {
+    unimplemented!()
+}
+
+#[proc_macro]
+pub fn vecdeque_set(tokens: TokenStream) -> TokenStream {
+    unimplemented!()
+}
+*/
