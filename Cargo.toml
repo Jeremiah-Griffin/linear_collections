@@ -3,7 +3,7 @@ members = ["macros"]
 
 [package]
 name = "linear_collections"
-version = "0.2.3"
+version = "0.3.0"
 edition = "2021"
 description = "Map and Set types backed by linear data structures."
 license = "MIT"
@@ -28,5 +28,5 @@ serde = ["dep:serde"]
 #serde_big_array = ["dep:serde", "dep:serde_big_array"]
 
 #Linear-collections can use macros to validate literals structures at compile time. 
-#These add a number of dependencies and are thusly feature gated.
+#These add a number of dependencies and are thus feature gated.
 macros = ["dep:macros"]

@@ -18,7 +18,6 @@ however, it only supports collection backed by a vector: I personally needed Arr
 I am likely going to add VecDeque types and will look into how serde supports fixed length collection types.
 They aren't in now as I don't immediately need them, but will be added:
 
-- A macro based alternative for ArrayMap::new_unchecked which will statically guarantee that array literals have no duplicate keys
 - Fallible allocating apis 
 - VecDeque backed types (nice if you need a vecdeque to be returned from into_inner())
 - Serde support for Array types via serde-big-array (?)

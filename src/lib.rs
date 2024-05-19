@@ -13,7 +13,6 @@ mod test;
 pub(crate) trait AsMutSlice<K: Eq, V: Sized + PartialEq> {
     fn as_mut_slice(&mut self) -> &mut [(K, V)];
 }
-
 //This is allowed as making AsMutSlice public would permit
 //clients to wantonly break invariants of the collection
 #[allow(private_bounds)]
@@ -110,5 +109,20 @@ pub trait LinearMap<K: Eq, V: Sized + PartialEq>: AsMutSlice<K, V> {
             .iter_mut()
             .find(|(k, _)| k == key)
             .map(|(_, v)| *v = value);
+    }
+
+    ///For every key in iter which matches a key in self, this method replaces
+    ///the value from iter in self, "merging" the iterator and the map.
+    ///
+    ///for example:
+    ///[(A,1), (B, 2)].merge([(A,1), (B, 2'), (C, 2), (D, 3)].into_iter())
+    ///will yield a map:
+    ///[(A, 1), (B, 2')]
+    fn merge_from_iter<'a>(&'a mut self, iter: impl Iterator<Item = &'a (K, V)>)
+    where
+        K: 'a,
+        V: 'a + Clone,
+    {
+        iter.for_each(|(k, v)| self.replace(&k, v.clone().to_owned()))
     }
 }

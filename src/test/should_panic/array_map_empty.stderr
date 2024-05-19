@@ -1,7 +1,7 @@
 error: proc macro panicked
  --> src/test/should_panic/array_map_empty.rs:2:5
   |
-2 |     macros::array_map!([]);
-  |     ^^^^^^^^^^^^^^^^^^^^^^
+2 |     macros::array_map![];
+  |     ^^^^^^^^^^^^^^^^^^^^
   |
   = help: message: Input may not be empty

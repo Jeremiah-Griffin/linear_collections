@@ -8,15 +8,15 @@ pub struct ArrayMap<K: Eq, V: Sized + PartialEq, const LENGTH: usize> {
     array: [(K, V); LENGTH],
 }
 impl<K: Eq, V: Sized + PartialEq, const LENGTH: usize> ArrayMap<K, V, LENGTH> {
-    ///Creates a new ArrayMap from the provided array: use this if you know for a fact that
-    ///each key provided is unique.
+    ///**Please only use this method to create maps at compile time if the "macros" feature is unavailable to you**
+    ///"macros" provides safe, checked alternatives to initialize linear maps with compile time checking
+    ///of the invariants of each type.
     ///
-    ///Don't be afraid by the unsafe marker: improper use of this method will NOT create memory unsafety,
-    ///but will result in every identical key beyond the first never getting accessed as LinearMaps short circuit
-    ///on the first matching key.
+    ///Creates a new ArrayMap from the
     ///
-    ///For a (safe) compile time checked version of this function, enable the macros feature and use the "new" function.
-    pub const unsafe fn new_unchecked(array: [(K, V); LENGTH]) -> ArrayMap<K, V, LENGTH> {
+    ///SAFETY: improper use of this method - initializing with duplicate keys -will NOT create memory unsafety, but will result in every
+    ///identical key beyond the first never getting accessed as LinearMaps short circuit on the first matching key.
+    pub const unsafe fn from_array_unchecked(array: [(K, V); LENGTH]) -> ArrayMap<K, V, LENGTH> {
         ArrayMap { array }
     }
 
@@ -28,17 +28,6 @@ impl<K: Eq, V: Sized + PartialEq, const LENGTH: usize> ArrayMap<K, V, LENGTH> {
     ///Returns true if the store is empty, false otherwise.
     pub const fn is_empty(&self) -> bool {
         self.len() == 0
-    }
-
-    ///Replaces a values all  key value pairs matching an element from iter with
-    ///that element from iter.
-    ///
-    ///for example:
-    ///[(A,1), (B, 2)].merge([(A,1), (B, 2'), (C, 2), (D, 3)].into_iter())
-    ///will yield a map:
-    ///[(A, 1), (B, 2')]
-    pub fn merge_from_iter(&mut self, iter: impl Iterator<Item = (K, V)>) {
-        iter.for_each(|(k, v)| self.replace(&k, v))
     }
 }
 

@@ -17,6 +17,10 @@ impl<T: Eq> VecSet<T> {
         }
     }
 
+    pub const unsafe fn from_map_unchecked(map: VecMap<T, ()>) -> VecSet<T> {
+        VecSet { map }
+    }
+
     ///Returns the number of items in of the set
     pub fn len(&self) -> usize {
         self.map.len()
@@ -39,8 +43,13 @@ impl<T: Eq> VecSet<T> {
         self.map.remove_entry(&value).map(|(t, _)| t)
     }
 
-    ///Returns the backing vector of this type
-    pub fn into_inner(self) -> Vec<T> {
+    ///Returns true if the referenced value is in the set, false otherwise.
+    pub fn contains(&self, value: &T) -> bool {
+        self.map.contains_key(value)
+    }
+
+    ///Returns a vector with all the elements in the set.
+    pub fn into_vec(self) -> Vec<T> {
         //TODO:...since unit is a ZST can I just transmute? This is silly.
         self.map.into_inner().into_iter().map(|(t, _)| t).collect()
     }

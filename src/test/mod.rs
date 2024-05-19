@@ -1,7 +1,7 @@
 use crate::LinearMap;
 use crate::VecMap;
 #[test]
-fn test_create_capacity_zero() {
+fn linear_map_create_capacity_zero() {
     let mut m = crate::VecMap::with_capacity(0);
 
     assert!(m.insert(1, 1).is_none());
@@ -11,7 +11,7 @@ fn test_create_capacity_zero() {
 }
 
 #[test]
-fn test_insert() {
+fn linear_map_insert() {
     let mut m = VecMap::new();
     assert_eq!(m.len(), 0);
     assert!(m.insert(1, 2).is_none());
@@ -23,13 +23,13 @@ fn test_insert() {
 }
 
 #[test]
-fn test_empty_remove() {
+fn linear_map_empty_remove() {
     let mut m: VecMap<i32, bool> = VecMap::new();
     assert_eq!(m.remove(&0), None);
 }
 
 #[test]
-fn test_empty_entry() {
+fn linear_map_empty_entry() {
     let mut m: VecMap<i32, bool> = VecMap::new();
     if m.nth_value(0).is_some() {
         panic!()
@@ -39,7 +39,7 @@ fn test_empty_entry() {
 }
 
 #[test]
-fn test_lots_of_insertions() {
+fn linear_map_lots_of_insertions() {
     let mut m = VecMap::new();
 
     // Try this a few times to make sure we never screw up the hashmap's
@@ -105,7 +105,7 @@ fn test_lots_of_insertions() {
 }
 
 #[test]
-fn test_find_mut() {
+fn linear_map_find_mut() {
     let mut m = VecMap::new();
     assert!(m.insert(1, 12).is_none());
     assert!(m.insert(2, 8).is_none());
@@ -119,7 +119,7 @@ fn test_find_mut() {
 }
 
 #[test]
-fn test_insert_overwrite() {
+fn linear_map_insert_overwrite() {
     let mut m = VecMap::new();
     assert!(m.insert(1, 2).is_none());
     assert_eq!(*m.get(&1).unwrap(), 2);
@@ -128,7 +128,7 @@ fn test_insert_overwrite() {
 }
 
 #[test]
-fn test_insert_conflicts() {
+fn linear_map_insert_conflicts() {
     let mut m = VecMap::with_capacity(4);
     assert!(m.insert(1, 2).is_none());
     assert!(m.insert(5, 3).is_none());
@@ -139,7 +139,7 @@ fn test_insert_conflicts() {
 }
 
 #[test]
-fn test_conflict_remove() {
+fn linear_map_conflict_remove() {
     let mut m = VecMap::with_capacity(4);
     assert!(m.insert(1, 2).is_none());
     assert_eq!(*m.get(&1).unwrap(), 2);
@@ -156,7 +156,7 @@ fn test_conflict_remove() {
 }
 
 #[test]
-fn test_is_empty() {
+fn linear_map_is_empty() {
     let mut m = VecMap::with_capacity(4);
     assert!(m.insert(1, 2).is_none());
     assert!(!m.is_empty());
@@ -165,7 +165,7 @@ fn test_is_empty() {
 }
 
 #[test]
-fn test_remove() {
+fn linear_map_remove() {
     let mut m = VecMap::new();
     m.insert(1, 2);
     assert_eq!(m.remove(&1), Some(2));
@@ -173,7 +173,7 @@ fn test_remove() {
 }
 
 #[test]
-fn test_iterate() {
+fn linear_map_iterate() {
     let mut m = VecMap::with_capacity(4);
     for i in 0..32 {
         assert!(m.insert(i, i * 2).is_none());
@@ -190,7 +190,7 @@ fn test_iterate() {
 }
 
 #[test]
-fn test_find() {
+fn linear_map_find() {
     let mut m = VecMap::new();
     assert!(m.get(&1).is_none());
     m.insert(1, 2);
@@ -200,11 +200,29 @@ fn test_find() {
     }
 }
 #[test]
-fn test_remove_entry() {
+fn linear_map_remove_entry() {
     let mut m = std::collections::HashMap::new();
     m.insert(1, 2);
     assert_eq!(m.remove_entry(&1), Some((1, 2)));
     assert_eq!(m.remove(&1), None);
+}
+
+#[test]
+fn linear_map_merge_from_iter() {
+    //For every key in iter which maches a key in self, this method replaces
+    //the value from iter in self, "merging" the iterator and the map.
+    //
+    //for example:
+    //[(A,1), (B, 2)].merge([(A,1), (B, 2'), (C, 2), (D, 3)].into_iter())
+    //will yield a map:
+    //[(A, 1), (B, 2')]
+    let mut m = VecMap::new();
+    m.insert(0, "A");
+    m.insert(1, "B");
+
+    let v = vec![(0, "A"), (1, "B'"), (2, "C"), (3, "D")];
+
+    m.merge_from_iter(v.iter());
 }
 
 /*
@@ -322,20 +340,61 @@ pub mod macro_tests {
     use crate as linear_collections;
     use crate::{array::map::ArrayMap, LinearMap};
     #[cfg(test)]
-    use macros::array_map;
+    use macros::{array_map, vec_map, vec_set};
 
     #[test]
     fn array_map_one() {
-        let a = array_map!([("k", "v"),]);
-        assert_eq!(a.len(), 1);
+        let map = array_map![("k", "v")];
+        assert_eq!(map.len(), 1);
+        assert_eq!(map.get(&"k"), Some(&"v"));
+        assert_eq!(map.get(&"j"), None);
     }
 
     #[test]
     fn array_map_many() {
-        let map = array_map!([(0, "v0"), (1, "v1"), (2, "v2"), (3, "v3")]);
+        let map = array_map![(0, "v0"), (1, "v1"), (2, "v2"), (3, "v3")];
         assert_eq!(map.len(), 4);
         assert_eq!(map.get(&0), Some(&"v0"));
         assert_eq!(map.get(&5), None);
+    }
+
+    #[test]
+    fn vec_map_one() {
+        let map = vec_map![("k", "v")];
+        assert_eq!(map.len(), 1);
+        assert_eq!(map.get(&"k"), Some(&"v"));
+        assert_eq!(map.get(&"j"), None);
+    }
+
+    #[test]
+    fn vec_map_many() {
+        let map = vec_map![(0, "v0"), (1, "v1"), (2, "v2"), (3, "v3")];
+        assert_eq!(map.len(), 4);
+        assert_eq!(map.get(&0), Some(&"v0"));
+        assert_eq!(map.get(&5), None);
+    }
+
+    #[test]
+    fn vec_set_one() {
+        let set = vec_set![0];
+
+        assert_eq!(set.contains(&0), true);
+        assert_eq!(set.contains(&1), false);
+        assert_eq!(set.len(), 1);
+    }
+
+    #[test]
+    fn vec_set_many() {
+        let set = vec_set![0, 1, 2, 3, 4, 5];
+
+        assert_eq!(set.contains(&0), true);
+        assert_eq!(set.contains(&1), true);
+        assert_eq!(set.contains(&2), true);
+        assert_eq!(set.contains(&3), true);
+        assert_eq!(set.contains(&4), true);
+        assert_eq!(set.contains(&5), true);
+        assert_eq!(set.contains(&6), false);
+        assert_eq!(set.len(), 6);
     }
 
     #[test]
@@ -345,5 +404,8 @@ pub mod macro_tests {
         t.compile_fail("src/test/should_panic/array_map_empty.rs");
         t.compile_fail("src/test/should_panic/array_map_many_duplicates.rs");
         t.compile_fail("src/test/should_panic/array_map_one_duplicate.rs");
+        t.compile_fail("src/test/should_panic/vec_map_empty.rs");
+        t.compile_fail("src/test/should_panic/vec_map_many_duplicates.rs");
+        t.compile_fail("src/test/should_panic/vec_map_one_duplicate.rs");
     }
 }

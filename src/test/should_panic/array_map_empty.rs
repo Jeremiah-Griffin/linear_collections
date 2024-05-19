@@ -1,3 +1,3 @@
 pub fn main() {
-    macros::array_map!([]);
+    macros::array_map![];
 }
