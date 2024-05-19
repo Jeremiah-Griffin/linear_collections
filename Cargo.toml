@@ -16,6 +16,9 @@ serde = { version = "1.*.*", optional = true, default-features = false, features
 macros = {path = "macros", optional = true}
 #serde_big_array = {version = 0.5.1, optional = true},
 
+[dev-dependencies]
+trybuild = {version = "1.0.96"}
+
 [features]
 default = ["macros"]
 #Adds support for ser/deserialization of *non-array types* with serde.

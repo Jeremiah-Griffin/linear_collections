@@ -1,9 +1,3 @@
-#[cfg(test)]
-///We only test VecMap here we're really testing only the linear map trait,
-///not the specific implementation. Any further invariants are upheld and tested by the
-///underlying type in std.
-///
-///These are all ripped from std::collections::HashMap. Credit to the rust developers.
 use crate::LinearMap;
 use crate::VecMap;
 #[test]
@@ -322,40 +316,34 @@ fn test_eq() {
 
 #[cfg(feature = "macros")]
 pub mod macro_tests {
+    #[forbid(unsafe_code)]
     //the as binding is to simulate the name of the crate
     //be called in a consuming crate. linear_collections otherwise will not resolve
     use crate as linear_collections;
-    use crate::array::map::ArrayMap;
+    use crate::{array::map::ArrayMap, LinearMap};
     #[cfg(test)]
     use macros::array_map;
+
     #[test]
-    fn array_map_empty() {
-        array_map!([("k", "v"),]);
+    fn array_map_one() {
+        let a = array_map!([("k", "v"),]);
+        assert_eq!(a.len(), 1);
     }
 
     #[test]
-    fn array_map_one() {}
+    fn array_map_many() {
+        let map = array_map!([(0, "v0"), (1, "v1"), (2, "v2"), (3, "v3")]);
+        assert_eq!(map.len(), 4);
+        assert_eq!(map.get(&0), Some(&"v0"));
+        assert_eq!(map.get(&5), None);
+    }
 
     #[test]
-    fn array_map_many() {}
+    fn should_panic() {
+        let t = trybuild::TestCases::new();
 
-    #[test]
-    #[should_panic]
-    fn array_map_one_duplicate() {}
-
-    #[test]
-    #[should_panic]
-    fn array_map_many_duplicates() {}
-
-    #[test]
-    #[should_panic]
-    ///numeric types can have suffixes, and these should not affect parsing
-    fn array_map_numeric_with_type() {}
-
-    #[test]
-    #[should_panic]
-    fn array_map_numeric_with_seperator() {}
-
-    #[test]
-    fn array_map_string_literal_with_prefix() {}
+        t.compile_fail("src/test/should_panic/array_map_empty.rs");
+        t.compile_fail("src/test/should_panic/array_map_many_duplicates.rs");
+        t.compile_fail("src/test/should_panic/array_map_one_duplicate.rs");
+    }
 }

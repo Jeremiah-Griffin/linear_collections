@@ -1,15 +1,20 @@
-use std::collections::{BTreeSet, HashSet};
-
 use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
+use std::collections::{BTreeSet, HashSet};
 use syn::{parse_macro_input, Expr, ExprArray, ExprTuple};
 
+///should change this to just panic on invalid imports and switch the
+///qyote! to emit the different type of struct.
 #[proc_macro]
 pub fn array_map(tokens: TokenStream) -> TokenStream {
     let input = parse_macro_input!(tokens as ExprArray);
     let elements = input.elems;
     let iter = elements.iter();
     let length = elements.len();
+
+    if length == 0 {
+        panic!("Input may not be empty")
+    };
 
     //TODO: need to parse elements as tuples, forgor
 
@@ -38,20 +43,19 @@ pub fn array_map(tokens: TokenStream) -> TokenStream {
             duplicates.push(key)
         }
     }
+
     if duplicates.len() > 0 {
-        panic!("Values with duplicate keys found: {duplicates:?}")
+        panic!("Duplicate keys found: {duplicates:?}")
     }
 
     quote! {
-        #[allow(unsafe_code)]
-        ///SAFETY: the macro guarantees that we supply no duplicate elements to this function.
-        unsafe {
-            linear_collections::ArrayMap::new_unchecked([#(#iter),*; #length])
+        unsafe{
+            linear_collections::ArrayMap::new_unchecked([#(#iter),*])
+
         }
     }
     .into()
 }
-
 /*
 #[proc_macro]
 pub fn vec_map(tokens: TokenStream) -> TokenStream {
