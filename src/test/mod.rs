@@ -1,5 +1,7 @@
+#[cfg(test)]
 use crate::LinearMap;
 use crate::VecMap;
+
 #[test]
 fn linear_map_create_capacity_zero() {
     let mut m = crate::VecMap::with_capacity(0);

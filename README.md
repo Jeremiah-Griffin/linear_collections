@@ -20,3 +20,9 @@ They aren't in now as I don't immediately need them, but will be added:
 - VecDeque backed types (nice if you need a vecdeque to be returned from into_inner())
 - Serde support for Array types via serde-big-array (?)
 
+
+# Stability Policy (pre - 1.0) 
+- 1.0 will not be reached until all unstable features relied upon by this crate are either stabilized or removed.
+- All changes up to and including removal of features prepended with "nightly" (i.e. nightly_vecdeque) are not considered breaking, so long as they are made 
+  for conformance to the underlying unstable api.
+- Soundness bug fixes are not considered to be breaking.

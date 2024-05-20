@@ -3,7 +3,6 @@
 //which would be wasteful for vec and array map just to have compatibility with the two-slice api for VecDeque.
 //concat instead allows us to share the same trait while foisting any potential cost to vecdeque alone.
 //should document the concat bound and see what doesnt implement it.
-
 use std::collections::VecDeque;
 
 use crate::{AsMutSlice, LinearMap};
@@ -53,7 +52,7 @@ impl<K: Eq, V: Sized + PartialEq> VecDequeMap<K, V> {
             .find(|(_, (k, _))| k == key)
             .map(|(i, _)| i)?;
 
-        Some(self.vecdeque.remove(idx))
+        self.vecdeque.remove(idx)
     }
 
     ///Inserts the provided value into the VecDequeMap. If the provided key is
@@ -62,7 +61,7 @@ impl<K: Eq, V: Sized + PartialEq> VecDequeMap<K, V> {
         match self.vecdeque.iter_mut().find(|(k, _)| *k == key) {
             Some((_, v)) => Some(std::mem::replace(v, value)),
             None => {
-                self.vecdeque.push((key, value));
+                self.vecdeque.push_back((key, value));
                 None
             }
         }

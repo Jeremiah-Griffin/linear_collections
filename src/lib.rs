@@ -1,7 +1,17 @@
+/*
+#![cfg_attr(feature = "nightly_vecdeque", feature(slice_concat_trait))]
+#[cfg(feature = "nightly_vecdeque")]
+mod vecdeque;
+#[cfg(feature = "nightly_vecdeque")]
+pub use vecdeque::map::VecDequeMap;
+#[cfg(feature = "nightly_vecdeque")]
+pub use vecdeque::set::VecDequeSet;
+*/
 mod array;
 mod vec;
-mod vecdeque;
 pub use array::map::ArrayMap;
+#[cfg(feature = "macros")]
+pub use macros::{array_map, vec_map, vec_set};
 pub use vec::map::VecMap;
 pub use vec::set::VecSet;
 #[cfg(feature = "serde")]
@@ -31,16 +41,6 @@ pub trait LinearMap<K: Eq, V: Sized + PartialEq>: AsMutSlice<K, V> {
 
     //notice to implementors: if calling as_slice is not zero cost, override
     //this default implementation with one that is.
-    ///Returns the number of elements in the container
-    fn len(&self) -> usize {
-        self.as_slice().len()
-    }
-
-    ///Returns true if the store is empty, false otherwise.
-    fn is_empty(&self) -> bool {
-        self.len() == 0
-    }
-
     ///Returns true if this map contains the given key. False otherwise.
     fn contains_key(&self, key: &K) -> bool {
         for (k, _) in self.as_slice().iter() {

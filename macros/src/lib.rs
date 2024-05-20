@@ -5,6 +5,7 @@ use syn::{parse::Parse, parse_macro_input, punctuated::Punctuated, ExprTuple, To
 mod helpers;
 
 #[proc_macro]
+///Creates an ArrayMap, checking at compile time that there are no duplicate keys.
 pub fn array_map(tokens: TokenStream) -> TokenStream {
     let input = parse_macro_input!(tokens as MapLiteral);
 
@@ -20,6 +21,7 @@ pub fn array_map(tokens: TokenStream) -> TokenStream {
 }
 
 #[proc_macro]
+///Creates a VecMap, checking at compile time that there are no duplicate keys.
 pub fn vec_map(tokens: TokenStream) -> TokenStream {
     let input = parse_macro_input!(tokens as MapLiteral);
 
@@ -35,6 +37,7 @@ pub fn vec_map(tokens: TokenStream) -> TokenStream {
 }
 
 #[proc_macro]
+///Creates a VecMap, checking at compile time that there are no duplicate values.
 pub fn vec_set(tokens: TokenStream) -> TokenStream {
     let input = parse_macro_input!(tokens as SetLiteral);
 

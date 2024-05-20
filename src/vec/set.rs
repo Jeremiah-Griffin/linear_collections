@@ -1,5 +1,6 @@
 use crate::{LinearMap, VecMap};
 
+///A set backed by a VecMap where the value for each key is ().
 pub struct VecSet<T: Eq> {
     map: VecMap<T, ()>,
 }
@@ -17,6 +18,14 @@ impl<T: Eq> VecSet<T> {
         }
     }
 
+    ///**Please only use this method to create set literals if the "macros" feature is unavailable to you**
+    ///"macros" provides safe, checked alternatives to initialize linear maps with compile time checking
+    ///of the invariants of each type.
+    ///
+    ///Creates a new VecSet from the supplied VecMap.
+    ///
+    ///SAFETY: improper use of this method - initializing with duplicate values - will NOT create memory unsafety, but will result in every
+    ///identical value beyond the first never getting accessed as LinearMaps short circuit on the first match.
     pub const unsafe fn from_map_unchecked(map: VecMap<T, ()>) -> VecSet<T> {
         VecSet { map }
     }
@@ -28,7 +37,7 @@ impl<T: Eq> VecSet<T> {
 
     ///Returns true if the store is empty, false otherwise.
     pub fn is_empty(&self) -> bool {
-        self.len() == 0
+        self.map.is_empty()
     }
 
     ///Adds a value to the set.

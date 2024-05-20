@@ -11,16 +11,26 @@ impl<K: Eq, V: Sized + PartialEq> VecMap<K, V> {
         VecMap { vector: Vec::new() }
     }
 
-    ///**Please only use this method to create maps at compile time if the "macros" feature is unavailable to you**
+    ///**Please only use this method to create map literals if the "macros" feature is unavailable to you**
     ///"macros" provides safe, checked alternatives to initialize linear maps with compile time checking
     ///of the invariants of each type.
     ///
-    ///Creates a new VecMap from the
+    ///Creates a new VecMap from the supplied vector.
     ///
-    ///SAFETY: improper use of this method - initializing with duplicate keys -will NOT create memory unsafety, but will result in every
+    ///SAFETY: improper use of this method - initializing with duplicate keys - will NOT create memory unsafety, but will result in every
     ///identical key beyond the first never getting accessed as LinearMaps short circuit on the first matching key.
     pub const unsafe fn from_vec_unchecked(vector: Vec<(K, V)>) -> VecMap<K, V> {
         VecMap { vector }
+    }
+
+    ///Returns the number of elements in the container
+    pub fn len(&self) -> usize {
+        self.vector.len()
+    }
+
+    ///Returns true if the store is empty, false otherwise.
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 
     ///Creates a new, empty VecMap with capacity set to the provide value.
