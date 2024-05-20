@@ -20,7 +20,7 @@ macros = {path = "macros", optional = true}
 trybuild = {version = "1.0.96"}
 
 [features]
-default = ["macros"]
+default = []
 #Adds support for ser/deserialization of *non-array types* with serde.
 #To serialize array backed types, enable the "serde-big-array" feature as well.
 serde = ["dep:serde"]

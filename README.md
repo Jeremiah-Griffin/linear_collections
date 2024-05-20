@@ -8,11 +8,9 @@ are greater than their comparatively reduced algorithmic complexity.
 This penalty usually is not great, however, a (small) amount of performance may be gained if allocating 
 small such structures in a tight loop - say, deserializing the claims from a Json Web Token.
 
-
 # Motivation
 There exists another crate implementing linear collections (linear_map)
 however, it only supports collection backed by a vector: I personally needed Array types as well.
-
 
 # Future plans
 I am likely going to add VecDeque types and will look into how serde supports fixed length collection types.

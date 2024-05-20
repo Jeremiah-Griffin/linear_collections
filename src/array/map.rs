@@ -19,16 +19,6 @@ impl<K: Eq, V: Sized + PartialEq, const LENGTH: usize> ArrayMap<K, V, LENGTH> {
     pub const unsafe fn from_array_unchecked(array: [(K, V); LENGTH]) -> ArrayMap<K, V, LENGTH> {
         ArrayMap { array }
     }
-
-    ///Returns the number of items in this ArrayMap
-    pub const fn len(&self) -> usize {
-        self.array.len()
-    }
-
-    ///Returns true if the store is empty, false otherwise.
-    pub const fn is_empty(&self) -> bool {
-        self.len() == 0
-    }
 }
 
 impl<K: Eq, V: Sized + PartialEq, const LENGTH: usize> LinearMap<K, V> for ArrayMap<K, V, LENGTH> {

@@ -1,6 +1,6 @@
 mod array;
 mod vec;
-
+mod vecdeque;
 pub use array::map::ArrayMap;
 pub use vec::map::VecMap;
 pub use vec::set::VecSet;
@@ -13,6 +13,7 @@ mod test;
 pub(crate) trait AsMutSlice<K: Eq, V: Sized + PartialEq> {
     fn as_mut_slice(&mut self) -> &mut [(K, V)];
 }
+
 //This is allowed as making AsMutSlice public would permit
 //clients to wantonly break invariants of the collection
 #[allow(private_bounds)]
@@ -27,6 +28,18 @@ pub trait LinearMap<K: Eq, V: Sized + PartialEq>: AsMutSlice<K, V> {
 
     ///Consumes self, returning the underlying store.
     fn into_inner(self) -> Self::Backing;
+
+    //notice to implementors: if calling as_slice is not zero cost, override
+    //this default implementation with one that is.
+    ///Returns the number of elements in the container
+    fn len(&self) -> usize {
+        self.as_slice().len()
+    }
+
+    ///Returns true if the store is empty, false otherwise.
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
 
     ///Returns true if this map contains the given key. False otherwise.
     fn contains_key(&self, key: &K) -> bool {
