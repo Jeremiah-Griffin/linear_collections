@@ -1,7 +1,10 @@
 [package]
-name = "macros"
+name = "linear_collections_macros"
 version = "0.1.0"
 edition = "2021"
+description = "proc-macros for linear_collections"
+license = "MIT"
+repository = "https://github.com/Jeremiah-Griffin/linear_collections"
 
 [dependencies]
 quote = { version = "1.0"}

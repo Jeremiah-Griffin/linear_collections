@@ -5,6 +5,8 @@ use syn::{parse::Parse, parse_macro_input, punctuated::Punctuated, ExprTuple, To
 mod helpers;
 
 #[proc_macro]
+///NOTE: This macro does not currently consider prefixed or suffixed items (r"t" and "t" or 1 and 1usize) to be
+///distinct. This is highly likely to change in the future, and this fix may not be considered a breaking change.
 ///Creates an ArrayMap, checking at compile time that there are no duplicate keys.
 pub fn array_map(tokens: TokenStream) -> TokenStream {
     let input = parse_macro_input!(tokens as MapLiteral);
@@ -21,6 +23,8 @@ pub fn array_map(tokens: TokenStream) -> TokenStream {
 }
 
 #[proc_macro]
+///NOTE: This macro does not currently consider prefixed or suffixed items (r"t" and "t" or 1 and 1usize) to be
+///distinct. This is highly likely to change in the future, and this fix may not be considered a breaking change.
 ///Creates a VecMap, checking at compile time that there are no duplicate keys.
 pub fn vec_map(tokens: TokenStream) -> TokenStream {
     let input = parse_macro_input!(tokens as MapLiteral);
@@ -37,6 +41,8 @@ pub fn vec_map(tokens: TokenStream) -> TokenStream {
 }
 
 #[proc_macro]
+///NOTE: This macro does not currently consider prefixed or suffixed items (r"t" and "t" or 1 and 1usize) to be
+///distinct. This is highly likely to change in the future, and this fix may not be considered a breaking change.
 ///Creates a VecMap, checking at compile time that there are no duplicate values.
 pub fn vec_set(tokens: TokenStream) -> TokenStream {
     let input = parse_macro_input!(tokens as SetLiteral);

@@ -61,7 +61,7 @@ impl<T: Eq> VecSet<T> {
 
     ///Returns a vector with all the elements in the set.
     pub fn into_vec(self) -> Vec<T> {
-        //TODO:...since unit is a ZST can I just transmute? This is silly.
+        //TODO:...since () is a ZST can I just transmute? This is silly.
         self.map.into_inner().into_iter().map(|(t, _)| t).collect()
     }
 }
