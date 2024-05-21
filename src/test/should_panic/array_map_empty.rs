@@ -1,3 +1,3 @@
 pub fn main() {
-    macros::array_map![];
+    linear_collections_macros::array_map![];
 }

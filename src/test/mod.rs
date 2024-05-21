@@ -341,7 +341,7 @@ pub mod macro_tests {
     //be called in a consuming crate. linear_collections otherwise will not resolve
     use crate as linear_collections;
     use crate::{array::map::ArrayMap, LinearMap};
-    use macros::{array_map, vec_map, vec_set};
+    use linear_collections_macros::{array_map, vec_map, vec_set};
 
     #[test]
     fn array_map_one() {

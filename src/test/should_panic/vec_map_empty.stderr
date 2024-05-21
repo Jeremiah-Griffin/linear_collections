@@ -1,7 +1,7 @@
 error: proc macro panicked
  --> src/test/should_panic/vec_map_empty.rs:2:5
   |
-2 |     macros::vec_map![];
-  |     ^^^^^^^^^^^^^^^^^^
+2 |     linear_collections_macros::vec_map![];
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   |
   = help: message: Input may not be empty

@@ -11,7 +11,7 @@ mod array;
 mod vec;
 pub use array::map::ArrayMap;
 #[cfg(feature = "macros")]
-pub use macros::{array_map, vec_map, vec_set};
+pub use linear_collections_macros::{array_map, vec_map, vec_set};
 pub use vec::map::VecMap;
 pub use vec::set::VecSet;
 #[cfg(feature = "serde")]

@@ -1,3 +1,3 @@
 pub fn main() {
-    macros::vec_map![("k", "v"), ("k", "v")]
+    linear_collections_macros::vec_map![("k", "v"), ("k", "v")]
 }

@@ -1,7 +1,7 @@
 error: proc macro panicked
  --> src/test/should_panic/vec_map_many_duplicates.rs:2:5
   |
-2 |     macros::vec_map![(0, "v"), (0, "v"), (1, "v"), (1, "v")];
-  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2 |     linear_collections_macros::vec_map![(0, "v"), (0, "v"), (1, "v"), (1, "v")];
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   |
   = help: message: Duplicate keys found: ["0", "1"]
