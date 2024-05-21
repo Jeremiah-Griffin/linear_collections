@@ -1,8 +1,10 @@
 use crate::{LinearMap, VecMap};
 
 ///A set backed by a VecMap where the value for each key is ().
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct VecSet<T: Eq> {
-    map: VecMap<T, ()>,
+    //TODO: Iterators, pub crate is a dumb cheat to get around lack of iterator support. Fix when adding iterators.
+    pub(crate) map: VecMap<T, ()>,
 }
 
 impl<T: Eq> VecSet<T> {

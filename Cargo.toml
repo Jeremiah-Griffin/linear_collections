@@ -13,6 +13,7 @@ keywords = ["vecmap", "arraymap", "linearmap", "vecset", "arrayset"]
 
 [dependencies]
 serde = { version = "1.*.*", optional = true, default-features = false, features = ["std"]}
+serde_test = {version = "1.0.176", optional = true}
 macros = {path = "macros", optional = true}
 #serde_big_array = {version = 0.5.1, optional = true},
 
@@ -23,7 +24,7 @@ trybuild = {version = "1.0.96"}
 default = []
 #Adds support for ser/deserialization of *non-array types* with serde.
 #To serialize array backed types, enable the "serde-big-array" feature as well.
-serde = ["dep:serde"]
+serde = ["dep:serde", "dep:serde_test"]
 #Enables ser/deserialization of array backed types with serde
 #serde_big_array = ["dep:serde", "dep:serde_big_array"]
 

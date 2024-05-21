@@ -1,6 +1,7 @@
 use crate::{AsMutSlice, LinearMap};
 
 ///A map type backed by a Vector. Useful for small collections whose size can change.
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct VecMap<K: Eq, V: Sized + PartialEq> {
     vector: Vec<(K, V)>,
 }

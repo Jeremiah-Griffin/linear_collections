@@ -19,6 +19,7 @@ They aren't in now as I don't immediately need them, but will be added:
 - Fallible allocating apis 
 - VecDeque backed types (nice if you need a vecdeque to be returned from into_inner())
 - Serde support for Array types via serde-big-array (?)
+- Iterators
 
 
 # Stability Policy (pre - 1.0) 

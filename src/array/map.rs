@@ -1,6 +1,6 @@
 use crate::{AsMutSlice, LinearMap};
 
-#[derive(Copy, Clone)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct ArrayMap<K: Eq, V: Sized + PartialEq, const LENGTH: usize> {
     array: [(K, V); LENGTH],
 }

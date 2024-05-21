@@ -1,7 +1,6 @@
-#[cfg(test)]
 use crate::LinearMap;
 use crate::VecMap;
-
+#[cfg(test)]
 #[test]
 fn linear_map_create_capacity_zero() {
     let mut m = crate::VecMap::with_capacity(0);
@@ -336,12 +335,12 @@ fn test_eq() {
 
 #[cfg(feature = "macros")]
 pub mod macro_tests {
+    #[cfg(test)]
     #[forbid(unsafe_code)]
     //the as binding is to simulate the name of the crate
     //be called in a consuming crate. linear_collections otherwise will not resolve
     use crate as linear_collections;
     use crate::{array::map::ArrayMap, LinearMap};
-    #[cfg(test)]
     use macros::{array_map, vec_map, vec_set};
 
     #[test]
