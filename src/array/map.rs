@@ -1,6 +1,7 @@
 use crate::{AsMutSlice, LinearMap};
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+///A map type backed by an Array, stack allocated and fixed in size.
 pub struct ArrayMap<K: Eq, V: Sized + PartialEq, const LENGTH: usize> {
     array: [(K, V); LENGTH],
 }
