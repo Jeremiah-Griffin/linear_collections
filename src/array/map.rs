@@ -20,7 +20,7 @@ impl<K: Eq, V: Sized + PartialEq, const LENGTH: usize> ArrayMap<K, V, LENGTH> {
 
     ///Returns the number of elements in the ArrayMap
     pub const fn len(&self) -> usize {
-        self.array.len()
+        LENGTH
     }
 
     ///Returns true if the store is empty, false otherwise.
