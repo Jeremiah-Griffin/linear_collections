@@ -151,3 +151,27 @@ pub trait LinearMap<K: Eq, V: Sized + PartialEq>: AsMutSlice<K, V> {
         iter.for_each(|(k, v)| self.replace(&k, v.clone().to_owned()))
     }
 }
+
+pub trait LinearSet<T: Eq>: Sized {
+    ///The map type which backs this set.
+    type BACKING: LinearMap<T, ()>;
+
+    fn map(&self) -> &Self::BACKING;
+
+    fn map_mut(&self) -> &mut Self::BACKING;
+
+    ///Returns true if the referenced value is in the set, false otherwise.
+    fn contains(&self, value: &T) -> bool {
+        self.map().contains_key(value)
+    }
+
+    ///Returns a vector with all the elements in the set.
+    fn into_vec(self) -> Vec<T> {
+        //TODO:...since () is a ZST can I just transmute? This is silly.
+        self.map()
+            .into_inner()
+            .into_iter()
+            .map(|(t, _)| t)
+            .collect()
+    }
+}

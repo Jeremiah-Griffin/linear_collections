@@ -1,6 +1,49 @@
 #[cfg(test)]
 pub mod test;
 use std::{array, intrinsics::transmute_unchecked, mem::MaybeUninit};
+pub mod map {
+    use crate::{AsMutSlice, LinearMap};
+
+    use super::FatVec;
+
+    #[derive(Debug, PartialEq, Eq)]
+    ///A map type backed by an FatVec, a vector with stack space to hold up to
+    ///`STACK_CAPACITY` items on the stack. The remaining overflow onto the heap.
+    pub struct FatVecMap<K, V, const STACK_CAPACITY: usize> {
+        fat_vec: FatVec<(K, V), STACK_CAPACITY>,
+    }
+
+    impl<K: Eq, V: Sized + PartialEq, const STACK_CAPACITY: usize> LinearMap<K, V>
+        for FatVecMap<K, V, STACK_CAPACITY>
+    {
+        type Backing = FatVec<(K, V), STACK_CAPACITY>;
+        fn as_slice(&self) -> &[(K, V)] {
+            &self.fat_vec.as_slice()
+        }
+
+        fn into_inner(self) -> Self::Backing {
+            self.fat_vec
+        }
+    }
+
+    impl<K: Eq, V: Sized + PartialEq, const STACK_CAPACITY: usize> AsMutSlice<K, V>
+        for FatVecMap<K, V, STACK_CAPACITY>
+    {
+        fn as_mut_slice(&mut self) -> &mut [(K, V)] {
+            &mut self.fat_vec
+        }
+    }
+}
+pub mod set {
+    use super::map::FatVecMap;
+
+    #[derive(Debug, PartialEq, Eq)]
+    ///A set type backed by an FatVec, a vector with stack space to hold up to
+    ///`STACK_CAPACITY` items on the stack. The remaining overflow onto the heap.
+    pub struct FatVecSet<K, const STACK_CAPACITY: usize> {
+        fat_vec: FatVecMap<K, (), STACK_CAPACITY>,
+    }
+}
 
 use super::error::AllocationError;
 
@@ -8,8 +51,8 @@ use super::error::AllocationError;
 ///A vector which allocates at least `STACK_CAPACITY` elements onto the stack.
 pub struct FatVec<T, const STACK_CAPACITY: usize> {
     array: [MaybeUninit<T>; STACK_CAPACITY],
-    ///TODO: should replace this vec with an other implementation.
-    ///TODO: fallibele collections: replace this with a custom fallible vec implementation.
+    //TODO: should replace this vec with an other implementation.
+    //TODO: fallibele collections: replace this with a custom fallible vec implementation.
     ///For now, with panicking operations we call some method that ensures the next call will not panic. This is a bit flimsy.
     ///Vec includes its own `len`, which isn't necessary for us to track two.
     ///RawVec seems to basically work for this
@@ -166,7 +209,7 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
         }
         match STACK_CAPACITY > idx {
             //SAFETY:
-            //Because we maintain length seperately of the vec and array, we can rely on IDX not to be out of bounds for
+            //Because we maintain length seperately from the vec and array, we can rely on IDX not to be out of bounds for
             //either these accesses.
             true => unsafe { Some(self.array[idx].assume_init_mut()) },
             //subtract as the first element of vec is 0, but in the whole `FatVec`, it's
@@ -208,8 +251,12 @@ impl<'a, const STACK_CAPACITY: usize, T> Iterator for Iter<'a, STACK_CAPACITY, T
 
 impl<const STACK_CAPACITY: usize, T: PartialEq> PartialEq for FatVec<T, STACK_CAPACITY> {
     fn eq(&self, other: &Self) -> bool {
-        self.iter()
-            .enumerate()
-            .all(|(i, this)| other.get(i).is_some_and(|o| *o == *this))
+        self.len() == other.len()
+            && self
+                .iter()
+                .enumerate()
+                .all(|(i, this)| other.get(i).is_some_and(|o| *o == *this))
     }
 }
+
+impl<const STACK_CAPACITY: usize, T: Eq> Eq for FatVec<T, STACK_CAPACITY> {}
