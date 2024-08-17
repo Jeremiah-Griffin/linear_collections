@@ -22,10 +22,13 @@ linear_collections_macros = {path = "macros", version = "0.1.0", optional = true
 trybuild = {version = "1.0.96"}
 
 [features]
+#panicking and nightly_fallible are seperate in case a create wants 
+#only fallible collections. Choosing no default features and nightly_fallible will achieve this.
+
 #Types which handle allocation failure by panicking.
 panicking = []
 #Types which handle allocation failure by returning an error. 
-fallible = []
+nightly_fallible = []
 default = ["panicking"]
 #Adds support for ser/deserialization of *non-array types* with serde.
 #To serialize array backed types, enable the "serde-big-array" feature as well.

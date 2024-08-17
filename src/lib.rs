@@ -1,22 +1,34 @@
-/*
-#![cfg_attr(feature = "nightly_vecdeque", feature(slice_concat_trait))]
-#[cfg(feature = "nightly_vecdeque")]
-mod vecdeque;
-#[cfg(feature = "nightly_vecdeque")]
-pub use vecdeque::map::VecDequeMap;
-#[cfg(feature = "nightly_vecdeque")]
-pub use vecdeque::set::VecDequeSet;
-*/
+#![cfg_attr(feature = "nightly_fallible", allow(internal_features))]
+#![cfg_attr(feature = "nightly_fallible", feature(core_intrinsics))]
+#![cfg_attr(feature = "nightly_fallible", feature(try_reserve_kind))]
+#![cfg_attr(feature = "nightly_fallible", feature(try_with_capacity))]
+#![cfg_attr(feature = "nightly_fallible", feature(slice_concat_ext))]
+#![cfg_attr(feature = "nightly_fallible", feature(slice_concat_trait))]
+
 mod array;
-mod vec;
 pub use array::map::ArrayMap;
 #[cfg(feature = "macros")]
 pub use linear_collections_macros::{array_map, vec_map, vec_set};
-pub use vec::map::VecMap;
-pub use vec::set::VecSet;
+
+#[cfg(feature = "panicking")]
+mod panicking;
+#[cfg(feature = "panicking")]
+pub use panicking::{
+    vec::{map::VecMap, set::VecSet},
+    //vecdeque::map::VecDequeMap,
+};
+
+#[cfg(feature = "nightly_fallible")]
+//added but not exposed pending miri testing
+//We always compile fallible as the infallible versions are just fallible with panic called on the additional methods.
+mod fallible;
+
 #[cfg(feature = "serde")]
 mod serde;
+#[cfg(test)]
 mod test;
+
+///Added
 
 ///visible only within crate as callers could use this to violate internal
 ///invariants of implementors

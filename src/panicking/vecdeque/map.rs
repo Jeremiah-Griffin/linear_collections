@@ -71,7 +71,7 @@ impl<K: Eq, V: Sized + PartialEq> VecDequeMap<K, V> {
 impl<K: Eq, V: Sized + PartialEq> LinearMap<K, V> for VecDequeMap<K, V> {
     type Backing = VecDeque<(K, V)>;
     fn as_slice(&self) -> &[(K, V)] {
-        [self.vecdeque.as_slices()].concat()
+        self.vecdeque.as_slices().concat()
     }
 
     fn into_inner(self) -> Self::Backing {
@@ -81,6 +81,6 @@ impl<K: Eq, V: Sized + PartialEq> LinearMap<K, V> for VecDequeMap<K, V> {
 
 impl<K: Eq, V: Sized + PartialEq> AsMutSlice<K, V> for VecDequeMap<K, V> {
     fn as_mut_slice(&mut self) -> &mut [(K, V)] {
-        [self.vecdeque.as_mut_slices()].concat()
+        self.vecdeque.as_mut_slices().concat()
     }
 }
