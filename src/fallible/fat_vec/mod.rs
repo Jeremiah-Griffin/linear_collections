@@ -18,7 +18,11 @@ pub mod map {
     {
         type Backing = FatVec<(K, V), STACK_CAPACITY>;
         fn as_slice(&self) -> &[(K, V)] {
+            /*
             &self.fat_vec.as_slice()
+            */
+
+            unimplemented!()
         }
 
         fn into_inner(self) -> Self::Backing {
@@ -30,7 +34,8 @@ pub mod map {
         for FatVecMap<K, V, STACK_CAPACITY>
     {
         fn as_mut_slice(&mut self) -> &mut [(K, V)] {
-            &mut self.fat_vec
+            unimplemented!()
+            //&mut self.fat_vec
         }
     }
 }
@@ -176,7 +181,9 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
     pub fn pop(&mut self) -> Option<T> {
         let r = match self.len() {
             0 => None,
-            l if l <= STACK_CAPACITY => unsafe { Some(self.array[l].assume_init_read()) },
+            l if l <= STACK_CAPACITY => unsafe {
+                Some(self.array.get_unchecked(l).assume_init_read())
+            },
             _ => self.vec.pop(),
         };
 
@@ -195,7 +202,7 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
             //SAFETY:
             //Because we maintain length seperately of the vec and array, we can rely on IDX not to be out of bounds for
             //either these accesses.
-            true => unsafe { Some(self.array[idx].assume_init_ref()) },
+            true => unsafe { Some(self.array.get_unchecked(idx).assume_init_ref()) },
             //subtract as the first element of vec is 0, but in the whole `FatVec`, it's
             //always STACK_CAPACITY + idx. The subtraction accounts for this for this.
             false => self.vec.get(idx - STACK_CAPACITY),
@@ -211,7 +218,7 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
             //SAFETY:
             //Because we maintain length seperately from the vec and array, we can rely on IDX not to be out of bounds for
             //either these accesses.
-            true => unsafe { Some(self.array[idx].assume_init_mut()) },
+            true => unsafe { Some(self.array.get_unchecked_mut(idx).assume_init_mut()) },
             //subtract as the first element of vec is 0, but in the whole `FatVec`, it's
             //always STACK_CAPACITY + idx. The subtraction accounts for this for this.
             false => self.vec.get_mut(idx - STACK_CAPACITY),

@@ -4,9 +4,14 @@
 #![cfg_attr(feature = "nightly_fallible", feature(try_with_capacity))]
 #![cfg_attr(feature = "nightly_fallible", feature(slice_concat_ext))]
 #![cfg_attr(feature = "nightly_fallible", feature(slice_concat_trait))]
+#[cfg(feature = "nightly_fallible")]
+//added but not exposed pending miri testing
+//We always compile fallible as the infallible versions are just fallible with panic called on the additional methods.
+mod fallible;
 
 mod array;
 pub use array::map::ArrayMap;
+
 #[cfg(feature = "macros")]
 pub use linear_collections_macros::{array_map, vec_map, vec_set};
 
@@ -17,11 +22,6 @@ pub use panicking::{
     vec::{map::VecMap, set::VecSet},
     //vecdeque::map::VecDequeMap,
 };
-
-#[cfg(feature = "nightly_fallible")]
-//added but not exposed pending miri testing
-//We always compile fallible as the infallible versions are just fallible with panic called on the additional methods.
-mod fallible;
 
 #[cfg(feature = "serde")]
 mod serde;
@@ -167,11 +167,14 @@ pub trait LinearSet<T: Eq>: Sized {
 
     ///Returns a vector with all the elements in the set.
     fn into_vec(self) -> Vec<T> {
+        /*
         //TODO:...since () is a ZST can I just transmute? This is silly.
         self.map()
             .into_inner()
             .into_iter()
             .map(|(t, _)| t)
-            .collect()
+            .collect()*/
+
+        unimplemented!()
     }
 }

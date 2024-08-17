@@ -252,7 +252,7 @@ pub fn push_exact_stack_capacity_correct_invariants() {
     svec.push("ten").unwrap();
 
     let array = unsafe {
-        svec.array[0..]
+        svec.array
             .into_iter()
             .map(|t| t.clone().assume_init_read())
             .collect::<Vec<&str>>()
@@ -283,7 +283,7 @@ pub fn push_beyond_stack_capacity_correct_invariants() {
     svec.push("ten").unwrap();
 
     let array = unsafe {
-        svec.array[0..]
+        svec.array
             .into_iter()
             .map(|t| t.clone().assume_init_read())
             .collect::<Vec<&str>>()
