@@ -1,3 +1,5 @@
+use std::alloc::AllocError;
+
 use crate::{AsMutSlice, LinearMap};
 
 ///A map type backed by a Vector. Useful for small collections whose size can change.
@@ -63,6 +65,18 @@ impl<K: Eq, V: Sized + PartialEq> VecMap<K, V> {
     pub fn insert(&mut self, key: K, value: V) -> Option<V> {
         match self.vector.iter_mut().find(|(k, _)| *k == key) {
             Some((_, v)) => Some(std::mem::replace(v, value)),
+            None => {
+                self.vector.push((key, value));
+                None
+            }
+        }
+    }
+
+    ///Inserts the provided value into the VecMap. If the provided key is
+    ///found it will update the value. and return the old value. If not, this will allocate for a new key value pair.    
+    pub fn try_insert(&mut self, key: K, value: V) -> Result<Option<V>, AllocError> {
+        match self.vector.iter_mut().find(|(k, _)| *k == key) {
+            Some((_, v)) => Ok(Some(std::mem::replace(v, value))),
             None => {
                 self.vector.push((key, value));
                 None
