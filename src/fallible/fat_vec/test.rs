@@ -162,7 +162,7 @@ pub fn get_last_heap_resident() {
 }
 
 #[test]
-///Vec's iter is known good. There shouldn't be any difference between these two.
+///Vec's iter is known good. There shouldn't be any difference between these two
 ///under any circumstances.
 pub fn iter_is_same_as_vec() {
     let array = ["one", "two", "three", "four", "five"];

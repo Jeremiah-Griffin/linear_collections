@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 #![cfg_attr(feature = "nightly_fallible", allow(internal_features))]
 #![cfg_attr(feature = "nightly_fallible", feature(core_intrinsics))]
 #![cfg_attr(feature = "nightly_fallible", feature(try_reserve_kind))]
@@ -45,11 +46,12 @@ pub(crate) trait AsMutSlice<K: Eq, V: Sized + PartialEq> {
 ///this is to permit the implementation of fixed sized types backed by arrays.
 pub trait LinearMap<K: Eq, V: Sized + PartialEq>: AsMutSlice<K, V> {
     type Backing;
-    ///The keys and values of the map.
-    fn as_slice(&self) -> &[(K, V)];
-
     ///Consumes self, returning the underlying store.
     fn into_inner(self) -> Self::Backing;
+
+    fn iter(&self) -> impl Iterator<Item = &T>;
+
+    fn iter_mut(&mut self) -> impl Iterator<Item = &mut T>;
 
     //notice to implementors: if calling as_slice is not zero cost, override
     //this default implementation with one that is.
