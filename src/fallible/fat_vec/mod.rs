@@ -155,6 +155,7 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
         r
     }
     /// Removes the element from a `FatVec` and returns it, or [`None`] if the `FatVec` is empty.
+    ///TODO: miri testing stuff.
     pub fn remove(&mut self, index: usize) -> Option<T> {
         match self.len() {
             //SAFETY:
@@ -190,12 +191,16 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
                     loop_idx += 1;
                 }
 
+                self.len -= 1;
+
                 //we can leave the remaining elements as they are and just bump the idx.
                 Some(r)
             }
             //value is resident on heap
             _ => {
                 let vec_idx = index - STACK_CAPACITY;
+
+                self.len -= 1;
 
                 match vec_idx > self.vec.len() {
                     true => None,

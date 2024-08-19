@@ -1,4 +1,6 @@
-use crate::panicking::InfallibleLinearSet;
+use std::collections::TryReserveError;
+
+use crate::fallible::{FallibleLinearMap, FallibleLinearSet};
 
 use super::map::FatMap;
 
@@ -8,8 +10,8 @@ use super::map::FatMap;
 pub struct FatSet<T: Eq, const STACK_CAPACITY: usize> {
     map: FatMap<T, (), STACK_CAPACITY>,
 }
-/*
-impl<T: Eq, const STACK_CAPACITY: usize> LinearSet<T> for FatSet<T, STACK_CAPACITY> {
+
+impl<T: Eq, const STACK_CAPACITY: usize> FallibleLinearSet<T> for FatSet<T, STACK_CAPACITY> {
     type BACKING = FatMap<T, (), STACK_CAPACITY>;
 
     fn map(&self) -> &Self::BACKING {
@@ -20,11 +22,11 @@ impl<T: Eq, const STACK_CAPACITY: usize> LinearSet<T> for FatSet<T, STACK_CAPACI
         &mut self.map
     }
 
-    fn insert(&mut self, value: T) -> bool {
-        self.map.insert(T, ()).is_none()
+    fn insert(&mut self, value: T) -> Result<bool, TryReserveError> {
+        self.map.insert(value, ()).map(|v| v.is_none())
     }
 
     fn remove(&mut self, value: &T) -> Option<T> {
-        todo!()
+        self.map.remove_entry(value).map(|(v, _)| v)
     }
-}*/
+}

@@ -1,4 +1,4 @@
-use crate::panicking::InfallibleLinearMap;
+use crate::fallible::FallibleLinearMap;
 use std::collections::TryReserveError;
 
 use super::FatVec;
@@ -10,10 +10,7 @@ pub struct FatMap<K, V, const STACK_CAPACITY: usize> {
     fatvec: FatVec<(K, V), STACK_CAPACITY>,
 }
 
-impl<K: Eq, V: Sized + PartialEq, const STACK_CAPACITY: usize> FatMap<K, V, STACK_CAPACITY> {}
-
-/*
-impl<K: Eq, V: Sized + PartialEq, const STACK_CAPACITY: usize> InfallibleLinearMap<K, V>
+impl<K: Eq, V: Sized + PartialEq, const STACK_CAPACITY: usize> FallibleLinearMap<K, V>
     for FatMap<K, V, STACK_CAPACITY>
 {
     type Backing = FatVec<(K, V), STACK_CAPACITY>;
@@ -58,6 +55,6 @@ impl<K: Eq, V: Sized + PartialEq, const STACK_CAPACITY: usize> InfallibleLinearM
             .find(|(_, (k, _))| k == key)
             .map(|(i, _)| i)?;
 
-        Some(self.fatvec.remove(idx))
+        self.fatvec.remove(idx)
     }
-}*/
+}

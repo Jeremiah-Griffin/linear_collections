@@ -346,7 +346,7 @@ pub fn remove_shifts_at_end() {
 
     //if remove did not shift left we would expect uninitialized memory at `index` and the incorrect number of items.
     assert_eq!(
-        v.iter().map(|t| t.clone()).collect::<Vec<&str>>(),
+        v.iter().map(|t| *t).collect::<Vec<&str>>(),
         vec!["one", "two", "three", "four"]
     )
 }
@@ -361,7 +361,7 @@ pub fn remove_shifts_at_middle() {
 
     //if remove did not shift left we would expect uninitialized memory at `index` and the incorrect number of items.
     assert_eq!(
-        v.iter().map(|t| t.clone()).collect::<Vec<&str>>(),
+        v.iter().map(|t| *t).collect::<Vec<&str>>(),
         vec!["one", "three", "four", "five"]
     )
 }
@@ -375,7 +375,7 @@ pub fn remove_shifts_at_start() {
 
     //if remove did not shift left we would expect uninitialized memory at `index` and the incorrect number of items.
     assert_eq!(
-        v.iter().map(|t| t.clone()).collect::<Vec<&str>>(),
+        v.iter().map(|t| *t).collect::<Vec<&str>>(),
         vec!["two", "three", "four", "five"]
     )
 }

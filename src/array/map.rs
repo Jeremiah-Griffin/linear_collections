@@ -29,9 +29,16 @@ impl<K: Eq, V: Sized + PartialEq, const LENGTH: usize> ArrayMap<K, V, LENGTH> {
         LENGTH == 0
     }
 
-    pub const fn get(&self, index: usize) -> Option<&T> {}
+    pub fn get<'a>(&'a self, key: &K) -> Option<&V> {
+        self.array.iter().find(|(k, _)| k == key).map(|(_, v)| v)
+    }
 
-    pub const fn get_mut(&mut self) -> Option<&mut T> {}
+    pub fn get_mut<'a>(&'a mut self, key: &K) -> Option<&mut V> {
+        self.array
+            .iter_mut()
+            .find(|(k, _)| k == key)
+            .map(|(_, v)| v)
+    }
 
     fn into_inner(self) -> [(K, V); LENGTH] {
         self.array
