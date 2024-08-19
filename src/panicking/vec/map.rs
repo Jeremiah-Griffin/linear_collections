@@ -19,7 +19,7 @@ impl<K: Eq, V: Sized + PartialEq> VecMap<K, V> {
     ///Creates a new VecMap from the supplied vector.
     ///
     ///SAFETY: improper use of this method - initializing with duplicate keys - will NOT create memory unsafety, but will result in every
-    ///identical key beyond the first never getting accessed as LinearMaps short circuit on the first matching key.
+    ///identical key beyond the first never getting accessed as VecMaps short circuit on the first matching key.
     pub const unsafe fn from_vec_unchecked(vector: Vec<(K, V)>) -> VecMap<K, V> {
         VecMap { vector }
     }

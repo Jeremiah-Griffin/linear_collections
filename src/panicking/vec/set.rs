@@ -18,11 +18,11 @@ impl<T: Eq> InfallibleLinearSet<T> for VecSet<T> {
     }
 
     fn insert(&mut self, value: T) -> bool {
-        todo!()
+        self.map.insert(value, ()).is_none()
     }
 
     fn remove(&mut self, value: &T) -> Option<T> {
-        todo!()
+        self.map.remove_entry(value).map(|(v, _)| v)
     }
 }
 
