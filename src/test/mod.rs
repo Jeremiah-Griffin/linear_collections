@@ -183,7 +183,7 @@ fn linear_map_iterate() {
 
     let mut observed: u32 = 0;
 
-    for (k, v) in m.as_slice() {
+    for (k, v) in m.iter() {
         assert_eq!(*v, *k * 2);
         observed |= 1 << *k;
     }
@@ -335,6 +335,7 @@ fn test_eq() {
 
 #[cfg(feature = "macros")]
 pub mod macro_tests {
+    #[allow(unused_imports)]
     #[cfg(test)]
     #[forbid(unsafe_code)]
     //the as binding is to simulate the name of the crate

@@ -28,15 +28,6 @@ pub use panicking::{
 mod serde;
 #[cfg(test)]
 mod test;
-
-///Added
-
-///visible only within crate as callers could use this to violate internal
-///invariants of implementors
-pub(crate) trait AsMutSlice<K: Eq, V: Sized + PartialEq> {
-    fn as_mut_slice(&mut self) -> &mut [(K, V)];
-}
-
 //This is allowed as making AsMutSlice public would permit
 //clients to wantonly break invariants of the collection
 #[allow(private_bounds)]
@@ -44,20 +35,26 @@ pub(crate) trait AsMutSlice<K: Eq, V: Sized + PartialEq> {
 ///Because arrays may implement this type, we cannot assume that implementors will be dynamically sized.
 ///Only methods which do not require manipulating the length or capacity of the store are provided here:
 ///this is to permit the implementation of fixed sized types backed by arrays.
-pub trait LinearMap<K: Eq, V: Sized + PartialEq>: AsMutSlice<K, V> {
+pub trait LinearMap<K: Eq, V: Sized + PartialEq> {
     type Backing;
     ///Consumes self, returning the underlying store.
     fn into_inner(self) -> Self::Backing;
 
-    fn iter(&self) -> impl Iterator<Item = &T>;
+    fn iter<'a>(&'a self) -> impl Iterator<Item = &'a (K, V)>
+    where
+        K: 'a,
+        V: 'a;
 
-    fn iter_mut(&mut self) -> impl Iterator<Item = &mut T>;
+    fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut (K, V)>
+    where
+        K: 'a,
+        V: 'a;
 
     //notice to implementors: if calling as_slice is not zero cost, override
     //this default implementation with one that is.
     ///Returns true if this map contains the given key. False otherwise.
     fn contains_key(&self, key: &K) -> bool {
-        for (k, _) in self.as_slice().iter() {
+        for (k, _) in self.iter() {
             if k == key {
                 return true;
             }
@@ -67,7 +64,7 @@ pub trait LinearMap<K: Eq, V: Sized + PartialEq>: AsMutSlice<K, V> {
 
     ///Returns true if this map contains a given value. False otherwise.
     fn contains_value(&self, value: &V) -> bool {
-        for (_, v) in self.as_slice().iter() {
+        for (_, v) in self.iter() {
             if v == value {
                 return true;
             }
@@ -78,19 +75,13 @@ pub trait LinearMap<K: Eq, V: Sized + PartialEq>: AsMutSlice<K, V> {
     ///Gets a reference with the associated key. Will return None if that i
     ///key is not in the map.
     fn get<'a>(&'a self, key: &'a K) -> Option<&'a V> {
-        self.as_slice()
-            .iter()
-            .find(|(k, _)| k == key)
-            .map(|(_, v)| v)
+        self.iter().find(|(k, _)| k == key).map(|(_, v)| v)
     }
 
     ///Gets a mutable reference with the associated key. Will return None if that
     ///key is not in the map.
     fn get_mut<'a>(&'a mut self, key: &'a K) -> Option<&'a mut V> {
-        self.as_mut_slice()
-            .iter_mut()
-            .find(|(k, _)| k == key)
-            .map(|(_, v)| v)
+        self.iter_mut().find(|(k, _)| k == key).map(|(_, v)| v)
     }
 
     ///Gets a reference to the nth value in the map.
@@ -99,7 +90,7 @@ pub trait LinearMap<K: Eq, V: Sized + PartialEq>: AsMutSlice<K, V> {
     where
         K: 'a,
     {
-        self.as_slice().get(index).map(|(_, v)| v)
+        self.iter().nth(index).map(|(_, v)| v)
     }
 
     ///Gets a reference to the nth value in the map.
@@ -108,7 +99,7 @@ pub trait LinearMap<K: Eq, V: Sized + PartialEq>: AsMutSlice<K, V> {
     where
         K: 'a,
     {
-        self.as_mut_slice().get_mut(index).map(|(_, v)| v)
+        self.iter_mut().nth(index).map(|(_, v)| v)
     }
 
     ///Gets a reference to the nth value in the map.
@@ -117,7 +108,7 @@ pub trait LinearMap<K: Eq, V: Sized + PartialEq>: AsMutSlice<K, V> {
     where
         V: 'a,
     {
-        self.as_slice().get(index).map(|(k, _)| k)
+        self.iter().nth(index).map(|(k, _)| k)
     }
 
     ///Gets a reference to the nth key in the map.
@@ -126,14 +117,13 @@ pub trait LinearMap<K: Eq, V: Sized + PartialEq>: AsMutSlice<K, V> {
     where
         V: 'a,
     {
-        self.as_mut_slice().get_mut(index).map(|(k, _)| k)
+        self.iter_mut().nth(index).map(|(k, _)| k)
     }
 
     ///Searches for a key == key in the map. If it is present
     ///replaces its value with "value". If not, it does nothing.
     fn replace(&mut self, key: &K, value: V) {
-        self.as_mut_slice()
-            .iter_mut()
+        self.iter_mut()
             .find(|(k, _)| k == key)
             .map(|(_, v)| *v = value);
     }
@@ -154,6 +144,7 @@ pub trait LinearMap<K: Eq, V: Sized + PartialEq>: AsMutSlice<K, V> {
     }
 }
 
+///Set types backed by a LinearMap<K, ()>
 pub trait LinearSet<T: Eq>: Sized {
     ///The map type which backs this set.
     type BACKING: LinearMap<T, ()>;
@@ -168,15 +159,5 @@ pub trait LinearSet<T: Eq>: Sized {
     }
 
     ///Returns a vector with all the elements in the set.
-    fn into_vec(self) -> Vec<T> {
-        /*
-        //TODO:...since () is a ZST can I just transmute? This is silly.
-        self.map()
-            .into_inner()
-            .into_iter()
-            .map(|(t, _)| t)
-            .collect()*/
-
-        unimplemented!()
-    }
+    fn to_vec(self) -> Vec<T>;
 }

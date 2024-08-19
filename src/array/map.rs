@@ -1,4 +1,4 @@
-use crate::{AsMutSlice, LinearMap};
+use crate::LinearMap;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 ///A map type backed by an Array, stack allocated and fixed in size.
@@ -31,17 +31,24 @@ impl<K: Eq, V: Sized + PartialEq, const LENGTH: usize> ArrayMap<K, V, LENGTH> {
 
 impl<K: Eq, V: Sized + PartialEq, const LENGTH: usize> LinearMap<K, V> for ArrayMap<K, V, LENGTH> {
     type Backing = [(K, V); LENGTH];
-    fn as_slice(&self) -> &[(K, V)] {
-        &self.array
-    }
 
     fn into_inner(self) -> Self::Backing {
         self.array
     }
-}
 
-impl<K: Eq, V: Sized + PartialEq, const LENGTH: usize> AsMutSlice<K, V> for ArrayMap<K, V, LENGTH> {
-    fn as_mut_slice(&mut self) -> &mut [(K, V)] {
-        &mut self.array
+    fn iter<'a>(&'a self) -> impl Iterator<Item = &(K, V)>
+    where
+        K: 'a,
+        V: 'a,
+    {
+        self.array.iter()
+    }
+
+    fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut (K, V)>
+    where
+        K: 'a,
+        V: 'a,
+    {
+        self.array.iter_mut()
     }
 }

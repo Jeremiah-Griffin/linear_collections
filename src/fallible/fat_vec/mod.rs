@@ -2,71 +2,23 @@
 pub mod test;
 use std::{array, collections::TryReserveError, intrinsics::transmute_unchecked, mem::MaybeUninit};
 
-use types::{Iter, IterMut};
+use types::Iter;
 pub mod map;
 pub mod set;
-pub mod types {
-    use super::FatVec;
-
-    pub struct Iter<'a, const STACK_CAPACITY: usize, T> {
-        idx: usize,
-        svec: &'a FatVec<T, STACK_CAPACITY>,
-    }
-
-    impl<'a, const STACK_CAPACITY: usize, T> Iterator for Iter<'a, STACK_CAPACITY, T> {
-        type Item = &'a T;
-
-        fn next(&mut self) -> Option<Self::Item> {
-            let t = self.svec.get(self.idx);
-            self.idx += 1;
-            t
-        }
-    }
-
-    pub struct IterMut<'a, const STACK_CAPACITY: usize, T> {
-        idx: usize,
-        svec: &'a mut FatVec<T, STACK_CAPACITY>,
-    }
-
-    impl<'a, const STACK_CAPACITY: usize, T> Iterator for IterMut<'a, STACK_CAPACITY, T> {
-        type Item = &'a mut T;
-
-        fn next(&mut self) -> Option<Self::Item> {
-            let t = self.svec.get_mut(self.idx);
-            self.idx += 1;
-            t
-        }
-    }
-    /*
-
-    pub struct IterMut<'a, const STACK_CAPACITY: usize, T> {
-        idx: usize,
-        svec: &'a mut FatVec<T, STACK_CAPACITY>,
-    }
-
-    impl<'a, const STACK_CAPACITY: usize, T> Iterator for IterMut<'a, STACK_CAPACITY, T> {
-        type Item = &'a T;
-
-        fn next(&mut self) -> Option<Self::Item> {
-            let t = self.svec.get(self.idx);
-            self.idx += 1;
-            t
-        }
-    }*/
-}
+pub mod types;
 
 #[derive(Debug)]
 ///A vector which allocates at least `STACK_CAPACITY` elements onto the stack.
 pub struct FatVec<T, const STACK_CAPACITY: usize> {
-    array: [MaybeUninit<T>; STACK_CAPACITY],
+    pub(crate) array: [MaybeUninit<T>; STACK_CAPACITY],
     //TODO: should replace this vec with an other implementation.
     //TODO: fallibele collections: replace this with a custom fallible vec implementation.
     ///For now, with panicking operations we call some method that ensures the next call will not panic. This is a bit flimsy.
     ///Vec includes its own `len`, which isn't necessary for us to track two.
     ///RawVec seems to basically work for this
-    vec: Vec<T>,
+    pub(crate) vec: Vec<T>,
     ///this tracks both the number of elements inside the vec as well as the array.
-    len: usize,
+    pub(crate) len: usize,
 }
 
 impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
@@ -108,11 +60,21 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
     //***methods***
 
     pub fn iter<'a>(&'a self) -> Iter<'a, STACK_CAPACITY, T> {
-        unimplemented!()
+        Iter::new(&self)
     }
 
-    pub fn iter_mut<'a>(&'a self) -> IterMut<'a, STACK_CAPACITY, T> {
-        unimplemented!()
+    pub fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut T> {
+        let len = match STACK_CAPACITY > self.len() {
+            true => self.array.len(),
+            false => self.len(),
+        };
+
+        self.array[0..len]
+            .iter_mut()
+            //SAFETY:
+            //Initializing is tied to the idx. all items <= to idx are guaranteed to be init.
+            .map(|t| unsafe { t.assume_init_mut() })
+            .chain(self.vec.iter_mut())
     }
 
     ///Returns the number of items in this `FatVec`
@@ -131,7 +93,10 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
         //SAFETY:
         //Ensure that all  elements are dropped. Bounded by array len means this cannot find uninitalized
         //memory.
-        unsafe { self.array.iter_mut().for_each(|t| t.assume_init_drop()) }
+        self.array
+            .iter_mut()
+            .for_each(|t| unsafe { t.assume_init_drop() });
+
         self.vec.clear();
         self.len = 0;
     }
@@ -204,7 +169,7 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
     }
 
     ///Gets a unique reference to the item at the requested, returning `None` if idx is outside the range of the `FatVec`.
-    pub fn get_mut(&mut self, idx: usize) -> Option<&mut T> {
+    pub fn get_mut<'a>(&'a mut self, idx: usize) -> Option<&'a mut T> {
         if idx > self.len {
             return None;
         }

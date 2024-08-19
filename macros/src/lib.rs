@@ -3,7 +3,7 @@ use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
 use syn::{parse::Parse, parse_macro_input, punctuated::Punctuated, ExprTuple, Token};
 mod helpers;
-
+#[allow(unused_imports)]
 #[proc_macro]
 ///NOTE: This macro does not currently consider prefixed or suffixed items (r"t" and "t" or 1 and 1usize) to be
 ///distinct. This is highly likely to change in the future and this fix may not be considered a breaking change.

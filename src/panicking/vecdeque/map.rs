@@ -1,11 +1,6 @@
-//TODO: this needs to be behind a nightly flag so we can use the CONCAT trait.
-//how expensive is concat? If we used an iterator that would 1) allocate for both vecmap and arraymap
-//which would be wasteful for vec and array map just to have compatibility with the two-slice api for VecDeque.
-//concat instead allows us to share the same trait while foisting any potential cost to vecdeque alone.
-//should document the concat bound and see what doesnt implement it.
 use std::collections::VecDeque;
 
-use crate::{AsMutSlice, LinearMap};
+use crate::LinearMap;
 ///A map type backed by a VecDeque. Useful for small collections whose size can change.
 pub struct VecDequeMap<K: Eq, V: Sized + PartialEq> {
     vecdeque: VecDeque<(K, V)>,
@@ -76,11 +71,5 @@ impl<K: Eq, V: Sized + PartialEq> LinearMap<K, V> for VecDequeMap<K, V> {
 
     fn into_inner(self) -> Self::Backing {
         self.vecdeque
-    }
-}
-
-impl<K: Eq, V: Sized + PartialEq> AsMutSlice<K, V> for VecDequeMap<K, V> {
-    fn as_mut_slice(&mut self) -> &mut [(K, V)] {
-        self.vecdeque.as_mut_slices().concat()
     }
 }

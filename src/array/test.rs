@@ -1,5 +1,5 @@
 use crate::{ArrayMap, LinearMap};
-
+#[allow(unused_imports)]
 #[cfg(test)]
 #[test]
 ///Since I keep forgetting this, if len is moved into the trait

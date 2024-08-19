@@ -1,4 +1,4 @@
-use crate::{AsMutSlice, LinearMap};
+use crate::LinearMap;
 
 use super::FatVec;
 
@@ -13,22 +13,24 @@ impl<K: Eq, V: Sized + PartialEq, const STACK_CAPACITY: usize> LinearMap<K, V>
     for FatMap<K, V, STACK_CAPACITY>
 {
     type Backing = FatVec<(K, V), STACK_CAPACITY>;
-    fn as_slice(&self) -> &[(K, V)] {
-        &self.fat_vec.as_slice()
-
-        unimplemented!()
-    }
 
     fn into_inner(self) -> Self::Backing {
         self.fat_vec
     }
-}
 
-impl<K: Eq, V: Sized + PartialEq, const STACK_CAPACITY: usize> AsMutSlice<K, V>
-    for FatMap<K, V, STACK_CAPACITY>
-{
-    fn as_mut_slice(&mut self) -> &mut [(K, V)] {
-        unimplemented!()
-        //&mut self.fat_vec
+    fn iter<'a>(&'a self) -> impl Iterator<Item = &'a (K, V)>
+    where
+        K: 'a,
+        V: 'a,
+    {
+        self.fat_vec.iter()
+    }
+
+    fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut (K, V)>
+    where
+        K: 'a,
+        V: 'a,
+    {
+        self.fat_vec.iter_mut()
     }
 }

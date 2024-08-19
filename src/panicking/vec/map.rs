@@ -1,4 +1,4 @@
-use crate::{AsMutSlice, LinearMap};
+use crate::LinearMap;
 
 ///A map type backed by a Vector. Useful for small collections whose size can change.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
@@ -73,17 +73,24 @@ impl<K: Eq, V: Sized + PartialEq> VecMap<K, V> {
 
 impl<K: Eq, V: Sized + PartialEq> LinearMap<K, V> for VecMap<K, V> {
     type Backing = Vec<(K, V)>;
-    fn as_slice(&self) -> &[(K, V)] {
-        self.vector.as_slice()
-    }
 
     fn into_inner(self) -> Self::Backing {
         self.vector
     }
-}
 
-impl<K: Eq, V: Sized + PartialEq> AsMutSlice<K, V> for VecMap<K, V> {
-    fn as_mut_slice(&mut self) -> &mut [(K, V)] {
-        self.vector.as_mut_slice()
+    fn iter<'a>(&'a self) -> impl Iterator<Item = &'a (K, V)>
+    where
+        K: 'a,
+        V: 'a,
+    {
+        self.vector.iter()
+    }
+
+    fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut (K, V)>
+    where
+        K: 'a,
+        V: 'a,
+    {
+        self.vector.iter_mut()
     }
 }
