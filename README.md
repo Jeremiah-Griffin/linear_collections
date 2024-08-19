@@ -16,20 +16,14 @@ however, it only supports collection backed by a vector: I personally needed Arr
 - "macros": compile type checking of type literals.
 - "serde": ser/deserialization with serde.
 
-# Changes for version 0.3.0
-- fixed merge_from_iter
-- added macros
-- added many trait derives
-- added serde support for VecSet
-- ArrayMap::new_unchecked renamed to ArrayMap::from_array_unchecked
-- added VecSet::from_map_unchecked 
+# Changes for version 0.4.0
+- Added iterator support
+- Added FatVec/Map/Set, a vector type which can store a limited number of elements on the stack.
+- Added Fallible collection types which can gracefully return an error on a memory allocation failure.
 
 # TODO:
-- Fallible allocating apis 
 - VecDeque backed types (nice if you need a vecdeque to be returned from into_inner())
 - Serde support for Array types via serde-big-array
-- Iterator Support
-- More tests
 
 
 # Stability Policy (pre - 1.0) 

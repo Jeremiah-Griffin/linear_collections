@@ -18,10 +18,7 @@ pub use linear_collections_macros::{array_map, vec_map, vec_set};
 #[cfg(feature = "panicking")]
 mod panicking;
 #[cfg(feature = "panicking")]
-pub use panicking::{
-    vec::{map::VecMap, set::VecSet},
-    //vecdeque::map::VecDequeMap,
-};
+pub use panicking::vec::{map::VecMap, set::VecSet};
 
 #[cfg(feature = "serde")]
 mod serde;
