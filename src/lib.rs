@@ -16,6 +16,7 @@ pub use vec::map::VecMap;
 pub use vec::set::VecSet;
 #[cfg(feature = "serde")]
 mod serde;
+#[cfg(test)]
 mod test;
 
 ///visible only within crate as callers could use this to violate internal

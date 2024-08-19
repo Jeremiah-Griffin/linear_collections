@@ -1,6 +1,5 @@
 use crate::{ArrayMap, LinearMap};
 
-#[cfg(test)]
 #[test]
 ///Since I keep forgetting this, if len is moved into the trait
 ///and thus made non-const this test will fail to compile.
