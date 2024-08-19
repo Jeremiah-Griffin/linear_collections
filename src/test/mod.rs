@@ -1,4 +1,4 @@
-use crate::LinearMap;
+use crate::panicking::InfallibleLinearMap;
 use crate::VecMap;
 #[cfg(test)]
 #[test]
@@ -341,7 +341,10 @@ pub mod macro_tests {
     //the as binding is to simulate the name of the crate
     //be called in a consuming crate. linear_collections otherwise will not resolve
     use crate as linear_collections;
-    use crate::{array::map::ArrayMap, LinearMap};
+    use crate::{
+        array::map::ArrayMap,
+        panicking::{InfallibleLinearMap, InfallibleLinearSet},
+    };
     use linear_collections_macros::{array_map, vec_map, vec_set};
 
     #[test]

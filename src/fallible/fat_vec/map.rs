@@ -1,4 +1,5 @@
-use crate::LinearMap;
+use crate::panicking::InfallibleLinearMap;
+use std::collections::TryReserveError;
 
 use super::FatVec;
 
@@ -6,16 +7,31 @@ use super::FatVec;
 ///A map type backed by an FatVec, a vector with stack space to hold up to
 ///`STACK_CAPACITY` items on the stack. The remaining overflow onto the heap.
 pub struct FatMap<K, V, const STACK_CAPACITY: usize> {
-    fat_vec: FatVec<(K, V), STACK_CAPACITY>,
+    fatvec: FatVec<(K, V), STACK_CAPACITY>,
 }
 
-impl<K: Eq, V: Sized + PartialEq, const STACK_CAPACITY: usize> LinearMap<K, V>
+impl<K: Eq, V: Sized + PartialEq, const STACK_CAPACITY: usize> FatMap<K, V, STACK_CAPACITY> {
+    pub fn insert(&mut self, key: K, value: V) -> Result<Option<V>, TryReserveError> {
+        let mut iter = self.fatvec.iter_mut();
+        match iter.find(|(k, _)| *k == key) {
+            Some((_, v)) => Ok(Some(std::mem::replace(v, value))),
+            None => {
+                //need to manually drop because the Result gets created as a temporary (?)
+                drop(iter);
+                self.fatvec.push((key, value))?;
+                Ok(None)
+            }
+        }
+    }
+}
+
+impl<K: Eq, V: Sized + PartialEq, const STACK_CAPACITY: usize> InfallibleLinearMap<K, V>
     for FatMap<K, V, STACK_CAPACITY>
 {
     type Backing = FatVec<(K, V), STACK_CAPACITY>;
 
     fn into_inner(self) -> Self::Backing {
-        self.fat_vec
+        self.fatvec
     }
 
     fn iter<'a>(&'a self) -> impl Iterator<Item = &'a (K, V)>
@@ -23,7 +39,7 @@ impl<K: Eq, V: Sized + PartialEq, const STACK_CAPACITY: usize> LinearMap<K, V>
         K: 'a,
         V: 'a,
     {
-        self.fat_vec.iter()
+        self.fatvec.iter()
     }
 
     fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut (K, V)>
@@ -31,6 +47,6 @@ impl<K: Eq, V: Sized + PartialEq, const STACK_CAPACITY: usize> LinearMap<K, V>
         K: 'a,
         V: 'a,
     {
-        self.fat_vec.iter_mut()
+        self.fatvec.iter_mut()
     }
 }

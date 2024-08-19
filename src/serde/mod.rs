@@ -1,8 +1,10 @@
-use crate::LinearMap;
+use crate::panicking::InfallibleLinearMap;
+use crate::panicking::InfallibleLinearSet;
 use crate::VecMap;
 use crate::VecSet;
 use serde::{de::Visitor, ser::SerializeMap, ser::SerializeSeq, Deserialize, Serialize};
 use std::marker::PhantomData;
+#[cfg(test)]
 mod test;
 //custom implementation to ensure this gets (de)serialized as a map instead of a list of tuples
 impl<K: Eq + Serialize, V: Sized + PartialEq + Serialize> Serialize for VecMap<K, V> {
@@ -72,7 +74,7 @@ impl<T: Eq + Serialize> Serialize for VecSet<T> {
         let mut list = serializer.serialize_seq(Some(self.len()))?;
 
         //TODO: Iterators
-        for (t, _) in self.map.iter() {
+        for (t, _) in self.map().iter() {
             list.serialize_element(t)?;
         }
 

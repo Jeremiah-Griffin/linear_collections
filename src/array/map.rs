@@ -1,4 +1,4 @@
-use crate::LinearMap;
+use crate::panicking::InfallibleLinearMap;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 ///A map type backed by an Array, stack allocated and fixed in size.
@@ -29,7 +29,9 @@ impl<K: Eq, V: Sized + PartialEq, const LENGTH: usize> ArrayMap<K, V, LENGTH> {
     }
 }
 
-impl<K: Eq, V: Sized + PartialEq, const LENGTH: usize> LinearMap<K, V> for ArrayMap<K, V, LENGTH> {
+impl<K: Eq, V: Sized + PartialEq, const LENGTH: usize> InfallibleLinearMap<K, V>
+    for ArrayMap<K, V, LENGTH>
+{
     type Backing = [(K, V); LENGTH];
 
     fn into_inner(self) -> Self::Backing {

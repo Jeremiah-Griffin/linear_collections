@@ -1,4 +1,4 @@
-#[cfg(test)]
+use crate::panicking::{InfallibleLinearMap, InfallibleLinearSet};
 use crate::{VecMap, VecSet};
 use serde_test::assert_tokens;
 use serde_test::Token;

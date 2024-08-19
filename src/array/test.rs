@@ -1,6 +1,5 @@
-use crate::{ArrayMap, LinearMap};
 #[allow(unused_imports)]
-#[cfg(test)]
+use crate::{panicking::InfallibleLinearMap, ArrayMap};
 #[test]
 ///Since I keep forgetting this, if len is moved into the trait
 ///and thus made non-const this test will fail to compile.

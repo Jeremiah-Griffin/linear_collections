@@ -10,15 +10,15 @@ pub mod types;
 #[derive(Debug)]
 ///A vector which allocates at least `STACK_CAPACITY` elements onto the stack.
 pub struct FatVec<T, const STACK_CAPACITY: usize> {
-    pub(crate) array: [MaybeUninit<T>; STACK_CAPACITY],
+    array: [MaybeUninit<T>; STACK_CAPACITY],
     //TODO: should replace this vec with an other implementation.
     //TODO: fallibele collections: replace this with a custom fallible vec implementation.
     ///For now, with panicking operations we call some method that ensures the next call will not panic. This is a bit flimsy.
     ///Vec includes its own `len`, which isn't necessary for us to track two.
     ///RawVec seems to basically work for this
-    pub(crate) vec: Vec<T>,
+    vec: Vec<T>,
     ///this tracks both the number of elements inside the vec as well as the array.
-    pub(crate) len: usize,
+    len: usize,
 }
 
 impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
