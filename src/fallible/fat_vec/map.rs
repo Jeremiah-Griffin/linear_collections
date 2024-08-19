@@ -10,8 +10,15 @@ pub struct FatMap<K, V, const STACK_CAPACITY: usize> {
     fatvec: FatVec<(K, V), STACK_CAPACITY>,
 }
 
-impl<K: Eq, V: Sized + PartialEq, const STACK_CAPACITY: usize> FatMap<K, V, STACK_CAPACITY> {
-    pub fn insert(&mut self, key: K, value: V) -> Result<Option<V>, TryReserveError> {
+impl<K: Eq, V: Sized + PartialEq, const STACK_CAPACITY: usize> FatMap<K, V, STACK_CAPACITY> {}
+
+/*
+impl<K: Eq, V: Sized + PartialEq, const STACK_CAPACITY: usize> InfallibleLinearMap<K, V>
+    for FatMap<K, V, STACK_CAPACITY>
+{
+    type Backing = FatVec<(K, V), STACK_CAPACITY>;
+
+    fn insert(&mut self, key: K, value: V) -> Result<Option<V>, TryReserveError> {
         let mut iter = self.fatvec.iter_mut();
         match iter.find(|(k, _)| *k == key) {
             Some((_, v)) => Ok(Some(std::mem::replace(v, value))),
@@ -23,13 +30,6 @@ impl<K: Eq, V: Sized + PartialEq, const STACK_CAPACITY: usize> FatMap<K, V, STAC
             }
         }
     }
-}
-
-impl<K: Eq, V: Sized + PartialEq, const STACK_CAPACITY: usize> InfallibleLinearMap<K, V>
-    for FatMap<K, V, STACK_CAPACITY>
-{
-    type Backing = FatVec<(K, V), STACK_CAPACITY>;
-
     fn into_inner(self) -> Self::Backing {
         self.fatvec
     }
@@ -49,4 +49,15 @@ impl<K: Eq, V: Sized + PartialEq, const STACK_CAPACITY: usize> InfallibleLinearM
     {
         self.fatvec.iter_mut()
     }
-}
+
+    fn remove_entry(&mut self, key: &K) -> Option<(K, V)> {
+        let idx = self
+            .fatvec
+            .iter()
+            .enumerate()
+            .find(|(_, (k, _))| k == key)
+            .map(|(i, _)| i)?;
+
+        Some(self.fatvec.remove(idx))
+    }
+}*/

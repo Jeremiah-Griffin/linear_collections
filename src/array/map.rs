@@ -1,7 +1,8 @@
-use crate::panicking::InfallibleLinearMap;
-
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 ///A map type backed by an Array, stack allocated and fixed in size.
+///
+///ArrayMap is the only map type in linear_collections which does *not* implement either LinearMap nor InfallibleLinearMap, which relies on
+///dynamic memory allocation to function.
 pub struct ArrayMap<K: Eq, V: Sized + PartialEq, const LENGTH: usize> {
     array: [(K, V); LENGTH],
 }
@@ -25,16 +26,14 @@ impl<K: Eq, V: Sized + PartialEq, const LENGTH: usize> ArrayMap<K, V, LENGTH> {
 
     ///Returns true if the store is empty, false otherwise.
     pub const fn is_empty(&self) -> bool {
-        self.len() == 0
+        LENGTH == 0
     }
-}
 
-impl<K: Eq, V: Sized + PartialEq, const LENGTH: usize> InfallibleLinearMap<K, V>
-    for ArrayMap<K, V, LENGTH>
-{
-    type Backing = [(K, V); LENGTH];
+    pub const fn get(&self, index: usize) -> Option<&T> {}
 
-    fn into_inner(self) -> Self::Backing {
+    pub const fn get_mut(&mut self) -> Option<&mut T> {}
+
+    fn into_inner(self) -> [(K, V); LENGTH] {
         self.array
     }
 

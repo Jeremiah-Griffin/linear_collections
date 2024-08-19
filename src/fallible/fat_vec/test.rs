@@ -312,3 +312,70 @@ pub fn with_array_identical_to_push() {
         FatVec::<&str, 5>::with_array(["one", "two", "three", "four", "five"])
     );
 }
+
+#[test]
+pub fn remove_removes() {
+    let mut v = FatVec::<&str, 5>::with_array(["one", "two", "three", "four", "five"]);
+
+    v.push("six").unwrap();
+    v.push("seven").unwrap();
+    v.push("eight").unwrap();
+    v.push("nine").unwrap();
+    v.push("ten").unwrap();
+
+    assert_eq!(v.remove(4), Some("five"));
+    assert_eq!(v.remove(9), Some("ten"));
+}
+
+#[test]
+///Remove should behave identically regardless of stack capacity.
+pub fn remove_empty() {
+    let mut empty_stack = FatVec::<&str, 0>::new();
+    let mut has_stack = FatVec::<&str, 10>::with_heap_capacity(100).unwrap();
+
+    assert_eq!(empty_stack.remove(0), None);
+    assert_eq!(has_stack.remove(100), None);
+}
+
+#[test]
+///When the requested index is at the end of the *array* there are no elements to shift left.
+pub fn remove_shifts_at_end() {
+    let mut v = FatVec::<&str, 5>::with_array(["one", "two", "three", "four", "five"]);
+
+    let _ = v.remove(4);
+
+    //if remove did not shift left we would expect uninitialized memory at `index` and the incorrect number of items.
+    assert_eq!(
+        v.iter().map(|t| t.clone()).collect::<Vec<&str>>(),
+        vec!["one", "two", "three", "four"]
+    )
+}
+
+#[test]
+///When the requested index is > 0 but < array.len() all successive elements must shift left,
+///but all preceeding elements must remain in place.
+pub fn remove_shifts_at_middle() {
+    let mut v = FatVec::<&str, 5>::with_array(["one", "two", "three", "four", "five"]);
+
+    let _ = v.remove(1);
+
+    //if remove did not shift left we would expect uninitialized memory at `index` and the incorrect number of items.
+    assert_eq!(
+        v.iter().map(|t| t.clone()).collect::<Vec<&str>>(),
+        vec!["one", "three", "four", "five"]
+    )
+}
+
+#[test]
+///When the requested index is 0 of the *array* all elements should get shifted left.
+pub fn remove_shifts_at_start() {
+    let mut v = FatVec::<&str, 5>::with_array(["one", "two", "three", "four", "five"]);
+
+    let _ = v.remove(0);
+
+    //if remove did not shift left we would expect uninitialized memory at `index` and the incorrect number of items.
+    assert_eq!(
+        v.iter().map(|t| t.clone()).collect::<Vec<&str>>(),
+        vec!["two", "three", "four", "five"]
+    )
+}

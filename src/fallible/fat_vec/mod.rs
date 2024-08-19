@@ -135,9 +135,13 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
         Ok(())
     }
 
-    /// Removes the last element from a vector and returns it, or [`None`] if it
-    /// is empty.    
+    /// Removes the last element from a `FatVec` and returns it, or [`None`] if the `FatVec` is empty.
     pub fn pop(&mut self) -> Option<T> {
+        //we keep this seperate from remove(self.len) as in the
+        //stack resident arm we can avoid having to shift the elements on the array to the left
+        //as we can just decrement the "stack pointer" and leave the type as is. Drop handling is done by moving
+        //the T out of pop. Remove can't do this as it needs to be able to pull elements arbitrarily from within the array
+        //meaning it needs to shift left to keep the values contiguous.
         let r = match self.len() {
             0 => None,
             l if l <= STACK_CAPACITY => unsafe {
@@ -149,6 +153,56 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
         self.len = self.len.saturating_sub(1);
 
         r
+    }
+    /// Removes the element from a `FatVec` and returns it, or [`None`] if the `FatVec` is empty.
+    pub fn remove(&mut self, index: usize) -> Option<T> {
+        match self.len() {
+            //SAFETY:
+            //Do not remove this arm without auditing the unsafe blocks below.
+            //guaranteeing that we return on a len of 0 means we can safely and cheaply subtract from the index without underflowing.
+            0 => None,
+            //value is resident on stack
+            _ if index <= STACK_CAPACITY => {
+                //take value
+                let r = unsafe { self.array.get_unchecked(index).assume_init_read() };
+
+                //shift values right of `r` left.
+                //start off by one?
+
+                let mut loop_idx = index + 1;
+                //Using the length of the entire `FatVec` is okay as we've established in the match arm
+                //that all elements are allocated on the array. This saves us the step of reading the next element
+                //to copy for the entire stack *so long as* we ensure all successive elements beyond the array len are MaybeUninit::uninit.
+                while loop_idx < self.len() {
+                    //all elements shifted
+                    unsafe {
+                        //SAFETY: guaranteed safe as loop_idx is guaranteed by the match arm to be <= len.
+                        let next = self.array.get_unchecked_mut(loop_idx) as *mut MaybeUninit<T>;
+                        //SAFETY: guaranteed safe as loop_idx is guaranteed by the match arm to be <= len *AND* we subtracting one from that.
+                        //we ensure that this doesn't underflow above.
+                        //saturating sub just to be doubly sure.
+                        let curr = self.array.get_unchecked_mut(loop_idx.saturating_sub(1))
+                            as *mut MaybeUninit<T>;
+
+                        *curr = next.read();
+                    }
+
+                    loop_idx += 1;
+                }
+
+                //we can leave the remaining elements as they are and just bump the idx.
+                Some(r)
+            }
+            //value is resident on heap
+            _ => {
+                let vec_idx = index - STACK_CAPACITY;
+
+                match vec_idx > self.vec.len() {
+                    true => None,
+                    false => Some(self.vec.remove(vec_idx)),
+                }
+            }
+        }
     }
 
     ///Gets a shared reference to the item at the requested, returning `None` if idx is outside the range of the `FatVec`.

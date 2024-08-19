@@ -41,34 +41,6 @@ impl<K: Eq, V: Sized + PartialEq> VecMap<K, V> {
             vector: Vec::with_capacity(capacity),
         }
     }
-    ///Tries to remove the value associated with the given key, returning None if it is not found.
-    pub fn remove(&mut self, key: &K) -> Option<V> {
-        self.remove_entry(key).map(|(_, v)| v)
-    }
-
-    ///Tries to remove the entry associated with the given key, returning None if it is not found.
-    pub fn remove_entry(&mut self, key: &K) -> Option<(K, V)> {
-        let idx = self
-            .vector
-            .iter()
-            .enumerate()
-            .find(|(_, (k, _))| k == key)
-            .map(|(i, _)| i)?;
-
-        Some(self.vector.remove(idx))
-    }
-
-    ///Inserts the provided value into the VecMap. If the provided key is
-    ///found it will update the value. and return the old value. If not, this will allocate for a new key value pair.    
-    pub fn insert(&mut self, key: K, value: V) -> Option<V> {
-        match self.vector.iter_mut().find(|(k, _)| *k == key) {
-            Some((_, v)) => Some(std::mem::replace(v, value)),
-            None => {
-                self.vector.push((key, value));
-                None
-            }
-        }
-    }
 }
 
 impl<K: Eq, V: Sized + PartialEq> InfallibleLinearMap<K, V> for VecMap<K, V> {
@@ -92,5 +64,28 @@ impl<K: Eq, V: Sized + PartialEq> InfallibleLinearMap<K, V> for VecMap<K, V> {
         V: 'a,
     {
         self.vector.iter_mut()
+    }
+    ///Tries to remove the entry associated with the given key, returning None if it is not found.
+    fn remove_entry(&mut self, key: &K) -> Option<(K, V)> {
+        let idx = self
+            .vector
+            .iter()
+            .enumerate()
+            .find(|(_, (k, _))| k == key)
+            .map(|(i, _)| i)?;
+
+        Some(self.vector.remove(idx))
+    }
+
+    ///Inserts the provided value into the VecMap. If the provided key is
+    ///found it will update the value. and return the old value. If not, this will allocate for a new key value pair.    
+    fn insert(&mut self, key: K, value: V) -> Option<V> {
+        match self.vector.iter_mut().find(|(k, _)| *k == key) {
+            Some((_, v)) => Some(std::mem::replace(v, value)),
+            None => {
+                self.vector.push((key, value));
+                None
+            }
+        }
     }
 }

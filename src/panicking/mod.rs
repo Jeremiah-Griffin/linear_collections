@@ -44,6 +44,8 @@ pub trait InfallibleLinearMap<K: Eq, V: Sized + PartialEq> {
         self.iter_mut().find(|(k, _)| k == key).map(|(_, v)| v)
     }
 
+    fn insert(&mut self, key: K, value: V) -> Option<V>;
+
     ///Consumes self, returning the underlying store.
     fn into_inner(self) -> Self::Backing;
 
@@ -122,6 +124,13 @@ pub trait InfallibleLinearMap<K: Eq, V: Sized + PartialEq> {
     {
         self.iter_mut().nth(index).map(|(k, _)| k)
     }
+
+    ///Tries to remove the value associated with the given key, returning None if it is not found.
+    fn remove(&mut self, key: &K) -> Option<V> {
+        self.remove_entry(key).map(|(_, v)| v)
+    }
+
+    fn remove_entry(&mut self, key: &K) -> Option<(K, V)>;
 
     fn values<'a>(&'a self) -> impl Iterator<Item = &'a V>
     where
