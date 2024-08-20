@@ -1,6 +1,7 @@
 use std::collections::TryReserveError;
 
 pub mod fat_vec;
+pub mod vecdeque;
 
 //This is allowed as making AsMutSlice public would permit
 //clients to wantonly break invariants of the collection
