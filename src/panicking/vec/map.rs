@@ -1,4 +1,4 @@
-use crate::panicking::InfallibleLinearMap;
+use crate::panicking::PanickingLinearMap;
 
 ///A map type backed by a Vector. Useful for small collections whose size can change.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
@@ -43,7 +43,7 @@ impl<K: Eq, V: Sized + PartialEq> VecMap<K, V> {
     }
 }
 
-impl<K: Eq, V: Sized + PartialEq> InfallibleLinearMap<K, V> for VecMap<K, V> {
+impl<K: Eq, V: Sized + PartialEq> PanickingLinearMap<K, V> for VecMap<K, V> {
     type Backing = Vec<(K, V)>;
 
     fn into_inner(self) -> Self::Backing {

@@ -1,6 +1,7 @@
 use std::collections::TryReserveError;
 
 pub mod fat_vec;
+pub mod vec;
 pub mod vecdeque;
 
 //This is allowed as making AsMutSlice public would permit

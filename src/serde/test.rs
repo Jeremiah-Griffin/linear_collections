@@ -1,10 +1,9 @@
+use crate::panicking::{
+    vec::{map::VecMap, set::VecSet},
+    PanickingLinearMap, PanickingLinearSet,
+};
 use serde_test::assert_tokens;
 use serde_test::Token;
-
-use crate::panicking::vec::map::VecMap;
-use crate::panicking::vec::set::VecSet;
-use crate::InfallibleLinearMap;
-use crate::InfallibleLinearSet;
 #[test]
 fn vec_map_many() {
     let mut map: VecMap<char, i32> = VecMap::new();

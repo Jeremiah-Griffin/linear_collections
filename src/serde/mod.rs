@@ -1,9 +1,9 @@
 use serde::{de::Visitor, ser::SerializeMap, ser::SerializeSeq, Deserialize, Serialize};
 use std::marker::PhantomData;
 
-use crate::{
-    panicking::vec::{map::VecMap, set::VecSet},
-    InfallibleLinearMap, InfallibleLinearSet,
+use crate::panicking::{
+    vec::{map::VecMap, set::VecSet},
+    PanickingLinearMap, PanickingLinearSet,
 };
 #[cfg(test)]
 mod test;

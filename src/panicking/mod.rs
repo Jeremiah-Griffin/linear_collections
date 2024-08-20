@@ -1,4 +1,6 @@
+pub mod fat_vec;
 pub mod vec;
+pub mod vecdeque;
 
 //This is allowed as making AsMutSlice public would permit
 //clients to wantonly break invariants of the collection
@@ -7,11 +9,9 @@ pub mod vec;
 ///Because arrays may implement this type, we cannot assume that implementors will be dynamically sized.
 ///Only methods which do not require manipulating the length or capacity of the store are provided here:
 ///this is to permit the implementation of fixed sized types backed by arrays.
-pub trait InfallibleLinearMap<K: Eq, V: Sized + PartialEq> {
+pub trait PanickingLinearMap<K: Eq, V: Sized + PartialEq> {
     type Backing;
 
-    //notice to implementors: if calling as_slice is not zero cost, override
-    //this default implementation with one that is.
     ///Returns true if this map contains the given key. False otherwise.
     fn contains_key(&self, key: &K) -> bool {
         for (k, _) in self.iter() {
@@ -158,9 +158,9 @@ pub trait InfallibleLinearMap<K: Eq, V: Sized + PartialEq> {
 }
 
 ///Set types backed by a LinearMap<K, ()>
-pub trait InfallibleLinearSet<T: Eq>: Sized {
+pub trait PanickingLinearSet<T: Eq>: Sized {
     ///The map type which backs this set.
-    type BACKING: InfallibleLinearMap<T, ()>;
+    type BACKING: PanickingLinearMap<T, ()>;
 
     fn map(&self) -> &Self::BACKING;
 

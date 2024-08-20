@@ -1,5 +1,6 @@
+use crate::panicking::vec::map::VecMap;
+use crate::panicking::PanickingLinearMap;
 use crate::{array_map, vec_map, vec_set};
-use crate::{panicking::vec::map::VecMap, InfallibleLinearMap};
 
 #[test]
 fn linear_map_create_capacity_zero() {
@@ -343,7 +344,7 @@ pub mod macro_tests {
     use crate as linear_collections;
     use crate::{
         array::map::ArrayMap,
-        panicking::{InfallibleLinearMap, InfallibleLinearSet},
+        panicking::{PanickingLinearMap, PanickingLinearSet},
     };
     use linear_collections_macros::{array_map, vec_map, vec_set};
 

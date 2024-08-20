@@ -1,6 +1,5 @@
 use std::collections::VecDeque;
 
-use crate::LinearMap;
 ///A map type backed by a VecDeque. Useful for small collections whose size can change.
 pub struct VecDequeMap<K: Eq, V: Sized + PartialEq> {
     vecdeque: VecDeque<(K, V)>,

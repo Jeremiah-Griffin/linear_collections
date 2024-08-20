@@ -60,12 +60,12 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
     ///Creates a new, empty `FatVec` with space to hold at least `capacity` elements without reallocating.
     ///Upon return, this `FatVec` will be able to hold `STACK_CAPACITY + `capacity` elements without
     ///re-allocating.
-    pub fn with_heap_capacity(capacity: usize) -> Result<Self, TryReserveError> {
-        Ok(Self {
+    pub fn with_heap_capacity(capacity: usize) -> Self {
+        Self {
             array: array::from_fn(|_| MaybeUninit::uninit()),
-            vec: Vec::try_with_capacity(capacity)?,
+            vec: Vec::with_capacity(capacity),
             len: 0,
-        })
+        }
     }
 
     //***methods***
@@ -113,7 +113,7 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
     }
 
     ///Appends the element to this `FatVec`, returning an error on failure.
-    pub fn push(&mut self, value: T) -> Result<(), TryReserveError> {
+    pub fn push(&mut self, value: T) {
         //We don't need to check if we're within the bounds of the collection as reserve will do this
         //for us.
         let new_len = self.len.saturating_add(1);
@@ -123,16 +123,10 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
                 unsafe { self.array.get_unchecked_mut(self.len).write(value) };
             }
             false => {
-                //call reserve on the vec as necessary to ensure pushing to it doesn't panic.
-                if self.vec.capacity() < new_len {
-                    self.reserve(1)?;
-                }
-
                 self.vec.push(value);
             }
         }
         self.len = new_len;
-        Ok(())
     }
 
     /// Removes the last element from a `FatVec` and returns it, or [`None`] if the `FatVec` is empty.
@@ -246,11 +240,11 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
     /// Tries to reserve the minimum capacity for at least `additional`
     /// elements to be inserted in the given `Vec<T>`.
     /// After calling `reserve`, capacity will be
-    /// equal to `self.len() + additional` if it returns `Ok(())`.
+    /// equal to `self.len() + additional`.
     /// Does nothing if the capacity is already sufficient.
-    pub fn reserve(&mut self, additional: usize) -> Result<(), TryReserveError> {
+    pub fn reserve(&mut self, additional: usize) {
         //We use try_reserve_exact to keep memory use as compact as possible at the expense of throughput.
-        self.vec.try_reserve_exact(additional).map_err(|e| e.into())
+        self.vec.reserve_exact(additional)
     }
 
     ///Shrinks the heap storage of this `FatVec` to match capacity.

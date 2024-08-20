@@ -1,5 +1,4 @@
-use crate::fallible::FallibleLinearMap;
-use std::collections::TryReserveError;
+use crate::panicking::PanickingLinearMap;
 
 use super::FatVec;
 
@@ -38,25 +37,25 @@ impl<K: Eq, V: Sized + PartialEq, const STACK_CAPACITY: usize> FatMap<K, V, STAC
     ///re-allocating.
     pub fn with_heap_capacity(capacity: usize) -> Self {
         Self {
-            fatvec: FatVec::with_heap_capacity(capacity).unwrap(),
+            fatvec: FatVec::with_heap_capacity(capacity),
         }
     }
 }
 
-impl<K: Eq, V: Sized + PartialEq, const STACK_CAPACITY: usize> FallibleLinearMap<K, V>
+impl<K: Eq, V: Sized + PartialEq, const STACK_CAPACITY: usize> PanickingLinearMap<K, V>
     for FatMap<K, V, STACK_CAPACITY>
 {
     type Backing = FatVec<(K, V), STACK_CAPACITY>;
 
-    fn insert(&mut self, key: K, value: V) -> Result<Option<V>, TryReserveError> {
+    fn insert(&mut self, key: K, value: V) -> Option<V> {
         let mut iter = self.fatvec.iter_mut();
         match iter.find(|(k, _)| *k == key) {
-            Some((_, v)) => Ok(Some(std::mem::replace(v, value))),
+            Some((_, v)) => Some(std::mem::replace(v, value)),
             None => {
                 //need to manually drop because the Result gets created as a temporary (?)
                 drop(iter);
-                self.fatvec.push((key, value))?;
-                Ok(None)
+                self.fatvec.push((key, value));
+                None
             }
         }
     }

@@ -1,4 +1,4 @@
-use crate::{panicking::InfallibleLinearSet, InfallibleLinearMap};
+use crate::panicking::{PanickingLinearSet, PanickingLinearMap};
 
 use super::map::VecMap;
 
@@ -8,7 +8,7 @@ pub struct VecSet<T: Eq> {
     map: VecMap<T, ()>,
 }
 
-impl<T: Eq> InfallibleLinearSet<T> for VecSet<T> {
+impl<T: Eq> PanickingLinearSet<T> for VecSet<T> {
     type BACKING = VecMap<T, ()>;
 
     fn map(&self) -> &Self::BACKING {
