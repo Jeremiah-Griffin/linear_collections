@@ -1,9 +1,10 @@
-use crate::panicking::InfallibleLinearMap;
-use crate::panicking::InfallibleLinearSet;
-use crate::VecMap;
-use crate::VecSet;
 use serde::{de::Visitor, ser::SerializeMap, ser::SerializeSeq, Deserialize, Serialize};
 use std::marker::PhantomData;
+
+use crate::{
+    panicking::vec::{map::VecMap, set::VecSet},
+    InfallibleLinearMap, InfallibleLinearSet,
+};
 #[cfg(test)]
 mod test;
 //custom implementation to ensure this gets (de)serialized as a map instead of a list of tuples

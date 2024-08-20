@@ -1,4 +1,6 @@
-use crate::{panicking::InfallibleLinearMap, panicking::InfallibleLinearSet, VecMap};
+use crate::{panicking::InfallibleLinearSet, InfallibleLinearMap};
+
+use super::map::VecMap;
 
 ///A set backed by a VecMap where the value for each key is ().
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]

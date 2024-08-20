@@ -3,7 +3,7 @@ use std::collections::TryReserveError;
 
 use super::FatVec;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Eq, PartialEq, Debug)]
 ///A map type backed by an FatVec, a vector with stack space to hold up to
 ///`STACK_CAPACITY` items on the stack. The remaining overflow onto the heap.
 pub struct FatMap<K, V, const STACK_CAPACITY: usize> {

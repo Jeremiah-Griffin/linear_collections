@@ -1,9 +1,9 @@
-use crate::panicking::InfallibleLinearMap;
-use crate::VecMap;
-#[cfg(test)]
+use crate::{array_map, vec_map, vec_set};
+use crate::{panicking::vec::map::VecMap, InfallibleLinearMap};
+
 #[test]
 fn linear_map_create_capacity_zero() {
-    let mut m = crate::VecMap::with_capacity(0);
+    let mut m = VecMap::with_capacity(0);
 
     assert!(m.insert(1, 1).is_none());
 

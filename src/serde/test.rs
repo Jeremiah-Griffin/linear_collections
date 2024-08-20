@@ -1,7 +1,10 @@
-use crate::panicking::{InfallibleLinearMap, InfallibleLinearSet};
-use crate::{VecMap, VecSet};
 use serde_test::assert_tokens;
 use serde_test::Token;
+
+use crate::panicking::vec::map::VecMap;
+use crate::panicking::vec::set::VecSet;
+use crate::InfallibleLinearMap;
+use crate::InfallibleLinearSet;
 #[test]
 fn vec_map_many() {
     let mut map: VecMap<char, i32> = VecMap::new();
@@ -34,6 +37,7 @@ fn vec_map_empty() {
 #[test]
 fn vec_set_many() {
     let mut set: VecSet<char> = VecSet::new();
+
     set.insert('b');
     set.insert('a');
     set.insert('c');
