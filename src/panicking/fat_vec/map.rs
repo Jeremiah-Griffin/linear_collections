@@ -89,4 +89,8 @@ impl<K: Eq, V: Sized + PartialEq, const STACK_CAPACITY: usize> PanickingLinearMa
 
         self.fatvec.remove(idx)
     }
+
+    fn len(&self) -> usize {
+        self.fatvec.len()
+    }
 }

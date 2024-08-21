@@ -1,4 +1,4 @@
-use crate::panicking::{PanickingLinearSet, PanickingLinearMap};
+use crate::panicking::{PanickingLinearMap, PanickingLinearSet};
 
 use super::map::VecMap;
 
@@ -17,14 +17,6 @@ impl<T: Eq> PanickingLinearSet<T> for VecSet<T> {
 
     fn map_mut(&mut self) -> &mut Self::BACKING {
         &mut self.map
-    }
-
-    fn insert(&mut self, value: T) -> bool {
-        self.map.insert(value, ()).is_none()
-    }
-
-    fn remove(&mut self, value: &T) -> Option<T> {
-        self.map.remove_entry(value).map(|(v, _)| v)
     }
 }
 

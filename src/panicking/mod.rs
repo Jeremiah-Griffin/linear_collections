@@ -59,6 +59,8 @@ pub trait PanickingLinearMap<K: Eq, V: Sized + PartialEq> {
         K: 'a,
         V: 'a;
 
+    fn len(&self) -> usize;
+
     fn keys<'a>(&'a self) -> impl Iterator<Item = &'a K>
     where
         K: 'a,
@@ -73,6 +75,10 @@ pub trait PanickingLinearMap<K: Eq, V: Sized + PartialEq> {
         V: 'a,
     {
         self.iter_mut().map(|(k, _)| k)
+    }
+
+    fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 
     ///For every key in iter which matches a key in self, this method replaces
@@ -171,11 +177,20 @@ pub trait PanickingLinearSet<T: Eq>: Sized {
         self.map().contains_key(value)
     }
 
+    fn len(&self) -> usize {
+        self.map().len()
+    }
+
+    fn is_empty(&self) -> bool {
+        self.map().is_empty()
+    }
+
     ///Adds a value to the set.
     ///If the set did not previously contain this value, true is returned.
-    ///If the set already contained this value, false is returned, and the set is not modified: original value is not replaced, and the value passed as argument is dropped.   
-    fn insert(&mut self, value: T) -> bool;
-
+    ///If the set already contained this value, false is returned, and the set is not modified: original value is not replaced, and the value passed as argument is dropped.
+    fn insert(&mut self, value: T) -> bool {
+        self.map_mut().insert(value, ()).is_none()
+    }
     fn values<'a>(&'a self) -> impl Iterator<Item = &'a T>
     where
         T: 'a,
@@ -191,5 +206,7 @@ pub trait PanickingLinearSet<T: Eq>: Sized {
     }
 
     ///Attempts to remove the referenced value from the set, returning None if it is not present.
-    fn remove(&mut self, value: &T) -> Option<T>;
+    fn remove(&mut self, value: &T) -> Option<T> {
+        self.map_mut().remove_entry(value).map(|(k, _)| k)
+    }
 }

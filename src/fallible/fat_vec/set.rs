@@ -21,12 +21,4 @@ impl<T: Eq, const STACK_CAPACITY: usize> FallibleLinearSet<T> for FatSet<T, STAC
     fn map_mut(&mut self) -> &mut Self::BACKING {
         &mut self.map
     }
-
-    fn insert(&mut self, value: T) -> Result<bool, TryReserveError> {
-        self.map.insert(value, ()).map(|v| v.is_none())
-    }
-
-    fn remove(&mut self, value: &T) -> Option<T> {
-        self.map.remove_entry(value).map(|(v, _)| v)
-    }
 }

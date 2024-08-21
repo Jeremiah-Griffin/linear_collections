@@ -90,4 +90,8 @@ impl<K: Eq, V: Sized + PartialEq, const STACK_CAPACITY: usize> FallibleLinearMap
 
         self.fatvec.remove(idx)
     }
+
+    fn len(&self) -> usize {
+        self.fatvec.len()
+    }
 }

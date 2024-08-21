@@ -3,6 +3,7 @@ use std::collections::TryReserveError;
 pub mod fat_vec;
 pub mod vec;
 pub mod vecdeque;
+pub mod macros {}
 
 //This is allowed as making AsMutSlice public would permit
 //clients to wantonly break invariants of the collection
@@ -13,6 +14,28 @@ pub mod vecdeque;
 ///this is to permit the implementation of fixed sized types backed by arrays.
 pub trait FallibleLinearMap<K: Eq, V: Sized + PartialEq> {
     type Backing;
+
+    ///Inserts a key-value pair into the map.
+    ///If the map did not have this key present, None is returned.
+    ///If the map did have this key present, the value is updated, and the old value is returned. The key is not updated, though; this matters for types that can be == without being identical. See the module-level documentation for more.
+    fn insert(&mut self, key: K, value: V) -> Result<Option<V>, TryReserveError>;
+
+    ///Consumes self, returning the underlying store.
+    fn into_inner(self) -> Self::Backing;
+
+    fn iter<'a>(&'a self) -> impl Iterator<Item = &'a (K, V)>
+    where
+        K: 'a,
+        V: 'a;
+
+    fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut (K, V)>
+    where
+        K: 'a,
+        V: 'a;
+
+    fn len(&self) -> usize;
+
+    fn remove_entry(&mut self, key: &K) -> Option<(K, V)>;
 
     //notice to implementors: if calling as_slice is not zero cost, override
     //this default implementation with one that is.
@@ -48,20 +71,10 @@ pub trait FallibleLinearMap<K: Eq, V: Sized + PartialEq> {
         self.iter_mut().find(|(k, _)| k == key).map(|(_, v)| v)
     }
 
-    fn insert(&mut self, key: K, value: V) -> Result<Option<V>, TryReserveError>;
-
-    ///Consumes self, returning the underlying store.
-    fn into_inner(self) -> Self::Backing;
-
-    fn iter<'a>(&'a self) -> impl Iterator<Item = &'a (K, V)>
-    where
-        K: 'a,
-        V: 'a;
-
-    fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut (K, V)>
-    where
-        K: 'a,
-        V: 'a;
+    ///Returns `true` if this map is empty and `false` otherwise.
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
 
     fn keys<'a>(&'a self) -> impl Iterator<Item = &'a K>
     where
@@ -134,8 +147,6 @@ pub trait FallibleLinearMap<K: Eq, V: Sized + PartialEq> {
         self.remove_entry(key).map(|(_, v)| v)
     }
 
-    fn remove_entry(&mut self, key: &K) -> Option<(K, V)>;
-
     fn values<'a>(&'a self) -> impl Iterator<Item = &'a V>
     where
         K: 'a,
@@ -177,8 +188,18 @@ pub trait FallibleLinearSet<T: Eq>: Sized {
 
     ///Adds a value to the set.
     ///If the set did not previously contain this value, true is returned.
-    ///If the set already contained this value, false is returned, and the set is not modified: original value is not replaced, and the value passed as argument is dropped.   
-    fn insert(&mut self, value: T) -> Result<bool, TryReserveError>;
+    ///If the set already contained this value, false is returned, and the set is not modified: original value is not replaced, and the value passed as argument is dropped.
+    fn insert(&mut self, value: T) -> Result<bool, TryReserveError> {
+        self.map_mut().insert(value, ()).map(|r| r.is_none())
+    }
+
+    fn is_empty(&self) -> bool {
+        self.map().is_empty()
+    }
+
+    fn len(&self) -> usize {
+        self.map().len()
+    }
 
     fn values<'a>(&'a self) -> impl Iterator<Item = &'a T>
     where
@@ -195,5 +216,7 @@ pub trait FallibleLinearSet<T: Eq>: Sized {
     }
 
     ///Attempts to remove the referenced value from the set, returning None if it is not present.
-    fn remove(&mut self, value: &T) -> Option<T>;
+    fn remove(&mut self, value: &T) -> Option<T> {
+        self.map_mut().remove_entry(value).map(|(k, _)| k)
+    }
 }

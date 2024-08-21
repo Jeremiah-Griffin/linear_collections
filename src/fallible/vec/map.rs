@@ -26,16 +26,6 @@ impl<K: Eq, V: Sized + PartialEq> VecMap<K, V> {
         VecMap { vector }
     }
 
-    ///Returns the number of elements in the container
-    pub fn len(&self) -> usize {
-        self.vector.len()
-    }
-
-    ///Returns true if the store is empty, false otherwise.
-    pub fn is_empty(&self) -> bool {
-        self.len() == 0
-    }
-
     ///Creates a new, empty VecMap with capacity set to the provide value.
     ///Calls Vec::with_capacity() internally.
     pub fn with_capacity(capacity: usize) -> VecMap<K, V> {
@@ -92,5 +82,9 @@ impl<K: Eq, V: Sized + PartialEq> FallibleLinearMap<K, V> for VecMap<K, V> {
                 Ok(None)
             }
         }
+    }
+
+    fn len(&self) -> usize {
+        self.vector.len()
     }
 }

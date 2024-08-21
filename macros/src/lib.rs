@@ -1,7 +1,7 @@
 use crate::helpers::{validate_map_literal, MapLiteral, SetLiteral};
 use proc_macro::TokenStream;
-use quote::{quote, ToTokens};
-use syn::{parse::Parse, parse_macro_input, punctuated::Punctuated, ExprTuple, Token};
+use quote::quote;
+use syn::parse_macro_input;
 mod helpers;
 #[allow(unused_imports)]
 #[proc_macro]
@@ -65,14 +65,31 @@ pub fn vec_set(tokens: TokenStream) -> TokenStream {
     .into()
 }
 
-/*
 #[proc_macro]
-pub fn vecdeque_map(tokens: TokenStream) -> TokenStream {
-    unimplemented!()
+pub fn deque_map(tokens: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(tokens as MapLiteral);
+
+    validate_map_literal(&input);
+
+    let iter = input.inner.iter();
+    quote! {
+        unsafe{
+            linear_collections::DequeMap::from_vecdeque_unchecked(vec![#(#iter),*])
+        }
+    }
+    .into()
 }
 
 #[proc_macro]
-pub fn vecdeque_set(tokens: TokenStream) -> TokenStream {
-    unimplemented!()
+pub fn deque_set(tokens: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(tokens as SetLiteral);
+
+    let iter = input.inner.iter();
+
+    quote! {
+        unsafe{
+            linear_collections::DequeMap::from_map_unchecked(vec_map![#((#iter, ())),*])
+        }
+    }
+    .into()
 }
-*/

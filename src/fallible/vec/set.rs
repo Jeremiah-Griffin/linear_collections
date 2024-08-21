@@ -20,14 +20,6 @@ impl<T: Eq> FallibleLinearSet<T> for VecSet<T> {
     fn map_mut(&mut self) -> &mut Self::BACKING {
         &mut self.map
     }
-
-    fn insert(&mut self, value: T) -> Result<bool, TryReserveError> {
-        self.map.insert(value, ()).map(|o| o.is_none())
-    }
-
-    fn remove(&mut self, value: &T) -> Option<T> {
-        self.map.remove_entry(value).map(|(v, _)| v)
-    }
 }
 
 impl<T: Eq> VecSet<T> {
@@ -47,10 +39,6 @@ impl<T: Eq> VecSet<T> {
     pub fn into_vec(self) -> Vec<T> {
         //TODO:...since () is a ZST can I just transmute? This is silly.
         self.map.into_inner().into_iter().map(|(t, _)| t).collect()
-    }
-
-    pub fn len(&self) -> usize {
-        self.map.len()
     }
 
     ///**Please only use this method to create set literals if the "macros" feature is unavailable to you**
