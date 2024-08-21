@@ -16,9 +16,6 @@ pub mod array;
 //We always compile fallible as the infallible versions are just fallible with panic called on the additional methods.
 pub mod fallible;
 
-#[cfg(feature = "macros")]
-pub use linear_collections_macros::{array_map, vec_map, vec_set};
-
 #[cfg(feature = "panicking")]
 pub mod panicking;
 

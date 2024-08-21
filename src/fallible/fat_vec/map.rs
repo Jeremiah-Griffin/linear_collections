@@ -33,6 +33,19 @@ impl<K: Eq, V: Sized + PartialEq, const STACK_CAPACITY: usize> FatMap<K, V, STAC
             fatvec: FatVec::with_array(array),
         }
     }
+
+    ///**Please only use this method to create maps at compile time if the "macros" feature is unavailable to you**
+    ///"macros" provides safe, checked alternatives to initialize linear maps with compile time checking
+    ///of the invariants of each type.
+    ///
+    ///Creates a new FatVecMap from the
+    ///
+    ///SAFETY: improper use of this method - initializing with duplicate keys -will NOT create memory unsafety, but will result in every
+    ///identical key beyond the first never getting accessed as LinearMaps short circuit on the first matching key.
+    pub const unsafe fn from_fatvec_unchecked(fatvec: FatVec<(K, V), STACK_CAPACITY>) -> Self {
+        Self { fatvec }
+    }
+
     ///Creates a new, empty `FatMap` with space to hold at least `capacity` elements without reallocating.
     ///Upon return, this `FatMap` will be able to hold `STACK_CAPACITY + `capacity` elements without
     ///re-allocating.

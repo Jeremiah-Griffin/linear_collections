@@ -3,7 +3,8 @@ use std::collections::TryReserveError;
 pub mod fat_vec;
 pub mod vec;
 pub mod vecdeque;
-pub mod macros {}
+#[cfg(feature = "macros")]
+pub use macros::fallible::*;
 
 //This is allowed as making AsMutSlice public would permit
 //clients to wantonly break invariants of the collection

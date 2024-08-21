@@ -39,10 +39,6 @@ impl<T: Eq> VecSet<T> {
         self.map.into_inner().into_iter().map(|(t, _)| t).collect()
     }
 
-    pub fn len(&self) -> usize {
-        self.map.len()
-    }
-
     ///**Please only use this method to create set literals if the "macros" feature is unavailable to you**
     ///"macros" provides safe, checked alternatives to initialize linear maps with compile time checking
     ///of the invariants of each type.
