@@ -2,7 +2,7 @@ mod fat_vec;
 mod vec;
 mod vecdeque;
 
-pub use fat_vec::{map::*, set::*};
+pub use fat_vec::{map::*, set::*, FatVec};
 pub use vec::{map::*, set::*};
 pub use vecdeque::{map::*, set::*};
 
