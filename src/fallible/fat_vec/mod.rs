@@ -282,7 +282,7 @@ impl<const STACK_CAPACITY: usize, T: PartialEq> PartialEq for FatVec<T, STACK_CA
 
 impl<const STACK_CAPACITY: usize, T: Eq> Eq for FatVec<T, STACK_CAPACITY> {}
 
-impl<const STACK_CAPACITY: usize, T: Eq + Clone> Clone for FatVec<T, STACK_CAPACITY> {
+impl<const STACK_CAPACITY: usize, T: Clone> Clone for FatVec<T, STACK_CAPACITY> {
     fn clone(&self) -> Self {
         //SAFETY:
         //
