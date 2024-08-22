@@ -34,6 +34,7 @@ pub trait FallibleLinearMap<K: Eq, V: Sized + PartialEq> {
         K: 'a,
         V: 'a;
 
+    ///TODO: THIS NEEDS TO BE MOVED TO A SEALED TRAIT AS MUTATING THE KEY TO BE == ANOTHER KEY IS UNSOUND
     fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut (K, V)>
     where
         K: 'a,
@@ -90,14 +91,6 @@ pub trait FallibleLinearMap<K: Eq, V: Sized + PartialEq> {
         self.iter().map(|(k, _)| k)
     }
 
-    fn keys_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut K>
-    where
-        K: 'a,
-        V: 'a,
-    {
-        self.iter_mut().map(|(k, _)| k)
-    }
-
     ///For every key in iter which matches a key in self, this method replaces
     ///the value from iter in self, "merging" the iterator and the map.
     ///
@@ -137,15 +130,6 @@ pub trait FallibleLinearMap<K: Eq, V: Sized + PartialEq> {
         V: 'a,
     {
         self.iter().nth(index).map(|(k, _)| k)
-    }
-
-    ///Gets a reference to the nth key in the map.
-    ///Will return None if index is out of bounds.    
-    fn nth_key_mut<'a>(&'a mut self, index: usize) -> Option<&'a mut K>
-    where
-        V: 'a,
-    {
-        self.iter_mut().nth(index).map(|(k, _)| k)
     }
 
     ///Tries to remove the value associated with the given key, returning None if it is not found.
@@ -212,13 +196,6 @@ pub trait FallibleLinearSet<T: Eq>: Sized {
         T: 'a,
     {
         self.map().keys()
-    }
-
-    fn values_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut T>
-    where
-        T: 'a,
-    {
-        self.map_mut().keys_mut()
     }
 
     ///Attempts to remove the referenced value from the set, returning None if it is not present.

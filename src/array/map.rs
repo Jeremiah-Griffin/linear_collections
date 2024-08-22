@@ -6,6 +6,7 @@
 pub struct ArrayMap<K: Eq, V: Sized + PartialEq, const LENGTH: usize> {
     array: [(K, V); LENGTH],
 }
+
 impl<K: Eq, V: Sized + PartialEq, const LENGTH: usize> ArrayMap<K, V, LENGTH> {
     ///**Please only use this method to create map literals if the "macros" feature is unavailable to you**
     ///"macros" provides safe, checked alternatives to initialize linear maps with compile time checking
@@ -17,6 +18,10 @@ impl<K: Eq, V: Sized + PartialEq, const LENGTH: usize> ArrayMap<K, V, LENGTH> {
     ///identical key beyond the first never getting accessed as LinearMaps short circuit on the first matching key.
     pub const unsafe fn from_array_unchecked(array: [(K, V); LENGTH]) -> ArrayMap<K, V, LENGTH> {
         ArrayMap { array }
+    }
+
+    pub const fn as_slice(&self) -> &[(K, V)] {
+        &self.array
     }
 
     ///Returns the number of elements in the ArrayMap
