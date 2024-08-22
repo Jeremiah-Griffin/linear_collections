@@ -48,7 +48,7 @@ dependencies = [
 
 [[package]]
 name = "linear_collections_macros"
-version = "0.1.0"
+version = "0.4.0"
 dependencies = [
  "quote",
  "syn",
