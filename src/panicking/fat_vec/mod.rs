@@ -19,14 +19,13 @@ pub struct FatVec<T, const STACK_CAPACITY: usize> {
     len: usize,
 }
 
-
-pub struct Iter<'a, T, const STACK_CAPACITY: usize>{
+pub struct Iter<'a, T, const STACK_CAPACITY: usize> {
     idx: usize,
-    fatvec: & 'a FatVec<T, STACK_CAPACITY>
+    fatvec: &'a FatVec<T, STACK_CAPACITY>,
 }
 
-impl <'a, T, const STACK_CAPACITY: usize>Iterator for Iter<'a, T, STACK_CAPACITY>{
-    type Item = & 'a T;
+impl<'a, T, const STACK_CAPACITY: usize> Iterator for Iter<'a, T, STACK_CAPACITY> {
+    type Item = &'a T;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.idx.checked_add(1)?;
@@ -74,6 +73,14 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
         }
     }*/
 
+    ///Gets the length of the array of the stack
+    const fn array_len(&self) -> usize {
+        match self.len <= STACK_CAPACITY {
+            true => self.len,
+            false => STACK_CAPACITY,
+        }
+    }
+
     ///Creates a new, empty `FatVec` with space to hold at least `capacity` elements without reallocating.
     ///Upon return, this `FatVec` will be able to hold `STACK_CAPACITY + `capacity` elements without
     ///re-allocating.
@@ -87,20 +94,14 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
 
     //***methods***
     pub fn iter<'a>(&'a self) -> impl Iterator<Item = &'a T> {
-
-        Iter{
+        Iter {
             idx: 0,
             fatvec: &self,
         }
-
     }
 
     pub fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut T> {
-        let len = match STACK_CAPACITY > self.len() {
-            true => self.array.len(),
-            false => self.len(),
-        };
-
+        let len = self.array_len();
         self.array[0..len]
             .iter_mut()
             //SAFETY:
@@ -189,7 +190,7 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
                 //Using the length of the entire `FatVec` is okay as we've established in the match arm
                 //that all elements are allocated on the array. This saves us the step of reading the next element
                 //to copy for the entire stack *so long as* we ensure all successive elements beyond the array len are MaybeUninit::uninit.
-                while loop_idx < self.len() {
+                while loop_idx <= self.len() {
                     //all elements shifted
                     unsafe {
                         //SAFETY: guaranteed safe as loop_idx is guaranteed by the match arm to be <= len.
