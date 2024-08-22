@@ -1,7 +1,4 @@
-use crate::panicking::{
-    vec::{map::VecMap, set::VecSet},
-    PanickingLinearMap, PanickingLinearSet,
-};
+use crate::panicking::*;
 use serde_test::assert_tokens;
 use serde_test::Token;
 #[test]

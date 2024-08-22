@@ -38,12 +38,8 @@ serde = ["dep:serde", "dep:serde_test"]
 #Enables ser/deserialization of array backed types with serde
 #serde_big_array = ["dep:serde", "dep:serde_big_array"]
 
-#Linear-collections can use macros to validate literals structures at compile time. 
-#These add a number of dependencies and are thus feature gated.
-macros = ["dep:linear_collections_macros"]
+#macros for panicking types
+panicking_macros = ["dep:fallible_linear_collections_macros", "dep:linear_collections_macros"]
 
 #macros for fallible types
-macros = ["dep:fallible_linear_collections_macros"]
-
-#macros for fallible types
-macros = ["dep:panicking_linear_collections_macros"]
+fallible_macros = ["dep:panicking_linear_collections_macros", "dep:linear_collections_macros"]

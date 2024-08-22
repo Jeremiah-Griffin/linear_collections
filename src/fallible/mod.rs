@@ -1,10 +1,15 @@
 use std::collections::TryReserveError;
 
-pub mod fat_vec;
-pub mod vec;
-pub mod vecdeque;
-#[cfg(feature = "macros")]
-pub use macros::fallible::*;
+mod fat_vec;
+mod vec;
+mod vecdeque;
+
+pub use fat_vec::{map::*, set::*};
+pub use vec::{map::*, set::*};
+pub use vecdeque::{map::*, set::*};
+
+#[cfg(feature = "fallible_macros")]
+pub use fallible_linear_collections_macros::*;
 
 //This is allowed as making AsMutSlice public would permit
 //clients to wantonly break invariants of the collection

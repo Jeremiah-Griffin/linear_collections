@@ -1,12 +1,28 @@
 use serde::{de::Visitor, ser::SerializeMap, ser::SerializeSeq, Deserialize, Serialize};
 use std::marker::PhantomData;
 
-use crate::panicking::{
-    vec::{map::VecMap, set::VecSet},
-    PanickingLinearMap, PanickingLinearSet,
-};
 #[cfg(test)]
 mod test;
+
+#[cfg(feature = "fallible")]
+mod fallible {}
+
+#[cfg(feature = "panicking")]
+mod panicking {
+    use serde::Serialize;
+
+    use crate::panicking::PanickingLinearMap;
+
+    impl<K: Eq + Serialize, V: Sized + Serialize, T: PanickingLinearMap<K, V>> Serialize for T {
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: serde::Serializer,
+        {
+            todo!()
+        }
+    }
+}
+
 //custom implementation to ensure this gets (de)serialized as a map instead of a list of tuples
 impl<K: Eq + Serialize, V: Sized + PartialEq + Serialize> Serialize for VecMap<K, V> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>

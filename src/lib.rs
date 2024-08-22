@@ -19,7 +19,9 @@ pub mod fallible;
 #[cfg(feature = "panicking")]
 pub mod panicking;
 
+/*
 #[cfg(feature = "serde")]
 mod serde;
+*/
 #[cfg(test)]
 mod test;

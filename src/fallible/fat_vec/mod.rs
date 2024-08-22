@@ -2,10 +2,8 @@
 pub mod test;
 use std::{array, collections::TryReserveError, intrinsics::transmute_unchecked, mem::MaybeUninit};
 
-use types::Iter;
 pub mod map;
 pub mod set;
-pub mod types;
 
 #[derive(Debug)]
 ///A vector which allocates at least `STACK_CAPACITY` elements onto the stack.
@@ -70,8 +68,18 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
 
     //***methods***
 
-    pub fn iter<'a>(&'a self) -> Iter<'a, STACK_CAPACITY, T> {
-        Iter::new(&self)
+    pub fn iter<'a>(&'a self) -> impl Iterator<Item = &'a T> {
+        let len = match STACK_CAPACITY > self.len() {
+            true => self.array.len(),
+            false => self.len(),
+        };
+
+        self.array[0..len]
+            .iter()
+            //SAFETY:
+            //Initializing is tied to the idx. all items <= to idx are guaranteed to be init.
+            .map(|t| unsafe { t.assume_init_ref() })
+            .chain(self.vec.iter())
     }
 
     pub fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut T> {
@@ -291,5 +299,3 @@ impl<const STACK_CAPACITY: usize, T: Eq + Clone> Clone for FatVec<T, STACK_CAPAC
         }
     }
 }
-
-impl<const STACK_CAPACITY: usize, T: Eq + Clone> From for FatVec<T, STACK_CAPACITY> {}

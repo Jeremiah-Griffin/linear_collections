@@ -1,6 +1,4 @@
-use crate::panicking::vec::map::VecMap;
-use crate::panicking::PanickingLinearMap;
-use crate::{array_map, vec_map, vec_set};
+use crate::panicking::*;
 
 #[test]
 fn linear_map_create_capacity_zero() {
@@ -334,19 +332,17 @@ fn test_eq() {
     assert_eq!(m1, m2);
 }*/
 
-#[cfg(feature = "macros")]
+#[cfg(feature = "panicking_macros")]
+#[cfg(test)]
 pub mod macro_tests {
+    pub use crate::panicking::*;
+    use linear_collections_macros::array_map;
+
     #[allow(unused_imports)]
-    #[cfg(test)]
     #[forbid(unsafe_code)]
     //the as binding is to simulate the name of the crate
     //be called in a consuming crate. linear_collections otherwise will not resolve
     use crate as linear_collections;
-    use crate::{
-        array::map::ArrayMap,
-        panicking::{PanickingLinearMap, PanickingLinearSet},
-    };
-    use linear_collections_macros::{array_map, vec_map, vec_set};
 
     #[test]
     fn array_map_one() {
