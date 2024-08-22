@@ -2,7 +2,7 @@ use crate::panicking::PanickingLinearMap;
 
 use super::FatVec;
 
-#[derive(Eq, PartialEq, Debug)]
+#[derive(Eq, PartialEq, Debug, Hash)]
 ///A map type backed by an FatVec, a vector with stack space to hold up to
 ///`STACK_CAPACITY` items on the stack. The remaining overflow onto the heap.
 pub struct FatMap<K: Eq, V: Sized + PartialEq, const STACK_CAPACITY: usize> {

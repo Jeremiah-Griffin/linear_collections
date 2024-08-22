@@ -1,6 +1,9 @@
 #[cfg(test)]
 pub mod test;
-use std::{array, collections::TryReserveError, intrinsics::transmute_unchecked, mem::MaybeUninit};
+use std::{
+    array, collections::TryReserveError, hash::Hash, intrinsics::transmute_unchecked,
+    mem::MaybeUninit,
+};
 
 pub mod map;
 pub mod set;
@@ -297,5 +300,10 @@ impl<const STACK_CAPACITY: usize, T: Eq + Clone> Clone for FatVec<T, STACK_CAPAC
             vec: self.vec.clone(),
             len: self.len.clone(),
         }
+    }
+}
+impl<const STACK_CAPACITY: usize, T: Hash> Hash for FatVec<T, STACK_CAPACITY> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.iter().for_each(|t| t.hash(state))
     }
 }

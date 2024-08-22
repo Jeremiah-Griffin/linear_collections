@@ -1,10 +1,8 @@
-use std::collections::TryReserveError;
-
-use crate::fallible::{FallibleLinearMap, FallibleLinearSet};
+use crate::fallible::FallibleLinearSet;
 
 use super::map::FatMap;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Hash)]
 ///A set type backed by a FatVec, a vector with stack space to hold up to
 ///`STACK_CAPACITY` items on the stack. The remaining items overflow onto the heap.
 pub struct FatSet<T: Eq, const STACK_CAPACITY: usize> {
