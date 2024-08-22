@@ -1,6 +1,6 @@
 #[cfg(test)]
 pub mod test;
-use std::{array, collections::TryReserveError, intrinsics::transmute_unchecked, mem::MaybeUninit};
+use std::{array, collections::TryReserveError, mem::MaybeUninit};
 
 pub mod map;
 pub mod set;
@@ -19,6 +19,21 @@ pub struct FatVec<T, const STACK_CAPACITY: usize> {
     len: usize,
 }
 
+
+pub struct Iter<'a, T, const STACK_CAPACITY: usize>{
+    idx: usize,
+    fatvec: & 'a FatVec<T, STACK_CAPACITY>
+}
+
+impl <'a, T, const STACK_CAPACITY: usize>Iterator for Iter<'a, T, STACK_CAPACITY>{
+    type Item = & 'a T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.idx.checked_add(1)?;
+        self.fatvec.get(self.idx)
+    }
+}
+
 impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
     //***constructors***
 
@@ -32,6 +47,10 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
             len: 0,
         }
     }
+
+    //commented out pending transmut unchecked workaround
+
+    /*
 
     ///Creates a `FatVec` with the provided array as the stack resident elements.
     ///The length of the supplied array will become the `STACK_CAPCITY` of the returned `FatVec` *AND* the length of the array.
@@ -53,7 +72,7 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
             vec: Vec::new(),
             len: STACK_CAPACITY,
         }
-    }
+    }*/
 
     ///Creates a new, empty `FatVec` with space to hold at least `capacity` elements without reallocating.
     ///Upon return, this `FatVec` will be able to hold `STACK_CAPACITY + `capacity` elements without
@@ -68,17 +87,12 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
 
     //***methods***
     pub fn iter<'a>(&'a self) -> impl Iterator<Item = &'a T> {
-        let len = match STACK_CAPACITY > self.len() {
-            true => self.array.len(),
-            false => self.len(),
-        };
 
-        self.array[0..len]
-            .iter()
-            //SAFETY:
-            //Initializing is tied to the idx. all items <= to idx are guaranteed to be init.
-            .map(|t| unsafe { t.assume_init_ref() })
-            .chain(self.vec.iter())
+        Iter{
+            idx: 0,
+            fatvec: &self,
+        }
+
     }
 
     pub fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut T> {

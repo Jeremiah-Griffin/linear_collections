@@ -45,11 +45,11 @@ impl<K: Eq, V: Sized + PartialEq, const LENGTH: usize> ArrayMap<K, V, LENGTH> {
             .map(|(_, v)| v)
     }
 
-    fn into_inner(self) -> [(K, V); LENGTH] {
+    pub fn into_inner(self) -> [(K, V); LENGTH] {
         self.array
     }
 
-    fn iter<'a>(&'a self) -> impl Iterator<Item = &(K, V)>
+    pub fn iter<'a>(&'a self) -> impl Iterator<Item = &(K, V)>
     where
         K: 'a,
         V: 'a,
@@ -57,11 +57,17 @@ impl<K: Eq, V: Sized + PartialEq, const LENGTH: usize> ArrayMap<K, V, LENGTH> {
         self.array.iter()
     }
 
-    fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut (K, V)>
-    where
-        K: 'a,
-        V: 'a,
-    {
-        self.array.iter_mut()
+    pub fn keys<'a>(&'a self) -> impl Iterator<Item = &K>{
+        self.iter().map(|(k, _)| k)
     }
+    
+    pub fn values<'a>(&'a self) -> impl Iterator<Item = &V>{
+        self.iter().map(|(_, v)| v)
+    
+    }
+
+    pub fn values_mut<'a>(& 'a mut self) -> impl Iterator<Item = &mut V>{
+        self.array.iter_mut().map(|(_, v)| v)
+    
+    }    
 }

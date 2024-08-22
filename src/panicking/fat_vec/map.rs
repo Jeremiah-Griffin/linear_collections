@@ -19,6 +19,9 @@ impl<K: Eq, V: Sized + PartialEq, const STACK_CAPACITY: usize> FatMap<K, V, STAC
         }
     }
 
+    //Pending with_array workaround
+
+    /*
     ///Creates a `FatMap` with the provided array as the stack resident elements.
     ///The length of the supplied array will become the `STACK_CAPCITY` of the returned `FatVec` *AND* the length of the array.
     ///There is no interface to mutate the length without manipulating the elements on the stack.
@@ -31,7 +34,7 @@ impl<K: Eq, V: Sized + PartialEq, const STACK_CAPACITY: usize> FatMap<K, V, STAC
         Self {
             fatvec: FatVec::with_array(array),
         }
-    }
+    }*/
     ///Creates a new, empty `FatMap` with space to hold at least `capacity` elements without reallocating.
     ///Upon return, this `FatMap` will be able to hold `STACK_CAPACITY + `capacity` elements without
     ///re-allocating.

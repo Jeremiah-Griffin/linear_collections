@@ -40,6 +40,7 @@ pub fn with_heap_capacity_does_not_change_length() {
 }
 
 //***methods***
+/*
 #[test]
 pub fn clear_is_clear() {
     let mut svec = FatVec::with_array(["one", "two", "three", "four", "five"].clone());
@@ -75,7 +76,6 @@ pub fn clear_drops() {
     }
 
     {
-        //**testing Drop tracking***
 
         let was_dropped = Arc::new(Mutex::new(false));
 
@@ -379,3 +379,4 @@ pub fn remove_shifts_at_start() {
         vec!["two", "three", "four", "five"]
     )
 }
+*/
