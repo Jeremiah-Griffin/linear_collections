@@ -1,9 +1,28 @@
-use crate::LinearMap;
-use crate::VecMap;
-use crate::VecSet;
 use serde::{de::Visitor, ser::SerializeMap, ser::SerializeSeq, Deserialize, Serialize};
 use std::marker::PhantomData;
+
+#[cfg(test)]
 mod test;
+
+#[cfg(feature = "fallible")]
+mod fallible {}
+
+#[cfg(feature = "panicking")]
+mod panicking {
+    use serde::Serialize;
+
+    use crate::panicking::PanickingLinearMap;
+
+    impl<K: Eq + Serialize, V: Sized + Serialize, T: PanickingLinearMap<K, V>> Serialize for T {
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: serde::Serializer,
+        {
+            todo!()
+        }
+    }
+}
+
 //custom implementation to ensure this gets (de)serialized as a map instead of a list of tuples
 impl<K: Eq + Serialize, V: Sized + PartialEq + Serialize> Serialize for VecMap<K, V> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -12,7 +31,7 @@ impl<K: Eq + Serialize, V: Sized + PartialEq + Serialize> Serialize for VecMap<K
     {
         let mut map = serializer.serialize_map(Some(self.len()))?;
 
-        for (k, v) in self.as_slice().iter() {
+        for (k, v) in self.iter() {
             map.serialize_entry(k, v)?;
         }
 
@@ -72,7 +91,7 @@ impl<T: Eq + Serialize> Serialize for VecSet<T> {
         let mut list = serializer.serialize_seq(Some(self.len()))?;
 
         //TODO: Iterators
-        for (t, _) in self.map.as_slice() {
+        for (t, _) in self.map().iter() {
             list.serialize_element(t)?;
         }
 

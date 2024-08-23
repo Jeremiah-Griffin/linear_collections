@@ -1,9 +1,8 @@
-use crate::LinearMap;
-use crate::VecMap;
-#[cfg(test)]
+use crate::panicking::*;
+
 #[test]
 fn linear_map_create_capacity_zero() {
-    let mut m = crate::VecMap::with_capacity(0);
+    let mut m = VecMap::with_capacity(0);
 
     assert!(m.insert(1, 1).is_none());
 
@@ -183,7 +182,7 @@ fn linear_map_iterate() {
 
     let mut observed: u32 = 0;
 
-    for (k, v) in m.as_slice() {
+    for (k, v) in m.iter() {
         assert_eq!(*v, *k * 2);
         observed |= 1 << *k;
     }
@@ -333,15 +332,17 @@ fn test_eq() {
     assert_eq!(m1, m2);
 }*/
 
-#[cfg(feature = "macros")]
+#[cfg(feature = "panicking_macros")]
+#[cfg(test)]
 pub mod macro_tests {
-    #[cfg(test)]
+    pub use crate::panicking::*;
+    use linear_collections_macros::array_map;
+
+    #[allow(unused_imports)]
     #[forbid(unsafe_code)]
     //the as binding is to simulate the name of the crate
     //be called in a consuming crate. linear_collections otherwise will not resolve
     use crate as linear_collections;
-    use crate::{array::map::ArrayMap, LinearMap};
-    use linear_collections_macros::{array_map, vec_map, vec_set};
 
     #[test]
     fn array_map_one() {

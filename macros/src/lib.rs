@@ -1,9 +1,58 @@
-use crate::helpers::{validate_map_literal, MapLiteral, SetLiteral};
+use std::collections::BTreeSet;
+
 use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
 use syn::{parse::Parse, parse_macro_input, punctuated::Punctuated, ExprTuple, Token};
-mod helpers;
 
+struct MapLiteral {
+    pub inner: Punctuated<ExprTuple, Token![,]>,
+}
+
+impl Parse for MapLiteral {
+    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+        Ok(Self {
+            inner: Punctuated::parse_terminated(input)?,
+        })
+    }
+}
+
+///The code for checking the input elements is identical between all maps
+///and factored into this function.
+fn validate_map_literal(input: &MapLiteral) {
+    let elements = &input.inner;
+    let length = elements.len();
+
+    if length == 0 {
+        panic!("Input may not be empty")
+    };
+
+    //TODO: need to parse elements as tuples, forgor
+    let mut duplicates: Vec<String> = Vec::new();
+    let mut keys: BTreeSet<String> = BTreeSet::new();
+
+    for e in elements.iter() {
+        let element_string = e.to_token_stream().to_string();
+
+        let tuple_pair_count = e.elems.len();
+
+        if tuple_pair_count != 2 {
+            panic!("All elements should have a length of 2 ( a key and a value) but {element_string} is {tuple_pair_count}")
+        }
+
+        let pairs = e.elems.clone().into_pairs().collect::<Vec<_>>();
+
+        let key = pairs[0].clone().into_value().to_token_stream().to_string();
+
+        if keys.insert(key.clone()) == false {
+            duplicates.push(key)
+        }
+    }
+
+    if duplicates.len() > 0 {
+        panic!("Duplicate keys found: {duplicates:?}")
+    }
+}
+#[allow(unused_imports)]
 #[proc_macro]
 ///NOTE: This macro does not currently consider prefixed or suffixed items (r"t" and "t" or 1 and 1usize) to be
 ///distinct. This is highly likely to change in the future and this fix may not be considered a breaking change.
@@ -19,60 +68,8 @@ pub fn array_map(tokens: TokenStream) -> TokenStream {
     let iter = input.inner.iter();
     quote! {
         unsafe{
-            linear_collections::ArrayMap::from_array_unchecked([#(#iter),*])
+            linear_collections::array::map::ArrayMap::from_array_unchecked([#(#iter),*])
         }
     }
     .into()
 }
-
-#[proc_macro]
-///NOTE: This macro does not currently consider prefixed or suffixed items (r"t" and "t" or 1 and 1usize) to be
-///distinct. This is highly likely to change in the future and this fix may not be considered a breaking change.
-///
-///Creates a VecMap, checking at compile time that there are no duplicate keys.j
-///Example:
-///`let map: VecMap<Char, i32> = vec_map![('A', 1), ('B', 2), ('C',3)];`
-pub fn vec_map(tokens: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(tokens as MapLiteral);
-
-    validate_map_literal(&input);
-
-    let iter = input.inner.iter();
-    quote! {
-        unsafe{
-            linear_collections::VecMap::from_vec_unchecked(vec![#(#iter),*])
-        }
-    }
-    .into()
-}
-
-#[proc_macro]
-///NOTE: This macro does not currently consider prefixed or suffixed items (r"t" and "t" or 1 and 1usize) to be
-///distinct. This is highly likely to change in the future and this fix may not be considered a breaking change.
-///
-///Creates a VecSet, checking at compile time that there are no duplicate values.
-///Input syntax is identical to the `vec![]` macro with the caveat that duplicate values will error at compile time.
-pub fn vec_set(tokens: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(tokens as SetLiteral);
-
-    let iter = input.inner.iter();
-
-    quote! {
-        unsafe{
-            linear_collections::VecSet::from_map_unchecked(vec_map![#((#iter, ())),*])
-        }
-    }
-    .into()
-}
-
-/*
-#[proc_macro]
-pub fn vecdeque_map(tokens: TokenStream) -> TokenStream {
-    unimplemented!()
-}
-
-#[proc_macro]
-pub fn vecdeque_set(tokens: TokenStream) -> TokenStream {
-    unimplemented!()
-}
-*/

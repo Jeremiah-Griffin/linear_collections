@@ -1,35 +1,34 @@
 # Linear Collections
 Map and Set types backed by linear data structures.
 
-Many use cases of maps are for small collections where the penalties of a comparable data structure from std 
-(memory overhead, hashing throughput, indirection and potential cache dislocality of a nonlinear data structure)
-are greater than their comparatively reduced algorithmic complexity.
+Many advanced datastructures we learn in leactures and classes may yield incredible Big O algorithmic performance, but suffer from
+excessive memory usage or high constant factors. In many cases - especially considering the sensitivity of modern CPUs to cache-residency and missed branch predictions - maximizing the use of the stack
+as well as well as minimizing fragmentation and branching can render simple linear datastructures and alogorithms to outperform their more theoritically perofrmant brethren.
 
-This penalty usually is not great, however, a (small) amount of performance may be gained if allocating 
-small such structures in a tight loop - say, deserializing the claims from a Json Web Token.
+While the performance advantage in the large is typically not great, it may be more noticeable in latency-sensitive operations or within loops which allocate these
+data structures in very large numbers.
 
 # Motivation
 There exists another crate implementing linear collection types (linear_map)
 however, it only supports collection backed by a vector: I personally needed Array types as well.
 
 # Feature Flags
-- "macros": compile type checking of type literals.
+- "fallible_macros": compile type checking of fallible type literals.
+- "panicking_macros": compile type checking of panicking type literals.
 - "serde": ser/deserialization with serde.
 
-# Changes for version 0.3.0
-- fixed merge_from_iter
-- added macros
-- added many trait derives
-- added serde support for VecSet
-- ArrayMap::new_unchecked renamed to ArrayMap::from_array_unchecked
-- added VecSet::from_map_unchecked 
+# Changes for version 0.4.0
+- Added iterator support
+- Added FatVec/Map/Set, a vector type which can store a limited number of elements on the stack.
+- Added Fallible collection types which can gracefully return an error on a memory allocation failure. 
+- Added VecDeqe backed types
+- Reorganization & Renames
+- Array backed types no longer implement LinearMap. Array's fixed length means a lot of methods needed to be exluded from the traits, either to preserve their `const`ness, or because they needed to heap allocate. Removing these impls frees up the api and makes maintenance and testing of the remaining types easier.
+
 
 # TODO:
-- Fallible allocating apis 
-- VecDeque backed types (nice if you need a vecdeque to be returned from into_inner())
 - Serde support for Array types via serde-big-array
-- Iterator Support
-- More tests
+- Fixed capactity, mutable length types.
 
 
 # Stability Policy (pre - 1.0) 

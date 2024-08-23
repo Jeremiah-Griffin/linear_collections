@@ -1,5 +1,4 @@
-#[cfg(test)]
-use crate::{VecMap, VecSet};
+use crate::panicking::*;
 use serde_test::assert_tokens;
 use serde_test::Token;
 #[test]
@@ -34,6 +33,7 @@ fn vec_map_empty() {
 #[test]
 fn vec_set_many() {
     let mut set: VecSet<char> = VecSet::new();
+
     set.insert('b');
     set.insert('a');
     set.insert('c');

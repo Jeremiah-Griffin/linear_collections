@@ -1,10 +1,12 @@
-use crate::{AsMutSlice, LinearMap};
-
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 ///A map type backed by an Array, stack allocated and fixed in size.
+///
+///ArrayMap is the only map type in linear_collections which does *not* implement either LinearMap nor InfallibleLinearMap, which relies on
+///dynamic memory allocation to function.
 pub struct ArrayMap<K: Eq, V: Sized + PartialEq, const LENGTH: usize> {
     array: [(K, V); LENGTH],
 }
+
 impl<K: Eq, V: Sized + PartialEq, const LENGTH: usize> ArrayMap<K, V, LENGTH> {
     ///**Please only use this method to create map literals if the "macros" feature is unavailable to you**
     ///"macros" provides safe, checked alternatives to initialize linear maps with compile time checking
@@ -18,6 +20,10 @@ impl<K: Eq, V: Sized + PartialEq, const LENGTH: usize> ArrayMap<K, V, LENGTH> {
         ArrayMap { array }
     }
 
+    pub const fn as_slice(&self) -> &[(K, V)] {
+        &self.array
+    }
+
     ///Returns the number of elements in the ArrayMap
     pub const fn len(&self) -> usize {
         LENGTH
@@ -25,23 +31,43 @@ impl<K: Eq, V: Sized + PartialEq, const LENGTH: usize> ArrayMap<K, V, LENGTH> {
 
     ///Returns true if the store is empty, false otherwise.
     pub const fn is_empty(&self) -> bool {
-        self.len() == 0
-    }
-}
-
-impl<K: Eq, V: Sized + PartialEq, const LENGTH: usize> LinearMap<K, V> for ArrayMap<K, V, LENGTH> {
-    type Backing = [(K, V); LENGTH];
-    fn as_slice(&self) -> &[(K, V)] {
-        &self.array
+        LENGTH == 0
     }
 
-    fn into_inner(self) -> Self::Backing {
+    pub fn get<'a>(&'a self, key: &K) -> Option<&V> {
+        self.array.iter().find(|(k, _)| k == key).map(|(_, v)| v)
+    }
+
+    pub fn get_mut<'a>(&'a mut self, key: &K) -> Option<&mut V> {
+        self.array
+            .iter_mut()
+            .find(|(k, _)| k == key)
+            .map(|(_, v)| v)
+    }
+
+    pub fn into_inner(self) -> [(K, V); LENGTH] {
         self.array
     }
-}
 
-impl<K: Eq, V: Sized + PartialEq, const LENGTH: usize> AsMutSlice<K, V> for ArrayMap<K, V, LENGTH> {
-    fn as_mut_slice(&mut self) -> &mut [(K, V)] {
-        &mut self.array
+    pub fn iter<'a>(&'a self) -> impl Iterator<Item = &(K, V)>
+    where
+        K: 'a,
+        V: 'a,
+    {
+        self.array.iter()
     }
+
+    pub fn keys<'a>(&'a self) -> impl Iterator<Item = &K>{
+        self.iter().map(|(k, _)| k)
+    }
+    
+    pub fn values<'a>(&'a self) -> impl Iterator<Item = &V>{
+        self.iter().map(|(_, v)| v)
+    
+    }
+
+    pub fn values_mut<'a>(& 'a mut self) -> impl Iterator<Item = &mut V>{
+        self.array.iter_mut().map(|(_, v)| v)
+    
+    }    
 }

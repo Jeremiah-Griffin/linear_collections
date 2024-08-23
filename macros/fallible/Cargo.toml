@@ -1,8 +1,8 @@
 [package]
-name = "linear_collections_macros"
+name = "fallible_linear_collections_macros"
 version = "0.4.0"
 edition = "2021"
-description = "proc-macros for linear_collections"
+description = "proc-macros for fallible types from linear_collections"
 license = "MIT"
 repository = "https://github.com/Jeremiah-Griffin/linear_collections"
 
