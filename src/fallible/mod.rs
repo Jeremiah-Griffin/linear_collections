@@ -11,9 +11,7 @@ pub use vecdeque::{map::*, set::*};
 #[cfg(feature = "fallible_macros")]
 pub use fallible_linear_collections_macros::*;
 
-//This is allowed as making AsMutSlice public would permit
-//clients to wantonly break invariants of the collection
-#[allow(private_bounds)]
+//Never implement clone: panics on alloc failure.
 ///Provides methods for maps backed by linear data structures like arrays and vectors.
 ///Because arrays may implement this type, we cannot assume that implementors will be dynamically sized.
 ///Only methods which do not require manipulating the length or capacity of the store are provided here:
@@ -162,7 +160,7 @@ pub trait FallibleLinearMap<K: Eq, V: Sized + PartialEq>: Sized {
     }
 }
 
-//Never implement clone: panics.
+//Never implement clone: panics on alloc failure.
 ///Set types backed by a FallibleLinearMap<K, ()> where K == T.
 pub trait FallibleLinearSet<T: Eq>: Sized {
     ///The map type which backs this set.
