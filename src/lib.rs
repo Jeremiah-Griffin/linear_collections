@@ -6,8 +6,12 @@
 #![cfg_attr(feature = "nightly_fallible", feature(slice_concat_ext))]
 #![cfg_attr(feature = "nightly_fallible", feature(slice_concat_trait))]
 pub mod array;
+///This is in the crate root because it's used internally but we still need it throughout both
+///fallible and panicking crates internally.
 mod array_vec {
-    use std::mem::MaybeUninit;
+    use std::{array, intrinsics::transmute_unchecked, mem::MaybeUninit};
+
+    use error::ArrayVecError;
 
     ///We need the core functionality of ArrayVec throughout the crate, but don't need the overhead
     ///of tracking `length` internally. So we don't!
@@ -15,13 +19,164 @@ mod array_vec {
         array: [MaybeUninit<T>; CAPACITY],
     }
 
+    impl<T, const CAPACITY: usize> RawArrayVec<T, CAPACITY> {
+        ///initializes all elements of this array to MaybeUninit::uninit.
+        pub fn uninit() -> Self {
+            Self {
+                array: array::from_fn(|_| MaybeUninit::uninit()),
+            }
+        }
+
+        ///SAFETY: UB if accessed beyond CAPACITY *OR* into uninitialized memory.
+        pub unsafe fn get(&self, index: usize) -> &T {
+            //SAFETY: addressed by the disclosure on the function signature
+            let item = unsafe { self.array.get_unchecked(index) };
+
+            //SAFETY: addressed by the disclosure on the function signature
+            let item = unsafe { transmute_unchecked(item) };
+
+            item
+        }
+
+        ///SAFETY: UB if accessed beyond CAPACITY *OR* into uninitialized memory.
+        pub unsafe fn get_mut(&mut self, index: usize) -> &mut T {
+            //SAFETY: addressed by the disclosure on the function signature
+            let item = unsafe { self.array.get_unchecked_mut(index) };
+
+            //SAFETY: addressed by the disclosure on the function signature
+            let item = unsafe { transmute_unchecked(item) };
+
+            item
+        }
+
+        ///Reports wether the specified index is within the capacity of this structure.
+        pub const fn is_within_capacity(&self, index: usize) -> bool {
+            CAPACITY > index
+        }
+
+        ///SAFETY: UB if accessed beyond CAPACITY *OR* into uninitialized element.
+        pub unsafe fn remove(&mut self, index: usize, length: usize) -> T {
+            //SAFETY: addressed by the disclosure on the function signature
+            //take value
+            let r = unsafe { self.array.get_unchecked(index).assume_init_read() };
+
+            //shift values right of `r` left.
+            //start off by one?
+
+            let mut loop_idx = index + 1;
+            //Using the length of the entire `FatVec` is okay as we've established in the match arm
+            //that all elements are allocated on the array. This saves us the step of reading the next element
+            //to copy for the entire stack *so long as* we ensure all successive elements beyond the array len are MaybeUninit::uninit.
+            while loop_idx <= length {
+                //all elements shifted
+                unsafe {
+                    //SAFETY: guaranteed safe as loop_idx is guaranteed by the match arm to be <= len.
+                    let next = self.array.get_unchecked_mut(loop_idx) as *mut MaybeUninit<T>;
+                    //SAFETY: guaranteed safe as loop_idx is guaranteed by the match arm to be <= len *AND* we subtracting one from that.
+                    //we ensure that this doesn't underflow above.
+                    //saturating sub just to be doubly sure.
+                    let curr = self.array.get_unchecked_mut(loop_idx.saturating_sub(1))
+                        as *mut MaybeUninit<T>;
+
+                    *curr = next.read();
+                }
+
+                loop_idx += 1;
+            }
+
+            r
+        }
+
+        pub unsafe fn insert_at(&mut self, index: usize, value: T) {
+            unsafe { self.array.get_unchecked_mut(index).write(value) };
+        }
+    }
+
     pub struct ArrayVec<T, const CAPACITY: usize> {
         raw: RawArrayVec<T, CAPACITY>,
         length: usize,
     }
 
-    mod map {}
-    mod set {}
+    impl<T, const CAPACITY: usize> ArrayVec<T, CAPACITY> {
+        pub fn new() -> Self {
+            Self {
+                raw: RawArrayVec::uninit(),
+                length: 0,
+            }
+        }
+
+        pub fn pop(&mut self) -> Option<T> {
+            self.remove(self.length)
+        }
+
+        pub fn push(&mut self, value: T) -> Result<(), ArrayVecError> {
+            match self.length < CAPACITY {
+                true => {
+                    self.length += 1;
+                    unsafe { self.raw.insert_at(self.length, value) };
+
+                    Ok(())
+                }
+                false => Err(ArrayVecError::WouldExceedCapacity),
+            }
+        }
+
+        pub fn remove(&mut self, index: usize) -> Option<T> {
+            match self.raw.is_within_capacity(index) && self.length > 0 {
+                //SAFETY: we track len and know it is not > CAPACITY in this arm
+                //so there is no possibility of UB
+                true => {
+                    let r = unsafe { self.raw.remove(index, self.length) };
+
+                    self.length -= 1;
+
+                    Some(r)
+                }
+                false => None,
+            }
+        }
+
+        pub fn get(&self, index: usize) -> Option<&T> {
+            match self.raw.is_within_capacity(index) && index < self.length {
+                //SAFETY: we track len and know it is not > CAPACITY in this arm
+                //so there is no possibility of UB
+                true => unsafe { Some(self.raw.get(index)) },
+                false => None,
+            }
+        }
+
+        pub fn get_mut(&mut self, index: usize) -> Option<&mut T> {
+            match self.raw.is_within_capacity(index) && index < self.length {
+                //SAFETY: we track len and know it is not > CAPACITY in this arm
+                //so there is no possibility of UB
+                true => unsafe { Some(self.raw.get_mut(index)) },
+                false => None,
+            }
+        }
+    }
+
+    pub mod error {
+        use std::{error::Error, fmt::Display};
+
+        #[derive(Clone, Copy, Debug)]
+        pub enum ArrayVecError {
+            WouldExceedCapacity,
+        }
+
+        impl Display for ArrayVecError {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                match self {
+                    ArrayVecError::WouldExceedCapacity => write!(f, "push would exceed capacity"),
+                }
+            }
+        }
+
+        impl Error for ArrayVecError {}
+    }
+    pub mod map {}
+    pub mod set {}
+    #[cfg(test)]
+    mod test {}
 }
 
 //We make the modules public but *not* the contained types. Certain projects need only one type or the other.
