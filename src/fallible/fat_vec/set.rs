@@ -1,4 +1,4 @@
-use crate::fallible::FallibleLinearSet;
+use crate::fallible::{FallibleLinearMap, FallibleLinearSet};
 
 use super::map::FatMap;
 
@@ -38,7 +38,6 @@ impl<T: Eq, const STACK_CAPACITY: usize> FatSet<T, STACK_CAPACITY> {
         Self { map }
     }
 }
-
 impl<T: Eq, const STACK_CAPACITY: usize> FallibleLinearSet<T> for FatSet<T, STACK_CAPACITY> {
     type BACKING = FatMap<T, (), STACK_CAPACITY>;
 

@@ -18,7 +18,7 @@ pub use fallible_linear_collections_macros::*;
 ///Because arrays may implement this type, we cannot assume that implementors will be dynamically sized.
 ///Only methods which do not require manipulating the length or capacity of the store are provided here:
 ///this is to permit the implementation of fixed sized types backed by arrays.
-pub trait FallibleLinearMap<K: Eq, V: Sized + PartialEq> {
+pub trait FallibleLinearMap<K: Eq, V: Sized + PartialEq>: Sized {
     type Backing;
 
     ///Inserts a key-value pair into the map.
@@ -162,7 +162,8 @@ pub trait FallibleLinearMap<K: Eq, V: Sized + PartialEq> {
     }
 }
 
-///Set types backed by a LinearMap<K, ()>
+//Never implement clone: panics.
+///Set types backed by a FallibleLinearMap<K, ()> where K == T.
 pub trait FallibleLinearSet<T: Eq>: Sized {
     ///The map type which backs this set.
     type BACKING: FallibleLinearMap<T, ()>;

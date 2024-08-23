@@ -282,26 +282,6 @@ impl<const STACK_CAPACITY: usize, T: PartialEq> PartialEq for FatVec<T, STACK_CA
 
 impl<const STACK_CAPACITY: usize, T: Eq> Eq for FatVec<T, STACK_CAPACITY> {}
 
-impl<const STACK_CAPACITY: usize, T: Clone> Clone for FatVec<T, STACK_CAPACITY> {
-    fn clone(&self) -> Self {
-        //SAFETY:
-        //
-        //We're not actually mutating anything or even type casting and the pointer is immediately discarded so
-        //no rules are violated.
-        let array: [MaybeUninit<T>; STACK_CAPACITY] = unsafe {
-            self.array
-                .as_ptr()
-                .cast::<[MaybeUninit<T>; STACK_CAPACITY]>()
-                .read()
-        };
-
-        Self {
-            array,
-            vec: self.vec.clone(),
-            len: self.len.clone(),
-        }
-    }
-}
 impl<const STACK_CAPACITY: usize, T: Hash> Hash for FatVec<T, STACK_CAPACITY> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.iter().for_each(|t| t.hash(state))
