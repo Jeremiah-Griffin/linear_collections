@@ -156,9 +156,11 @@ pub trait PanickingLinearMap<K: Eq, V: Sized + PartialEq> {
 pub trait PanickingLinearSet<T: Eq>: Sized {
     ///The map type which backs this set.
     type BACKING: PanickingLinearMap<T, ()>;
-
+    ///Sets in rust are often backed by a map type of some sort, with value of every key set to `()`. `PanickingLinearSet`s are no different, and this method
+    //permits shared access to the internal backing map.
     fn map(&self) -> &Self::BACKING;
-
+    ///Sets in rust are often backed by a map type of some sort, with value of every key set to `()`. `PanickingLinearSet`s are no different, and this method
+    //permits exclusive access to the internal backing map.
     fn map_mut(&mut self) -> &mut Self::BACKING;
 
     ///Returns true if the referenced value is in the set, false otherwise.
@@ -166,20 +168,23 @@ pub trait PanickingLinearSet<T: Eq>: Sized {
         self.map().contains_key(value)
     }
 
-    fn len(&self) -> usize {
-        self.map().len()
-    }
-
+    ///Returns `true` if this set is empty. `false` otherwise.
     fn is_empty(&self) -> bool {
         self.map().is_empty()
     }
 
+    ///The number of items contained in this set.
+    fn len(&self) -> usize {
+        self.map().len()
+    }
     ///Adds a value to the set.
     ///If the set did not previously contain this value, true is returned.
     ///If the set already contained this value, false is returned, and the set is not modified: original value is not replaced, and the value passed as argument is dropped.
     fn insert(&mut self, value: T) -> bool {
         self.map_mut().insert(value, ()).is_none()
     }
+    ///Iterates over the values in this set.
+
     fn values<'a>(&'a self) -> impl Iterator<Item = &'a T>
     where
         T: 'a,

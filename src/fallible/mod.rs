@@ -166,8 +166,11 @@ pub trait FallibleLinearSet<T: Eq>: Sized {
     ///The map type which backs this set.
     type BACKING: FallibleLinearMap<T, ()>;
 
+    ///Sets in rust are often backed by a map type of some sort, with value of every key set to `()`. FallibleLinearSets are no different, and this method
+    //permits shared access to the internal backing map.
     fn map(&self) -> &Self::BACKING;
-
+    ///Sets in rust are often backed by a map type of some sort, with value of every key set to `()`. FallibleLinearSets are no different, and this method
+    //permits exclusive access to the internal backing map.
     fn map_mut(&mut self) -> &mut Self::BACKING;
 
     ///Returns true if the referenced value is in the set, false otherwise.
@@ -182,14 +185,17 @@ pub trait FallibleLinearSet<T: Eq>: Sized {
         self.map_mut().insert(value, ()).map(|r| r.is_none())
     }
 
+    ///Returns `true` if this set is empty. `false` otherwise.
     fn is_empty(&self) -> bool {
         self.map().is_empty()
     }
 
+    ///The number of items contained in this set.
     fn len(&self) -> usize {
         self.map().len()
     }
 
+    ///Iterates over the values in this Set.
     fn values<'a>(&'a self) -> impl Iterator<Item = &'a T>
     where
         T: 'a,
