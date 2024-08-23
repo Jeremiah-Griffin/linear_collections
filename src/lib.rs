@@ -13,6 +13,7 @@ mod array_vec {
 
     use error::ArrayVecError;
 
+    #[derive(Debug)]
     ///We need the core functionality of ArrayVec throughout the crate, but don't need the overhead
     ///of tracking `length` internally. So we don't!
     pub(crate) struct RawArrayVec<T, const CAPACITY: usize> {
@@ -25,6 +26,14 @@ mod array_vec {
             Self {
                 array: array::from_fn(|_| MaybeUninit::uninit()),
             }
+        }
+
+        ///SAFETY: UB if `limit` is beyond CAPACITY.
+        ///Drops all elements up to `limit`, exclusive.
+        pub unsafe fn clear_to(&mut self, limit: usize) {
+            self.array[0..limit]
+                .iter_mut()
+                .for_each(|t| unsafe { t.assume_init_drop() });
         }
 
         ///SAFETY: UB if accessed beyond CAPACITY *OR* into uninitialized memory.
@@ -52,6 +61,27 @@ mod array_vec {
         ///Reports wether the specified index is within the capacity of this structure.
         pub const fn is_within_capacity(&self, index: usize) -> bool {
             CAPACITY > index
+        }
+
+        pub unsafe fn iter_to<'a>(&'a self, index: usize) -> impl Iterator<Item = &'a T> {
+            //TODO: This can panic
+            self.array[0..index]
+                .iter()
+                //SAFETY:
+                //Initializing is tied to the idx. all items <= to idx are guaranteed to be init.
+                .map(|t| unsafe { t.assume_init_ref() })
+        }
+
+        pub unsafe fn iter_mut_to<'a>(
+            &'a mut self,
+            index: usize,
+        ) -> impl Iterator<Item = &'a mut T> {
+            //TODO: This can panic
+            self.array[0..index]
+                .iter_mut()
+                //SAFETY:
+                //Initializing is tied to the idx. all items <= to idx are guaranteed to be init.
+                .map(|t| unsafe { t.assume_init_mut() })
         }
 
         ///SAFETY: UB if accessed beyond CAPACITY *OR* into uninitialized element.
@@ -92,6 +122,7 @@ mod array_vec {
         }
     }
 
+    #[derive(Debug)]
     pub struct ArrayVec<T, const CAPACITY: usize> {
         raw: RawArrayVec<T, CAPACITY>,
         length: usize,

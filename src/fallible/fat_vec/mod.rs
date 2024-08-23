@@ -5,13 +5,15 @@ use std::{
     mem::MaybeUninit,
 };
 
+use crate::array_vec::RawArrayVec;
+
 pub mod map;
 pub mod set;
 
 #[derive(Debug)]
 ///A vector which allocates at least `STACK_CAPACITY` elements onto the stack.
 pub struct FatVec<T, const STACK_CAPACITY: usize> {
-    array: [MaybeUninit<T>; STACK_CAPACITY],
+    array: RawArrayVec<T, STACK_CAPACITY>,
     //TODO: should replace this vec with an other implementation.
     //TODO: fallibele collections: replace this with a custom fallible vec implementation.
     ///For now, with panicking operations we call some method that ensures the next call will not panic. This is a bit flimsy.
@@ -30,7 +32,7 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
     ///heap allocations.
     pub fn new() -> Self {
         Self {
-            array: array::from_fn(|_| MaybeUninit::uninit()),
+            array: RawArrayVec::uninit(),
             vec: Vec::new(),
             len: 0,
         }
@@ -63,7 +65,7 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
     ///re-allocating.
     pub fn with_heap_capacity(capacity: usize) -> Result<Self, TryReserveError> {
         Ok(Self {
-            array: array::from_fn(|_| MaybeUninit::uninit()),
+            array: RawArrayVec::uninit(),
             vec: Vec::try_with_capacity(capacity)?,
             len: 0,
         })
@@ -81,23 +83,15 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
     pub fn iter<'a>(&'a self) -> impl Iterator<Item = &'a T> {
         let len = self.array_len();
 
-        self.array[0..len]
-            .iter()
-            //SAFETY:
-            //Initializing is tied to the idx. all items <= to idx are guaranteed to be init.
-            .map(|t| unsafe { t.assume_init_ref() })
-            .chain(self.vec.iter())
+        //SAFETY: len is guaranteed to be within the initialized contents of the RawVec
+        unsafe { self.array.iter_to(len) }.chain(self.vec.iter())
     }
 
     pub fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut T> {
         let len = self.array_len();
 
-        self.array[0..len]
-            .iter_mut()
-            //SAFETY:
-            //Initializing is tied to the idx. all items <= to idx are guaranteed to be init.
-            .map(|t| unsafe { t.assume_init_mut() })
-            .chain(self.vec.iter_mut())
+        //SAFETY: len is guaranteed to be within the initialized contents of the RawVec
+        unsafe { self.array.iter_mut_to(len) }.chain(self.vec.iter_mut())
     }
 
     ///Returns the number of items in this `FatVec`
@@ -113,13 +107,9 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
 
     ///TODO: how to test and ensure that each value gets dropped?
     pub fn clear(&mut self) {
-        let len = self.array_len(); //SAFETY:
-                                    //Ensure that all  elements are dropped. Bounded by array len means this cannot find uninitalized
-                                    //memory.
-        self.array[0..len]
-            .iter_mut()
-            .for_each(|t| unsafe { t.assume_init_drop() });
-
+        //Ensure that all  elements are dropped. Bounded by array len means this cannot find uninitalized
+        //memory.
+        unsafe { self.array.clear_to(self.array_len()) }
         self.vec.clear();
         self.len = 0;
     }
@@ -131,9 +121,7 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
         let new_len = self.len.saturating_add(1);
 
         match STACK_CAPACITY > self.len() {
-            true => {
-                unsafe { self.array.get_unchecked_mut(self.len).write(value) };
-            }
+            true => unsafe { self.array.insert_at(self.len, value) },
             false => {
                 //call reserve on the vec as necessary to ensure pushing to it doesn't panic.
                 if self.vec.capacity() < new_len {
@@ -156,8 +144,8 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
         //meaning it needs to shift left to keep the values contiguous.
         let r = match self.len() {
             0 => None,
-            l if l <= STACK_CAPACITY => unsafe {
-                Some(self.array.get_unchecked(l).assume_init_read())
+            idx if idx <= STACK_CAPACITY => unsafe {
+                Some(self.array.remove(idx, self.array_len()))
             },
             _ => self.vec.pop(),
         };
@@ -178,7 +166,7 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
             _ if index <= STACK_CAPACITY => {
                 self.len -= 1;
                 //take value
-                let r = unsafe { self.array.get_unchecked(index).assume_init_read() };
+                let r = unsafe { self.array.remove(index, self.array_len()) };
 
                 //shift values right of `r` left.
                 //start off by one?
@@ -191,13 +179,14 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
                     //all elements shifted
                     unsafe {
                         //SAFETY: guaranteed safe as loop_idx is guaranteed by the match arm to be <= len.
-                        let next = self.array.get_unchecked_mut(loop_idx) as *mut MaybeUninit<T>;
+                        let next = self.array.get_mut(loop_idx) as *mut T;
                         //SAFETY: guaranteed safe as loop_idx is guaranteed by the match arm to be <= len *AND* we subtracting one from that.
                         //we ensure that this doesn't underflow above.
                         //saturating sub just to be doubly sure.
-                        let curr = self.array.get_unchecked_mut(loop_idx.saturating_sub(1))
-                            as *mut MaybeUninit<T>;
+                        let curr = self.array.get_mut(loop_idx.saturating_sub(1)) as *mut T;
 
+                        //These derefs are safe as we're taking a raw pointer to the items *within*
+                        //TODO: do we need Pin somehwere? Can the compile move the referent out from under use?
                         *curr = next.read();
                     }
 
@@ -231,7 +220,7 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
             //SAFETY:
             //Because we maintain length seperately of the vec and array, we can rely on IDX not to be out of bounds for
             //either these accesses.
-            true => unsafe { Some(self.array.get_unchecked(idx).assume_init_ref()) },
+            true => unsafe { Some(self.array.get(idx)) },
             //subtract as the first element of vec is 0, but in the whole `FatVec`, it's
             //always STACK_CAPACITY + idx. The subtraction accounts for this for this.
             false => self.vec.get(idx - STACK_CAPACITY),
@@ -247,7 +236,7 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
             //SAFETY:
             //Because we maintain length seperately from the vec and array, we can rely on IDX not to be out of bounds for
             //either these accesses.
-            true => unsafe { Some(self.array.get_unchecked_mut(idx).assume_init_mut()) },
+            true => unsafe { Some(self.array.get_mut(idx)) },
             //subtract as the first element of vec is 0, but in the whole `FatVec`, it's
             //always STACK_CAPACITY + idx. The subtraction accounts for this for this.
             false => self.vec.get_mut(idx - STACK_CAPACITY),
