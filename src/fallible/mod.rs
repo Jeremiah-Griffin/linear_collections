@@ -81,6 +81,7 @@ pub trait FallibleLinearMap<K: Eq, V: Sized + PartialEq>: Sized {
         self.len() == 0
     }
 
+    ///Iterator over the keys of this map.
     fn keys<'a>(&'a self) -> impl Iterator<Item = &'a K>
     where
         K: 'a,
@@ -135,6 +136,7 @@ pub trait FallibleLinearMap<K: Eq, V: Sized + PartialEq>: Sized {
         self.remove_entry(key).map(|(_, v)| v)
     }
 
+    ///Iterator over the values of this map, returning a shared reference to each.
     fn values<'a>(&'a self) -> impl Iterator<Item = &'a V>
     where
         K: 'a,
@@ -143,6 +145,7 @@ pub trait FallibleLinearMap<K: Eq, V: Sized + PartialEq>: Sized {
         self.iter().map(|(_, v)| v)
     }
 
+    ///Iterator over the values of this map, returning an exclusive reference to each.
     fn values_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut V>
     where
         K: 'a,
@@ -195,7 +198,7 @@ pub trait FallibleLinearSet<T: Eq>: Sized {
         self.map().len()
     }
 
-    ///Iterates over the values in this Set.
+    ///Iterates over the values in this set.
     fn values<'a>(&'a self) -> impl Iterator<Item = &'a T>
     where
         T: 'a,

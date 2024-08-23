@@ -9,9 +9,6 @@ pub use vecdeque::{map::*, set::*};
 #[cfg(feature = "panicking_macros")]
 pub use panicking_linear_collections_macros::*;
 
-//This is allowed as making AsMutSlice public would permit
-//clients to wantonly break invariants of the collection
-#[allow(private_bounds)]
 ///Provides methods for maps backed by linear data structures like arrays and vectors.
 ///Because arrays may implement this type, we cannot assume that implementors will be dynamically sized.
 ///Only methods which do not require manipulating the length or capacity of the store are provided here:
@@ -69,6 +66,7 @@ pub trait PanickingLinearMap<K: Eq, V: Sized + PartialEq> {
 
     fn len(&self) -> usize;
 
+    ///Iterator over the keys of this map.
     fn keys<'a>(&'a self) -> impl Iterator<Item = &'a K>
     where
         K: 'a,
@@ -127,6 +125,7 @@ pub trait PanickingLinearMap<K: Eq, V: Sized + PartialEq> {
 
     fn remove_entry(&mut self, key: &K) -> Option<(K, V)>;
 
+    ///Iterator over the values of this map, returning a shared reference to each.
     fn values<'a>(&'a self) -> impl Iterator<Item = &'a V>
     where
         K: 'a,
@@ -135,6 +134,7 @@ pub trait PanickingLinearMap<K: Eq, V: Sized + PartialEq> {
         self.iter().map(|(_, v)| v)
     }
 
+    ///Iterator over the values of this map, returning an exclusive reference to each.
     fn values_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut V>
     where
         K: 'a,
@@ -184,7 +184,6 @@ pub trait PanickingLinearSet<T: Eq>: Sized {
         self.map_mut().insert(value, ()).is_none()
     }
     ///Iterates over the values in this set.
-
     fn values<'a>(&'a self) -> impl Iterator<Item = &'a T>
     where
         T: 'a,
