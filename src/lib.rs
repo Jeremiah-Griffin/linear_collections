@@ -25,3 +25,12 @@ mod serde;
 */
 #[cfg(test)]
 mod test;
+
+///Sealed trait to provide mutable iteration without allowing consumers
+///to violate the invariants of the map types
+pub(crate) trait MapIterMut<K, V> {
+    fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut (K, V)>
+    where
+        K: 'a,
+        V: 'a;
+}

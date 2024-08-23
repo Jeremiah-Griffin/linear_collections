@@ -1,4 +1,4 @@
-use crate::fallible::FallibleLinearMap;
+use crate::{fallible::FallibleLinearMap, MapIterMut};
 use std::collections::TryReserveError;
 
 use super::FatVec;
@@ -85,14 +85,6 @@ impl<K: Eq, V: Sized + PartialEq, const STACK_CAPACITY: usize> FallibleLinearMap
         self.fatvec.iter()
     }
 
-    fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut (K, V)>
-    where
-        K: 'a,
-        V: 'a,
-    {
-        self.fatvec.iter_mut()
-    }
-
     fn remove_entry(&mut self, key: &K) -> Option<(K, V)> {
         let idx = self
             .fatvec
@@ -106,5 +98,17 @@ impl<K: Eq, V: Sized + PartialEq, const STACK_CAPACITY: usize> FallibleLinearMap
 
     fn len(&self) -> usize {
         self.fatvec.len()
+    }
+}
+
+impl<K: Eq, V: Sized + PartialEq, const STACK_CAPACITY: usize> MapIterMut<K, V>
+    for FatMap<K, V, STACK_CAPACITY>
+{
+    fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut (K, V)>
+    where
+        K: 'a,
+        V: 'a,
+    {
+        self.fatvec.iter_mut()
     }
 }

@@ -1,6 +1,6 @@
 use std::collections::VecDeque;
 
-use crate::panicking::PanickingLinearMap;
+use crate::{panicking::PanickingLinearMap, MapIterMut};
 
 ///A map type backed by a VecDeque. Useful for small collections whose size can change.
 pub struct DequeMap<K: Eq, V: Sized + PartialEq> {
@@ -62,14 +62,6 @@ impl<K: Eq, V: Sized + PartialEq> PanickingLinearMap<K, V> for DequeMap<K, V> {
         self.vecdeque.iter()
     }
 
-    fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut (K, V)>
-    where
-        K: 'a,
-        V: 'a,
-    {
-        self.vecdeque.iter_mut()
-    }
-
     fn len(&self) -> usize {
         self.vecdeque.len()
     }
@@ -84,5 +76,15 @@ impl<K: Eq, V: Sized + PartialEq> PanickingLinearMap<K, V> for DequeMap<K, V> {
             .map(|(i, _)| i)?;
 
         self.vecdeque.remove(idx)
+    }
+}
+
+impl<K: Eq, V: Sized + PartialEq> MapIterMut<K, V> for DequeMap<K, V> {
+    fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut (K, V)>
+    where
+        K: 'a,
+        V: 'a,
+    {
+        self.vecdeque.iter_mut()
     }
 }

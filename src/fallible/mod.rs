@@ -11,12 +11,16 @@ pub use vecdeque::{map::*, set::*};
 #[cfg(feature = "fallible_macros")]
 pub use fallible_linear_collections_macros::*;
 
+use crate::MapIterMut;
+
+//sealed trait
+#[allow(private_bounds)]
 //Never implement clone: panics on alloc failure.
 ///Provides methods for maps backed by linear data structures like arrays and vectors.
 ///Because arrays may implement this type, we cannot assume that implementors will be dynamically sized.
 ///Only methods which do not require manipulating the length or capacity of the store are provided here:
 ///this is to permit the implementation of fixed sized types backed by arrays.
-pub trait FallibleLinearMap<K: Eq, V: Sized + PartialEq>: Sized {
+pub trait FallibleLinearMap<K: Eq, V: Sized + PartialEq>: MapIterMut<K, V> {
     type Backing;
 
     ///Inserts a key-value pair into the map.
@@ -28,12 +32,6 @@ pub trait FallibleLinearMap<K: Eq, V: Sized + PartialEq>: Sized {
     fn into_inner(self) -> Self::Backing;
 
     fn iter<'a>(&'a self) -> impl Iterator<Item = &'a (K, V)>
-    where
-        K: 'a,
-        V: 'a;
-
-    ///TODO: THIS NEEDS TO BE MOVED TO A SEALED TRAIT AS MUTATING THE KEY TO BE == ANOTHER KEY IS UNSOUND
-    fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut (K, V)>
     where
         K: 'a,
         V: 'a;
@@ -90,6 +88,9 @@ pub trait FallibleLinearMap<K: Eq, V: Sized + PartialEq>: Sized {
         self.iter().map(|(k, _)| k)
     }
 
+    /*
+    //TODO: TryClone.
+    //removed from fallible as we don't have a good way of copying elements with a guarantee of no panics.
     ///For every key in iter which matches a key in self, this method replaces
     ///the value from iter in self, "merging" the iterator and the map.
     ///
@@ -100,10 +101,10 @@ pub trait FallibleLinearMap<K: Eq, V: Sized + PartialEq>: Sized {
     fn merge_from_iter<'a>(&'a mut self, iter: impl Iterator<Item = &'a (K, V)>)
     where
         K: 'a,
-        V: 'a + Clone,
+        V: 'a ,
     {
         iter.for_each(|(k, v)| self.replace(&k, v.clone().to_owned()))
-    }
+    }*/
     ///Gets a reference to the nth value in the map.
     ///Will return None if index is out of bounds.
     fn nth_value<'a>(&'a self, index: usize) -> Option<&'a V>

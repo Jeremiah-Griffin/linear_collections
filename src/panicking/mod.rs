@@ -9,12 +9,18 @@ pub use vecdeque::{map::*, set::*};
 #[cfg(feature = "panicking_macros")]
 pub use panicking_linear_collections_macros::*;
 
+use crate::MapIterMut;
+
+//sealed trait
+#[allow(private_bounds)]
 ///Provides methods for maps backed by linear data structures like arrays and vectors.
 ///Because arrays may implement this type, we cannot assume that implementors will be dynamically sized.
 ///Only methods which do not require manipulating the length or capacity of the store are provided here:
 ///this is to permit the implementation of fixed sized types backed by arrays.
-pub trait PanickingLinearMap<K: Eq, V: Sized + PartialEq> {
+pub trait PanickingLinearMap<K: Eq, V: Sized + PartialEq>: MapIterMut<K, V> {
     type Backing;
+
+    fn len(&self) -> usize;
 
     ///Returns true if this map contains the given key. False otherwise.
     fn contains_key(&self, key: &K) -> bool {
@@ -57,14 +63,6 @@ pub trait PanickingLinearMap<K: Eq, V: Sized + PartialEq> {
     where
         K: 'a,
         V: 'a;
-
-    ///TODO: THIS NEEDS TO BE MOVED TO A SEALED TRAIT AS MUTATING KEYS IS UNSOUND
-    fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut (K, V)>
-    where
-        K: 'a,
-        V: 'a;
-
-    fn len(&self) -> usize;
 
     ///Iterator over the keys of this map.
     fn keys<'a>(&'a self) -> impl Iterator<Item = &'a K>

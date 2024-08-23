@@ -1,4 +1,4 @@
-use crate::panicking::PanickingLinearMap;
+use crate::{panicking::PanickingLinearMap, MapIterMut};
 
 use super::FatVec;
 
@@ -74,14 +74,6 @@ impl<K: Eq, V: Sized + PartialEq, const STACK_CAPACITY: usize> PanickingLinearMa
         self.fatvec.iter()
     }
 
-    fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut (K, V)>
-    where
-        K: 'a,
-        V: 'a,
-    {
-        self.fatvec.iter_mut()
-    }
-
     fn remove_entry(&mut self, key: &K) -> Option<(K, V)> {
         let idx = self
             .fatvec
@@ -95,5 +87,17 @@ impl<K: Eq, V: Sized + PartialEq, const STACK_CAPACITY: usize> PanickingLinearMa
 
     fn len(&self) -> usize {
         self.fatvec.len()
+    }
+}
+
+impl<K: Eq, V: Sized + PartialEq, const STACK_CAPACITY: usize> MapIterMut<K, V>
+    for FatMap<K, V, STACK_CAPACITY>
+{
+    fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut (K, V)>
+    where
+        K: 'a,
+        V: 'a,
+    {
+        self.fatvec.iter_mut()
     }
 }
