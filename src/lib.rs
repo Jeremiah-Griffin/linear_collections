@@ -6,6 +6,23 @@
 #![cfg_attr(feature = "nightly_fallible", feature(slice_concat_ext))]
 #![cfg_attr(feature = "nightly_fallible", feature(slice_concat_trait))]
 pub mod array;
+mod array_vec {
+    use std::mem::MaybeUninit;
+
+    ///We need the core functionality of ArrayVec throughout the crate, but don't need the overhead
+    ///of tracking `length` internally. So we don't!
+    pub(crate) struct RawArrayVec<T, const CAPACITY: usize> {
+        array: [MaybeUninit<T>; CAPACITY],
+    }
+
+    pub struct ArrayVec<T, const CAPACITY: usize> {
+        raw: RawArrayVec<T, CAPACITY>,
+        length: usize,
+    }
+
+    mod map {}
+    mod set {}
+}
 
 //We make the modules public but *not* the contained types. Certain projects need only one type or the other.
 //It would be unfortunate for a low level library which can only use fallible types to be forced to specify "FallibleFatVec".
