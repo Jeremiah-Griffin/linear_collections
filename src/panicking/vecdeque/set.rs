@@ -16,7 +16,7 @@ impl<T: Eq> DequeSet<T> {
     ///Creates a DequeSet that can hold `capacity` elements without reallocating
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
-            map: DequeMap::new(),
+            map: DequeMap::with_capacity(capacity),
         }
     }
 

@@ -1,4 +1,4 @@
-use crate::panicking::{PanickingLinearMap, PanickingLinearSet};
+use crate::panicking::PanickingLinearSet;
 
 use super::map::FatMap;
 

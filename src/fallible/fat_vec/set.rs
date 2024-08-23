@@ -1,4 +1,4 @@
-use crate::fallible::{FallibleLinearMap, FallibleLinearSet};
+use crate::fallible::FallibleLinearSet;
 
 use super::map::FatMap;
 

@@ -1,5 +1,3 @@
-use std::collections::TryReserveError;
-
 use crate::fallible::{FallibleLinearMap, FallibleLinearSet};
 
 use super::map::VecMap;
