@@ -9,6 +9,9 @@ pub use vecdeque::{map::*, set::*};
 #[cfg(feature = "panicking_macros")]
 pub use panicking_linear_collections_macros::*;
 
+#[cfg(test)]
+mod test;
+
 use crate::MapIterMut;
 
 //sealed trait

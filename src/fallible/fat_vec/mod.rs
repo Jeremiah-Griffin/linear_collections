@@ -1,9 +1,6 @@
 #[cfg(test)]
 pub mod test;
-use std::{
-    array, collections::TryReserveError, hash::Hash, intrinsics::transmute_unchecked,
-    mem::MaybeUninit,
-};
+use std::{collections::TryReserveError, hash::Hash, intrinsics::transmute_unchecked};
 
 use crate::array_vec::RawArrayVec;
 
@@ -164,44 +161,14 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
             0 => None,
             //value is resident on stack
             _ if index <= STACK_CAPACITY => {
-                self.len -= 1;
-                //take value
                 let r = unsafe { self.array.remove(index, self.array_len()) };
-
-                //shift values right of `r` left.
-                //start off by one?
-
-                let mut loop_idx = index + 1;
-                //Using the length of the entire `FatVec` is okay as we've established in the match arm
-                //that all elements are allocated on the array. This saves us the step of reading the next element
-                //to copy for the entire stack *so long as* we ensure all successive elements beyond the array len are MaybeUninit::uninit.
-                while loop_idx <= self.len() {
-                    //all elements shifted
-                    unsafe {
-                        //SAFETY: guaranteed safe as loop_idx is guaranteed by the match arm to be <= len.
-                        let next = self.array.get_mut(loop_idx) as *mut T;
-                        //SAFETY: guaranteed safe as loop_idx is guaranteed by the match arm to be <= len *AND* we subtracting one from that.
-                        //we ensure that this doesn't underflow above.
-                        //saturating sub just to be doubly sure.
-                        let curr = self.array.get_mut(loop_idx.saturating_sub(1)) as *mut T;
-
-                        //These derefs are safe as we're taking a raw pointer to the items *within*
-                        //TODO: do we need Pin somehwere? Can the compile move the referent out from under use?
-                        *curr = next.read();
-                    }
-
-                    loop_idx += 1;
-                }
-
-                //we can leave the remaining elements as they are and just bump the idx.
+                self.len -= 1;
                 Some(r)
             }
             //value is resident on heap
             _ => {
                 let vec_idx = index - STACK_CAPACITY;
-
                 self.len -= 1;
-
                 match vec_idx > self.vec.len() {
                     true => None,
                     false => Some(self.vec.remove(vec_idx)),
