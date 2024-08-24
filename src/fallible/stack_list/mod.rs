@@ -1,2 +1,2 @@
-pub mod map {}
-pub mod set {}
+pub mod map;
+pub mod set;

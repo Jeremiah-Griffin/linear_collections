@@ -118,6 +118,12 @@ pub struct StackList<T, const CAPACITY: usize> {
 }
 
 impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
+    pub const fn len(&self) -> usize {
+        self.length
+    }
+}
+
+impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
     pub fn new() -> Self {
         Self {
             raw: RawStackList::uninit(),

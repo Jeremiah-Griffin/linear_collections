@@ -1,4 +1,4 @@
-use std::{collections::TryReserveError, error::Error};
+use std::error::Error;
 
 mod fat_vec;
 mod stack_list;
@@ -6,6 +6,7 @@ mod vec;
 mod vecdeque;
 
 pub use fat_vec::{map::*, set::*, FatVec};
+pub use stack_list::{map::*, set::*};
 pub use vec::{map::*, set::*};
 pub use vecdeque::{map::*, set::*};
 
