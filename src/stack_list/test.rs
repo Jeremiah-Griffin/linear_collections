@@ -1,4 +1,4 @@
-use super::{ArrayVec, RawArrayVec};
+use super::{RawStackList, StackList};
 
 #[test]
 fn raw_arr_vec_remove_front_is_same_as_vec() {
@@ -10,7 +10,7 @@ fn raw_arr_vec_remove_front_is_same_as_vec() {
 
     let mut vec = vec![one, two, three, four, five];
 
-    let mut arrvec = RawArrayVec::<&str, 5>::uninit();
+    let mut arrvec = RawStackList::<&str, 5>::uninit();
 
     unsafe {
         arrvec.insert_at(0, one);
@@ -39,7 +39,7 @@ fn raw_arr_vec_remove_mid_is_same_as_vec() {
 
     let mut vec = vec![one, two, three, four, five];
 
-    let mut arrvec = RawArrayVec::<&str, 5>::uninit();
+    let mut arrvec = RawStackList::<&str, 5>::uninit();
 
     unsafe {
         arrvec.insert_at(0, one);
@@ -68,7 +68,7 @@ fn raw_arr_vec_remove_end_is_same_as_vec() {
 
     let mut vec = vec![one, two, three, four, five];
 
-    let mut arrvec = RawArrayVec::<&str, 5>::uninit();
+    let mut arrvec = RawStackList::<&str, 5>::uninit();
 
     unsafe {
         arrvec.insert_at(0, one);
@@ -97,7 +97,7 @@ fn arr_vec_remove_start_is_same_as_vec() {
 
     let mut vec = vec![one, two, three, four, five];
 
-    let mut arrvec = ArrayVec::<&str, 5>::new();
+    let mut arrvec = StackList::<&str, 5>::new();
 
     arrvec.push(one).unwrap();
     arrvec.push(two).unwrap();
@@ -124,7 +124,7 @@ fn arr_vec_remove_mid_is_same_as_vec() {
 
     let mut vec = vec![one, two, three, four, five];
 
-    let mut arrvec = ArrayVec::<&str, 5>::new();
+    let mut arrvec = StackList::<&str, 5>::new();
 
     arrvec.push(one).unwrap();
     arrvec.push(two).unwrap();
@@ -151,7 +151,7 @@ fn arr_vec_remove_end_is_same_as_vec() {
 
     let mut vec = vec![one, two, three, four, five];
 
-    let mut arrvec = ArrayVec::<&str, 5>::new();
+    let mut arrvec = StackList::<&str, 5>::new();
 
     arrvec.push(one).unwrap();
     arrvec.push(two).unwrap();

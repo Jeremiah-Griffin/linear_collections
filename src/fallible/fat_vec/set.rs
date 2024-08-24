@@ -39,13 +39,13 @@ impl<T: Eq, const STACK_CAPACITY: usize> FatSet<T, STACK_CAPACITY> {
     }
 }
 impl<T: Eq, const STACK_CAPACITY: usize> FallibleLinearSet<T> for FatSet<T, STACK_CAPACITY> {
-    type BACKING = FatMap<T, (), STACK_CAPACITY>;
+    type Backing = FatMap<T, (), STACK_CAPACITY>;
 
-    fn map(&self) -> &Self::BACKING {
+    fn map(&self) -> &Self::Backing {
         &self.map
     }
 
-    fn map_mut(&mut self) -> &mut Self::BACKING {
+    fn map_mut(&mut self) -> &mut Self::Backing {
         &mut self.map
     }
 }

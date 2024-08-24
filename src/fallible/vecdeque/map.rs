@@ -34,6 +34,7 @@ impl<K: Eq, V: Sized + PartialEq> DequeMap<K, V> {
 
 impl<K: Eq, V: Sized + PartialEq> FallibleLinearMap<K, V> for DequeMap<K, V> {
     type Backing = VecDeque<(K, V)>;
+    type InsertionError = TryReserveError;
 
     fn insert(&mut self, key: K, value: V) -> Result<Option<V>, std::collections::TryReserveError> {
         let mut iter = self.deque.iter_mut();

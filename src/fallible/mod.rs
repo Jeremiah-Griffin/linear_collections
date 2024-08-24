@@ -1,6 +1,7 @@
-use std::collections::TryReserveError;
+use std::{collections::TryReserveError, error::Error};
 
 mod fat_vec;
+mod stack_list;
 mod vec;
 mod vecdeque;
 
@@ -22,12 +23,14 @@ use crate::MapIterMut;
 ///this is to permit the implementation of fixed sized types backed by arrays.
 pub trait FallibleLinearMap<K: Eq, V: Sized + PartialEq>: MapIterMut<K, V> {
     type Backing;
+    //Aliasing the InsertionError allows us to implement this for both heap allocated types which return TryReserveError
+    //and the stack allocated ArrayVec which return ArrayVecError.
+    type InsertionError: Error;
 
     ///Inserts a key-value pair into the map.
     ///If the map did not have this key present, None is returned.
     ///If the map did have this key present, the value is updated, and the old value is returned. The key is not updated, though; this matters for types that can be == without being identical. See the module-level documentation for more.
-    fn insert(&mut self, key: K, value: V) -> Result<Option<V>, TryReserveError>;
-
+    fn insert(&mut self, key: K, value: V) -> Result<Option<V>, Self::InsertionError>;
     ///Consumes self, returning the underlying store.
     fn into_inner(self) -> Self::Backing;
 
@@ -168,24 +171,29 @@ pub trait FallibleLinearMap<K: Eq, V: Sized + PartialEq>: MapIterMut<K, V> {
 ///Set types backed by a FallibleLinearMap<K, ()> where K == T.
 pub trait FallibleLinearSet<T: Eq>: Sized {
     ///The map type which backs this set.
-    type BACKING: FallibleLinearMap<T, ()>;
+    type Backing: FallibleLinearMap<T, ()>;
 
     ///Sets in rust are often backed by a map type of some sort, with value of every key set to `()`. FallibleLinearSets are no different, and this method
     //permits shared access to the internal backing map.
-    fn map(&self) -> &Self::BACKING;
+    fn map(&self) -> &Self::Backing;
     ///Sets in rust are often backed by a map type of some sort, with value of every key set to `()`. FallibleLinearSets are no different, and this method
     //permits exclusive access to the internal backing map.
-    fn map_mut(&mut self) -> &mut Self::BACKING;
+    fn map_mut(&mut self) -> &mut Self::Backing;
 
     ///Returns true if the referenced value is in the set, false otherwise.
     fn contains(&self, value: &T) -> bool {
         self.map().contains_key(value)
     }
 
+    //Generic over E allows us to implement this for both heap allocated types which return TryReserveError
+    //and the stack allocated ArrayVec which return ArrayVecError.
     ///Adds a value to the set.
     ///If the set did not previously contain this value, true is returned.
     ///If the set already contained this value, false is returned, and the set is not modified: original value is not replaced, and the value passed as argument is dropped.
-    fn insert(&mut self, value: T) -> Result<bool, TryReserveError> {
+    fn insert(
+        &mut self,
+        value: T,
+    ) -> Result<bool, <Self::Backing as FallibleLinearMap<T, ()>>::InsertionError> {
         self.map_mut().insert(value, ()).map(|r| r.is_none())
     }
 

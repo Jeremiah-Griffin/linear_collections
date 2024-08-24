@@ -60,8 +60,9 @@ impl<K: Eq, V: Sized + PartialEq, const STACK_CAPACITY: usize> FallibleLinearMap
     for FatMap<K, V, STACK_CAPACITY>
 {
     type Backing = FatVec<(K, V), STACK_CAPACITY>;
+    type InsertionError = TryReserveError;
 
-    fn insert(&mut self, key: K, value: V) -> Result<Option<V>, TryReserveError> {
+    fn insert(&mut self, key: K, value: V) -> Result<Option<V>, Self::InsertionError> {
         let mut iter = self.fatvec.iter_mut();
         match iter.find(|(k, _)| *k == key) {
             Some((_, v)) => Ok(Some(std::mem::replace(v, value))),

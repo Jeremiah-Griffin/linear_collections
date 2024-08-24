@@ -2,7 +2,7 @@
 pub mod test;
 use std::{collections::TryReserveError, hash::Hash, intrinsics::transmute_unchecked};
 
-use crate::array_vec::RawArrayVec;
+use crate::stack_list::RawStackList;
 
 pub mod map;
 pub mod set;
@@ -10,7 +10,7 @@ pub mod set;
 #[derive(Debug)]
 ///A vector which allocates at least `STACK_CAPACITY` elements onto the stack.
 pub struct FatVec<T, const STACK_CAPACITY: usize> {
-    array: RawArrayVec<T, STACK_CAPACITY>,
+    array: RawStackList<T, STACK_CAPACITY>,
     //TODO: should replace this vec with an other implementation.
     //TODO: fallibele collections: replace this with a custom fallible vec implementation.
     ///For now, with panicking operations we call some method that ensures the next call will not panic. This is a bit flimsy.
@@ -29,7 +29,7 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
     ///heap allocations.
     pub fn new() -> Self {
         Self {
-            array: RawArrayVec::uninit(),
+            array: RawStackList::uninit(),
             vec: Vec::new(),
             len: 0,
         }
@@ -62,7 +62,7 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
     ///re-allocating.
     pub fn with_heap_capacity(capacity: usize) -> Result<Self, TryReserveError> {
         Ok(Self {
-            array: RawArrayVec::uninit(),
+            array: RawStackList::uninit(),
             vec: Vec::try_with_capacity(capacity)?,
             len: 0,
         })

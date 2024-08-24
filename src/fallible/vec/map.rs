@@ -37,6 +37,7 @@ impl<K: Eq, V: Sized + PartialEq> VecMap<K, V> {
 
 impl<K: Eq, V: Sized + PartialEq> FallibleLinearMap<K, V> for VecMap<K, V> {
     type Backing = Vec<(K, V)>;
+    type InsertionError = TryReserveError;
 
     fn into_inner(self) -> Self::Backing {
         self.vector
@@ -64,7 +65,7 @@ impl<K: Eq, V: Sized + PartialEq> FallibleLinearMap<K, V> for VecMap<K, V> {
 
     ///Inserts the provided value into the VecMap. If the provided key is
     ///found it will update the value. and return the old value. If not, this will allocate for a new key value pair.    
-    fn insert(&mut self, key: K, value: V) -> Result<Option<V>, TryReserveError> {
+    fn insert(&mut self, key: K, value: V) -> Result<Option<V>, Self::InsertionError> {
         match self.vector.iter_mut().find(|(k, _)| *k == key) {
             Some((_, v)) => Ok(Some(std::mem::replace(v, value))),
             None => {

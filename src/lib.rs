@@ -6,9 +6,9 @@
 #![cfg_attr(feature = "nightly_fallible", feature(slice_concat_ext))]
 #![cfg_attr(feature = "nightly_fallible", feature(slice_concat_trait))]
 pub mod array;
-///This is in the crate root because it's used internally but we still need it throughout both
-///fallible and panicking crates internally.
-mod array_vec;
+///This is in the crate root because it's used internally but we still need it throughout the
+///fallible module internally.
+pub mod stack_list;
 
 //We make the modules public but *not* the contained types. Certain projects need only one type or the other.
 //It would be unfortunate for a low level library which can only use fallible types to be forced to specify "FallibleFatVec".

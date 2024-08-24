@@ -9,13 +9,13 @@ pub struct VecSet<T: Eq> {
 }
 
 impl<T: Eq> FallibleLinearSet<T> for VecSet<T> {
-    type BACKING = VecMap<T, ()>;
+    type Backing = VecMap<T, ()>;
 
-    fn map(&self) -> &Self::BACKING {
+    fn map(&self) -> &Self::Backing {
         &self.map
     }
 
-    fn map_mut(&mut self) -> &mut Self::BACKING {
+    fn map_mut(&mut self) -> &mut Self::Backing {
         &mut self.map
     }
 }

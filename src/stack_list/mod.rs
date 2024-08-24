@@ -1,20 +1,18 @@
 use std::{array, intrinsics::transmute_unchecked, mem::MaybeUninit};
 
-use error::ArrayVecError;
+use error::StackListError;
 
 pub mod error;
-pub mod map;
-pub mod set;
 #[cfg(test)]
 mod test;
 #[derive(Debug)]
 ///We need the core functionality of ArrayVec throughout the crate, but don't need the overhead
 ///of tracking `length` internally. So we don't!
-pub(crate) struct RawArrayVec<T, const CAPACITY: usize> {
+pub(crate) struct RawStackList<T, const CAPACITY: usize> {
     array: [MaybeUninit<T>; CAPACITY],
 }
 
-impl<T, const CAPACITY: usize> RawArrayVec<T, CAPACITY> {
+impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
     ///initializes all elements of this array to MaybeUninit::uninit.
     pub fn uninit() -> Self {
         Self {
@@ -114,15 +112,15 @@ impl<T, const CAPACITY: usize> RawArrayVec<T, CAPACITY> {
 }
 
 #[derive(Debug)]
-pub struct ArrayVec<T, const CAPACITY: usize> {
-    raw: RawArrayVec<T, CAPACITY>,
+pub struct StackList<T, const CAPACITY: usize> {
+    raw: RawStackList<T, CAPACITY>,
     length: usize,
 }
 
-impl<T, const CAPACITY: usize> ArrayVec<T, CAPACITY> {
+impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
     pub fn new() -> Self {
         Self {
-            raw: RawArrayVec::uninit(),
+            raw: RawStackList::uninit(),
             length: 0,
         }
     }
@@ -148,7 +146,7 @@ impl<T, const CAPACITY: usize> ArrayVec<T, CAPACITY> {
         self.remove(self.length)
     }
 
-    pub fn push(&mut self, value: T) -> Result<(), ArrayVecError> {
+    pub fn push(&mut self, value: T) -> Result<(), StackListError> {
         match self.length < CAPACITY {
             true => {
                 unsafe { self.raw.insert_at(self.length, value) };
@@ -156,7 +154,7 @@ impl<T, const CAPACITY: usize> ArrayVec<T, CAPACITY> {
 
                 Ok(())
             }
-            false => Err(ArrayVecError::WouldExceedCapacity),
+            false => Err(StackListError::WouldExceedCapacity),
         }
     }
 

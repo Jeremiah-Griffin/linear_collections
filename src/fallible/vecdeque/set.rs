@@ -35,13 +35,13 @@ impl<T: Eq> DequeSet<T> {
 }
 
 impl<T: Eq> FallibleLinearSet<T> for DequeSet<T> {
-    type BACKING = DequeMap<T, ()>;
+    type Backing = DequeMap<T, ()>;
 
-    fn map(&self) -> &Self::BACKING {
+    fn map(&self) -> &Self::Backing {
         &self.map
     }
 
-    fn map_mut(&mut self) -> &mut Self::BACKING {
+    fn map_mut(&mut self) -> &mut Self::Backing {
         &mut self.map
     }
 }
