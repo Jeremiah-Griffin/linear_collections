@@ -1,6 +1,7 @@
 use std::{array, intrinsics::transmute_unchecked, mem::MaybeUninit};
 
 use error::StackListError;
+use static_assertions::const_assert;
 
 pub mod error;
 #[cfg(test)]
@@ -20,6 +21,20 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
         }
     }
 
+    ////Creates a RawStaticList from an array.
+    ///LIMITATIONS:
+    ///Unfortunately, because of the instability of const generic expressions, we can't assert statically that
+    ///the length of the array is <= CAPACITY. I am also not comfortable using the const_generic_expr feature
+    ///in production code. When that feature stabilizes, this restriction will be loosened and  lists with lengths shorter
+    ///than their capacity will become possible to write in safe code.
+    pub const fn from_array(array: [T; CAPACITY]) -> Self {
+        RawStackList {
+            //SAFETY:
+            //The representation fo a MaybeUninity T and T are identical.
+            //The lengths are the same in this case as well.
+            array: unsafe { transmute_unchecked(array) },
+        }
+    }
     ///SAFETY: UB if `limit` is beyond CAPACITY.
     ///Drops all elements up to `limit`, exclusive.
     pub unsafe fn clear_to(&mut self, limit: usize) {
@@ -106,7 +121,9 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
         r
     }
 
+    ///SAFETY: UB if insertion beyond CAPACITY.
     pub unsafe fn insert_at(&mut self, index: usize, value: T) {
+        //SAFETY: addressed by the disclosure on the function signature
         unsafe { self.array.get_unchecked_mut(index).write(value) };
     }
 }
@@ -143,10 +160,18 @@ impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
         unsafe { self.raw.iter_mut_to(self.length) }
     }
 
-    /*
-    pub fn from_array<const LENGTH: usize>(array: [T; LENGTH]) where LENGTH <= CAPACITY{
-        unimplemented!()
-    }*/
+    ////Creates a StaticList from an array, with the StaticList assuming the length of the array as its Capacity.
+    ///LIMITATIONS:
+    ///Unfortunately, because of the instability of const generic expressions, we can't assert statically that
+    ///the length of the array is <= CAPACITY. I am also not comfortable using the const_generic_expr feature
+    ///in production code. When that feature stabilizes, this restriction will be loosened and  lists with lengths shorter
+    ///than their capacity will become possible to write in safe code.
+    pub const fn from_array(array: [T; CAPACITY]) -> Self {
+        Self {
+            raw: RawStackList::from_array(array),
+            length: CAPACITY,
+        }
+    }
 
     pub fn pop(&mut self) -> Option<T> {
         self.remove(self.length)

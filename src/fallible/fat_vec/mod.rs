@@ -48,10 +48,7 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
             //MaybeUninit T and T are guaranteed to have the same size, layout, and alignment.
             //We can't transmute because of a compiler bug [47966](https://github.com/rust-lang/rust/issues/47966)
             //so we're forced to use transmut_unchecked instead, which doesnt do that broken compile-time check.
-            //TODO: REMOVE THIS USE OF TRANSMUTE_UNCHECKED AND CORE_INTRINSICS
-            //doing a pointer cast breaks the drop handling of stack resident values of T. We use a `transmute_unchecked` to ensure
-            //no copy is made so no `drop` gets run following the assignment.
-            array: unsafe { transmute_unchecked(array) },
+            array: RawStackList::from_array(array),
             vec: Vec::new(),
             len: STACK_CAPACITY,
         }
@@ -101,8 +98,6 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
     pub fn capacity(&self) -> usize {
         self.vec.capacity() + STACK_CAPACITY
     }
-
-    ///TODO: how to test and ensure that each value gets dropped?
     pub fn clear(&mut self) {
         //Ensure that all  elements are dropped. Bounded by array len means this cannot find uninitalized
         //memory.
@@ -228,11 +223,14 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
 
 impl<const STACK_CAPACITY: usize, T: PartialEq> PartialEq for FatVec<T, STACK_CAPACITY> {
     fn eq(&self, other: &Self) -> bool {
-        self.len() == other.len()
-            && self
-                .iter()
-                .enumerate()
-                .all(|(i, this)| other.get(i).is_some_and(|o| *o == *this))
+        //just want to explicitly evaluate this first as it's much cheaper.
+        if self.len() != other.len() {
+            return false;
+        }
+
+        self.iter()
+            .enumerate()
+            .all(|(i, this)| other.get(i).is_some_and(|o| *o == *this))
     }
 }
 

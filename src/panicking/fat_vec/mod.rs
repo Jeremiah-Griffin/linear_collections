@@ -47,8 +47,6 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
         }
     }
 
-    //commented out pending transmut unchecked workaround
-
     /*
 
     ///Creates a `FatVec` with the provided array as the stack resident elements.
@@ -277,11 +275,14 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
 
 impl<const STACK_CAPACITY: usize, T: PartialEq> PartialEq for FatVec<T, STACK_CAPACITY> {
     fn eq(&self, other: &Self) -> bool {
-        self.len() == other.len()
-            && self
-                .iter()
-                .enumerate()
-                .all(|(i, this)| other.get(i).is_some_and(|o| *o == *this))
+        //just want to explicitly evaluate this first as it's much cheaper.
+        if self.len() != other.len() {
+            return false;
+        }
+
+        self.iter()
+            .enumerate()
+            .all(|(i, this)| other.get(i).is_some_and(|o| *o == *this))
     }
 }
 
