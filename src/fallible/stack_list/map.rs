@@ -1,6 +1,6 @@
 use crate::{
     fallible::FallibleLinearMap,
-    stack_list::{error::StackListError, StackList},
+    stack_list::{error::PushError, StackList},
     MapIterMut,
 };
 
@@ -21,7 +21,7 @@ impl<K: Eq, V: Sized + PartialEq, const CAPACITY: usize> FallibleLinearMap<K, V>
     for StackMap<K, V, CAPACITY>
 {
     type Backing = StackList<(K, V), CAPACITY>;
-    type InsertionError = StackListError;
+    type InsertionError = PushError;
 
     fn insert(&mut self, key: K, value: V) -> Result<Option<V>, Self::InsertionError> {
         let mut iter = self.stack_list.iter_mut();

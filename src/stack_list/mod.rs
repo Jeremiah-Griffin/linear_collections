@@ -1,11 +1,16 @@
-use std::{array, intrinsics::transmute_unchecked, mem::MaybeUninit};
+use std::{array, hash::Hash, intrinsics::transmute_unchecked, mem::MaybeUninit};
 
-use error::StackListError;
-use static_assertions::const_assert;
+use error::PushError;
 
 pub mod error;
 #[cfg(test)]
 mod test;
+///NOTES ON IMPLS:
+///While we can implement Clone cheaply, with a cheakc
+///Clones an eq need to over all the *initialized* elements of the array to check for equivalence.
+//while we could iiterate ofer the entire capacity, this would be expensive for large capacites and small lengths.
+//additionally, we would need to zero ever uninit both initially and avfter every drop. That is a wast of writes.
+//
 #[derive(Debug)]
 ///We need the core functionality of ArrayVec throughout the crate, but don't need the overhead
 ///of tracking `length` internally. So we don't!
@@ -128,7 +133,22 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
     }
 }
 
-#[derive(Debug)]
+impl<const CAPACITY: usize, T: Clone> Clone for RawStackList<T, CAPACITY> {
+    fn clone(&self) -> Self {
+        //SAFETY:
+        //CAPACITY on both types is guaranteed to be identical
+        //The representation of two MaybeUninit<T> where T == T are identical.
+        let array = unsafe {
+            self.array
+                .as_ptr()
+                .cast::<[MaybeUninit<T>; CAPACITY]>()
+                .read()
+        };
+
+        Self { array }
+    }
+}
+#[derive(Clone, Debug)]
 pub struct StackList<T, const CAPACITY: usize> {
     raw: RawStackList<T, CAPACITY>,
     length: usize,
@@ -177,7 +197,7 @@ impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
         self.remove(self.length)
     }
 
-    pub fn push(&mut self, value: T) -> Result<(), StackListError> {
+    pub fn push(&mut self, value: T) -> Result<(), PushError> {
         match self.length < CAPACITY {
             true => {
                 unsafe { self.raw.insert_at(self.length, value) };
@@ -185,7 +205,7 @@ impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
 
                 Ok(())
             }
-            false => Err(StackListError::WouldExceedCapacity),
+            false => Err(PushError::WouldExceedCapacity),
         }
     }
 
@@ -220,5 +240,26 @@ impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
             true => unsafe { Some(self.raw.get_mut(index)) },
             false => None,
         }
+    }
+}
+
+impl<const STACK_CAPACITY: usize, T: PartialEq> PartialEq for StackList<T, STACK_CAPACITY> {
+    fn eq(&self, other: &Self) -> bool {
+        //just want to explicitly evaluate this first as it's much cheaper.
+        if self.len() != other.len() {
+            return false;
+        }
+
+        self.iter()
+            .enumerate()
+            .all(|(i, this)| other.get(i).is_some_and(|o| *o == *this))
+    }
+}
+
+impl<const STACK_CAPACITY: usize, T: Eq> Eq for StackList<T, STACK_CAPACITY> {}
+
+impl<const STACK_CAPACITY: usize, T: Hash> Hash for StackList<T, STACK_CAPACITY> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.iter().for_each(|t| t.hash(state))
     }
 }

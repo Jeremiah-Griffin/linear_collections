@@ -2,13 +2,15 @@
 pub mod test;
 use std::{array, hash::Hash, mem::MaybeUninit};
 
+use crate::stack_list::RawStackList;
+
 pub mod map;
 pub mod set;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 ///A vector which allocates at least `STACK_CAPACITY` elements onto the stack.
 pub struct FatVec<T, const STACK_CAPACITY: usize> {
-    array: [MaybeUninit<T>; STACK_CAPACITY],
+    stack_list: RawStackList<T, STACK_CAPACITY>,
     //TODO: should replace this vec with an other implementation.
     //TODO: fallibele collections: replace this with a custom fallible vec implementation.
     ///For now, with panicking operations we call some method that ensures the next call will not panic. This is a bit flimsy.
@@ -41,7 +43,7 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
     ///heap allocations.
     pub fn new() -> Self {
         Self {
-            array: array::from_fn(|_| MaybeUninit::uninit()),
+            stack_list: RawStackList::uninit(),
             vec: Vec::new(),
             len: 0,
         }
@@ -84,7 +86,7 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
     ///re-allocating.
     pub fn with_heap_capacity(capacity: usize) -> Self {
         Self {
-            array: array::from_fn(|_| MaybeUninit::uninit()),
+            stack_list: RawStackList::uninit(),
             vec: Vec::with_capacity(capacity),
             len: 0,
         }
@@ -100,12 +102,8 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
 
     pub fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut T> {
         let len = self.array_len();
-        self.array[0..len]
-            .iter_mut()
-            //SAFETY:
-            //Initializing is tied to the idx. all items <= to idx are guaranteed to be init.
-            .map(|t| unsafe { t.assume_init_mut() })
-            .chain(self.vec.iter_mut())
+        //SAFETY: len is guaranteed to be within the initialized contents of the RawVec
+        unsafe { self.stack_list.iter_mut_to(len) }.chain(self.vec.iter_mut())
     }
 
     ///Returns the number of items in this `FatVec`
@@ -124,9 +122,8 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
         //SAFETY:
         //Ensure that all  elements are dropped. Bounded by array len means this cannot find uninitalized
         //memory.
-        self.array
-            .iter_mut()
-            .for_each(|t| unsafe { t.assume_init_drop() });
+
+        unsafe { self.stack_list.clear_to(self.array_len()) }
 
         self.vec.clear();
         self.len = 0;
@@ -139,9 +136,7 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
         let new_len = self.len.saturating_add(1);
 
         match STACK_CAPACITY > self.len() {
-            true => {
-                unsafe { self.array.get_unchecked_mut(self.len).write(value) };
-            }
+            true => unsafe { self.stack_list.insert_at(self.len, value) },
             false => {
                 self.vec.push(value);
             }
@@ -158,8 +153,8 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
         //meaning it needs to shift left to keep the values contiguous.
         let r = match self.len() {
             0 => None,
-            l if l <= STACK_CAPACITY => unsafe {
-                Some(self.array.get_unchecked(l).assume_init_read())
+            idx if idx <= STACK_CAPACITY => unsafe {
+                Some(self.stack_list.remove(idx, self.array_len()))
             },
             _ => self.vec.pop(),
         };
@@ -174,40 +169,14 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
         match self.len() {
             //SAFETY:
             //Do not remove this arm without auditing the unsafe blocks below.
-            //guaranteeing that we return on a len of 0 means we can safely and cheaply subtract from the index without underflowing.
+            //guaranteeing that we return None on a len of 0 means we can safely and cheaply subtract from the index without underflowing.
             0 => None,
             //value is resident on stack
             _ if index <= STACK_CAPACITY => {
-                //take value
-                let r = unsafe { self.array.get_unchecked(index).assume_init_read() };
-
-                //shift values right of `r` left.
-                //start off by one?
-
-                let mut loop_idx = index + 1;
-                //Using the length of the entire `FatVec` is okay as we've established in the match arm
-                //that all elements are allocated on the array. This saves us the step of reading the next element
-                //to copy for the entire stack *so long as* we ensure all successive elements beyond the array len are MaybeUninit::uninit.
-                while loop_idx <= self.len() {
-                    //all elements shifted
-                    unsafe {
-                        //SAFETY: guaranteed safe as loop_idx is guaranteed by the match arm to be <= len.
-                        let next = self.array.get_unchecked_mut(loop_idx) as *mut MaybeUninit<T>;
-                        //SAFETY: guaranteed safe as loop_idx is guaranteed by the match arm to be <= len *AND* we subtracting one from that.
-                        //we ensure that this doesn't underflow above.
-                        //saturating sub just to be doubly sure.
-                        let curr = self.array.get_unchecked_mut(loop_idx.saturating_sub(1))
-                            as *mut MaybeUninit<T>;
-
-                        *curr = next.read();
-                    }
-
-                    loop_idx += 1;
-                }
-
+                //SAFETY
+                //bound by index means we are guaranteed to be within the initialized portion of the stack list.
+                let r = unsafe { self.stack_list.remove(index, self.array_len()) };
                 self.len -= 1;
-
-                //we can leave the remaining elements as they are and just bump the idx.
                 Some(r)
             }
             //value is resident on heap
@@ -234,7 +203,7 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
             //SAFETY:
             //Because we maintain length seperately of the vec and array, we can rely on IDX not to be out of bounds for
             //either these accesses.
-            true => unsafe { Some(self.array.get_unchecked(idx).assume_init_ref()) },
+            true => unsafe { Some(self.stack_list.get(idx)) },
             //subtract as the first element of vec is 0, but in the whole `FatVec`, it's
             //always STACK_CAPACITY + idx. The subtraction accounts for this for this.
             false => self.vec.get(idx - STACK_CAPACITY),
@@ -250,7 +219,7 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
             //SAFETY:
             //Because we maintain length seperately from the vec and array, we can rely on IDX not to be out of bounds for
             //either these accesses.
-            true => unsafe { Some(self.array.get_unchecked_mut(idx).assume_init_mut()) },
+            true => unsafe { Some(self.stack_list.get_mut(idx)) },
             //subtract as the first element of vec is 0, but in the whole `FatVec`, it's
             //always STACK_CAPACITY + idx. The subtraction accounts for this for this.
             false => self.vec.get_mut(idx - STACK_CAPACITY),
@@ -287,27 +256,6 @@ impl<const STACK_CAPACITY: usize, T: PartialEq> PartialEq for FatVec<T, STACK_CA
 }
 
 impl<const STACK_CAPACITY: usize, T: Eq> Eq for FatVec<T, STACK_CAPACITY> {}
-
-impl<const STACK_CAPACITY: usize, T: Clone> Clone for FatVec<T, STACK_CAPACITY> {
-    fn clone(&self) -> Self {
-        //SAFETY:
-        //
-        //We're not actually mutating anything or even type casting and the pointer is immediately discarded so
-        //no rules are violated.
-        let array: [MaybeUninit<T>; STACK_CAPACITY] = unsafe {
-            self.array
-                .as_ptr()
-                .cast::<[MaybeUninit<T>; STACK_CAPACITY]>()
-                .read()
-        };
-
-        Self {
-            array,
-            vec: self.vec.clone(),
-            len: self.len.clone(),
-        }
-    }
-}
 
 impl<const STACK_CAPACITY: usize, T: Hash> Hash for FatVec<T, STACK_CAPACITY> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {

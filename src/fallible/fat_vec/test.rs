@@ -222,7 +222,12 @@ pub fn push_inside_stack_capacity_correct_invariants() {
     svec.push("four").unwrap();
     svec.push("five").unwrap();
 
-    let array = unsafe { svec.array.iter_to(5).map(|t| *t).collect::<Vec<&str>>() };
+    let array = unsafe {
+        svec.stack_list
+            .iter_to(5)
+            .map(|t| *t)
+            .collect::<Vec<&str>>()
+    };
 
     print!("{array:?}");
 
@@ -246,7 +251,12 @@ pub fn push_exact_stack_capacity_correct_invariants() {
     svec.push("nine").unwrap();
     svec.push("ten").unwrap();
 
-    let array = unsafe { svec.array.iter_to(10).map(|t| *t).collect::<Vec<&str>>() };
+    let array = unsafe {
+        svec.stack_list
+            .iter_to(10)
+            .map(|t| *t)
+            .collect::<Vec<&str>>()
+    };
 
     assert_eq!(svec.len(), 10);
     assert_eq!(svec.vec.len(), 0);
@@ -272,7 +282,12 @@ pub fn push_beyond_stack_capacity_correct_invariants() {
     svec.push("nine").unwrap();
     svec.push("ten").unwrap();
 
-    let array = unsafe { svec.array.iter_to(5).map(|t| *t).collect::<Vec<&str>>() };
+    let array = unsafe {
+        svec.stack_list
+            .iter_to(5)
+            .map(|t| *t)
+            .collect::<Vec<&str>>()
+    };
 
     assert_eq!(svec.len(), 10);
     assert_eq!(svec.vec.len(), 5);
