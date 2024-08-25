@@ -47,13 +47,11 @@ which may not be teneble, especially for public APIs. For this reason, panicking
 
 
 # TODO:
-- Serde support for Array types via serde-big-array
+- Serde support for array and StackList backed types via serde-big-array
 - Fixed capactity, mutable length types.
-
+- no_std support
 
 # Stability Policy (pre - 1.0) 
 - 1.0 will not be reached until all unstable features relied upon by this crate are either stabilized or removed.
 - All changes up to and including removal of features prepended with "nightly_" are not considered breaking, so long as they are made 
   for conformance to the underlying unstable api or not otherwise specified as non-breaking. Please don't use them in public libraries.
-
-
