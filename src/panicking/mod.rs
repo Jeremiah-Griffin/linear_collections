@@ -20,7 +20,7 @@ use crate::MapIterMut;
 ///Because arrays may implement this type, we cannot assume that implementors will be dynamically sized.
 ///Only methods which do not require manipulating the length or capacity of the store are provided here:
 ///this is to permit the implementation of fixed sized types backed by arrays.
-pub trait PanickingLinearMap<K: Eq, V: Sized + PartialEq>: MapIterMut<K, V> {
+pub trait PanickingLinearMap<K: Eq, V: PartialEq>: MapIterMut<K, V> {
     type Backing;
 
     fn len(&self) -> usize;
@@ -154,7 +154,7 @@ pub trait PanickingLinearMap<K: Eq, V: Sized + PartialEq>: MapIterMut<K, V> {
 }
 
 ///Set types backed by a LinearMap<K, ()>
-pub trait PanickingLinearSet<T: Eq>: Sized {
+pub trait PanickingLinearSet<T: Eq> {
     ///The map type which backs this set.
     type BACKING: PanickingLinearMap<T, ()>;
     ///Sets in rust are often backed by a map type of some sort, with value of every key set to `()`. `PanickingLinearSet`s are no different, and this method

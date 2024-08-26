@@ -22,7 +22,7 @@ use crate::MapIterMut;
 ///Because arrays may implement this type, we cannot assume that implementors will be dynamically sized.
 ///Only methods which do not require manipulating the length or capacity of the store are provided here:
 ///this is to permit the implementation of fixed sized types backed by arrays.
-pub trait FallibleLinearMap<K: Eq, V: Sized + PartialEq>: MapIterMut<K, V> {
+pub trait FallibleLinearMap<K: Eq, V: PartialEq>: MapIterMut<K, V> {
     type Backing;
     //Aliasing the InsertionError allows us to implement this for both heap allocated types which return TryReserveError
     //and the stack allocated ArrayVec which return ArrayVecError.
@@ -170,7 +170,7 @@ pub trait FallibleLinearMap<K: Eq, V: Sized + PartialEq>: MapIterMut<K, V> {
 
 //Never implement clone: panics on alloc failure.
 ///Set types backed by a FallibleLinearMap<K, ()> where K == T.
-pub trait FallibleLinearSet<T: Eq>: Sized {
+pub trait FallibleLinearSet<T: Eq> {
     ///The map type which backs this set.
     type Backing: FallibleLinearMap<T, ()>;
 

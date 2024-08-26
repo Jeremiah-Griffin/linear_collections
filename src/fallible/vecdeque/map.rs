@@ -2,11 +2,11 @@ use std::collections::{TryReserveError, VecDeque};
 
 use crate::{fallible::FallibleLinearMap, MapIterMut};
 
-pub struct DequeMap<K: Eq, V: Sized + PartialEq> {
+pub struct DequeMap<K: Eq, V: PartialEq> {
     deque: VecDeque<(K, V)>,
 }
 
-impl<K: Eq, V: Sized + PartialEq> DequeMap<K, V> {
+impl<K: Eq, V: PartialEq> DequeMap<K, V> {
     pub fn new() -> Self {
         Self {
             deque: VecDeque::new(),
@@ -32,7 +32,7 @@ impl<K: Eq, V: Sized + PartialEq> DequeMap<K, V> {
     }
 }
 
-impl<K: Eq, V: Sized + PartialEq> FallibleLinearMap<K, V> for DequeMap<K, V> {
+impl<K: Eq, V: PartialEq> FallibleLinearMap<K, V> for DequeMap<K, V> {
     type Backing = VecDeque<(K, V)>;
     type InsertionError = TryReserveError;
 
@@ -82,7 +82,7 @@ impl<K: Eq, V: Sized + PartialEq> FallibleLinearMap<K, V> for DequeMap<K, V> {
     }
 }
 
-impl<K: Eq, V: Sized + PartialEq> MapIterMut<K, V> for DequeMap<K, V> {
+impl<K: Eq, V: PartialEq> MapIterMut<K, V> for DequeMap<K, V> {
     fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut (K, V)>
     where
         K: 'a,

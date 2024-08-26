@@ -4,10 +4,10 @@ use crate::{fallible::FallibleLinearMap, MapIterMut};
 
 ///A map type backed by a Vector. Useful for small collections whose size can change.
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
-pub struct VecMap<K: Eq, V: Sized + PartialEq> {
+pub struct VecMap<K: Eq, V: PartialEq> {
     vector: Vec<(K, V)>,
 }
-impl<K: Eq, V: Sized + PartialEq> VecMap<K, V> {
+impl<K: Eq, V: PartialEq> VecMap<K, V> {
     ///Creates a new, empty VecMap.
     ///Calls Vec::new() internally.
     pub fn new() -> VecMap<K, V> {
@@ -35,7 +35,7 @@ impl<K: Eq, V: Sized + PartialEq> VecMap<K, V> {
     }
 }
 
-impl<K: Eq, V: Sized + PartialEq> FallibleLinearMap<K, V> for VecMap<K, V> {
+impl<K: Eq, V: PartialEq> FallibleLinearMap<K, V> for VecMap<K, V> {
     type Backing = Vec<(K, V)>;
     type InsertionError = TryReserveError;
 
@@ -83,7 +83,7 @@ impl<K: Eq, V: Sized + PartialEq> FallibleLinearMap<K, V> for VecMap<K, V> {
     }
 }
 
-impl<K: Eq, V: Sized + PartialEq> MapIterMut<K, V> for VecMap<K, V> {
+impl<K: Eq, V: PartialEq> MapIterMut<K, V> for VecMap<K, V> {
     fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut (K, V)>
     where
         K: 'a,

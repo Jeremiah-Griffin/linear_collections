@@ -3,10 +3,10 @@ use std::collections::VecDeque;
 use crate::{panicking::PanickingLinearMap, MapIterMut};
 
 ///A map type backed by a VecDeque. Useful for small collections whose size can change.
-pub struct DequeMap<K: Eq, V: Sized + PartialEq> {
+pub struct DequeMap<K: Eq, V: PartialEq> {
     vecdeque: VecDeque<(K, V)>,
 }
-impl<K: Eq, V: Sized + PartialEq> DequeMap<K, V> {
+impl<K: Eq, V: PartialEq> DequeMap<K, V> {
     ///Creates a new, empty VecDequeMap.
     ///Calls Vec::new() internally.
     pub fn new() -> DequeMap<K, V> {
@@ -36,7 +36,7 @@ impl<K: Eq, V: Sized + PartialEq> DequeMap<K, V> {
     }
 }
 
-impl<K: Eq, V: Sized + PartialEq> PanickingLinearMap<K, V> for DequeMap<K, V> {
+impl<K: Eq, V: PartialEq> PanickingLinearMap<K, V> for DequeMap<K, V> {
     type Backing = VecDeque<(K, V)>;
 
     ///Inserts the provided value into the VecDequeMap. If the provided key is
@@ -79,7 +79,7 @@ impl<K: Eq, V: Sized + PartialEq> PanickingLinearMap<K, V> for DequeMap<K, V> {
     }
 }
 
-impl<K: Eq, V: Sized + PartialEq> MapIterMut<K, V> for DequeMap<K, V> {
+impl<K: Eq, V: PartialEq> MapIterMut<K, V> for DequeMap<K, V> {
     fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut (K, V)>
     where
         K: 'a,

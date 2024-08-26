@@ -5,11 +5,11 @@ use crate::{
 };
 
 ///A map backed by a `StackList`
-pub struct StackMap<K: Eq, V: Sized + PartialEq, const CAPACITY: usize> {
+pub struct StackMap<K: Eq, V: PartialEq, const CAPACITY: usize> {
     stack_list: StackList<(K, V), CAPACITY>,
 }
 
-impl<K: Eq, V: Sized + PartialEq, const CAPACITY: usize> StackMap<K, V, CAPACITY> {
+impl<K: Eq, V: PartialEq, const CAPACITY: usize> StackMap<K, V, CAPACITY> {
     pub fn new() -> Self {
         StackMap {
             stack_list: StackList::new(),
@@ -17,7 +17,7 @@ impl<K: Eq, V: Sized + PartialEq, const CAPACITY: usize> StackMap<K, V, CAPACITY
     }
 }
 
-impl<K: Eq, V: Sized + PartialEq, const CAPACITY: usize> FallibleLinearMap<K, V>
+impl<K: Eq, V: PartialEq, const CAPACITY: usize> FallibleLinearMap<K, V>
     for StackMap<K, V, CAPACITY>
 {
     type Backing = StackList<(K, V), CAPACITY>;
@@ -63,7 +63,7 @@ impl<K: Eq, V: Sized + PartialEq, const CAPACITY: usize> FallibleLinearMap<K, V>
     }
 }
 
-impl<K: Eq, V: Sized + PartialEq, const STACK_CAPACITY: usize> MapIterMut<K, V>
+impl<K: Eq, V: PartialEq, const STACK_CAPACITY: usize> MapIterMut<K, V>
     for StackMap<K, V, STACK_CAPACITY>
 {
     fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut (K, V)>

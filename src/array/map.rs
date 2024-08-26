@@ -3,11 +3,11 @@
 ///
 ///ArrayMap is the only map type in linear_collections which does *not* implement either LinearMap nor InfallibleLinearMap, which relies on
 ///dynamic memory allocation to function.
-pub struct ArrayMap<K: Eq, V: Sized + PartialEq, const LENGTH: usize> {
+pub struct ArrayMap<K: Eq, V, const LENGTH: usize> {
     array: [(K, V); LENGTH],
 }
 
-impl<K: Eq, V: Sized + PartialEq, const LENGTH: usize> ArrayMap<K, V, LENGTH> {
+impl<K: Eq, V, const LENGTH: usize> ArrayMap<K, V, LENGTH> {
     ///**Please only use this method to create map literals if the "macros" feature is unavailable to you**
     ///"macros" provides safe, checked alternatives to initialize linear maps with compile time checking
     ///of the invariants of each type.
@@ -57,17 +57,15 @@ impl<K: Eq, V: Sized + PartialEq, const LENGTH: usize> ArrayMap<K, V, LENGTH> {
         self.array.iter()
     }
 
-    pub fn keys<'a>(&'a self) -> impl Iterator<Item = &K>{
+    pub fn keys<'a>(&'a self) -> impl Iterator<Item = &K> {
         self.iter().map(|(k, _)| k)
     }
-    
-    pub fn values<'a>(&'a self) -> impl Iterator<Item = &V>{
+
+    pub fn values<'a>(&'a self) -> impl Iterator<Item = &V> {
         self.iter().map(|(_, v)| v)
-    
     }
 
-    pub fn values_mut<'a>(& 'a mut self) -> impl Iterator<Item = &mut V>{
+    pub fn values_mut<'a>(&'a mut self) -> impl Iterator<Item = &mut V> {
         self.array.iter_mut().map(|(_, v)| v)
-    
-    }    
+    }
 }
