@@ -168,6 +168,13 @@ impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
         }
     }
 
+    pub fn clear(&mut self) {
+        //SAFETY:
+        //bound by length so will not go out of bounds or into uninit memory
+        unsafe { self.raw.clear_to(self.length) };
+        self.length = 0;
+    }
+
     pub fn iter<'a>(&'a self) -> impl Iterator<Item = &'a T> {
         //SAFETY:
         //bound by length so will not go out of bounds or into uninit memory
