@@ -1,3 +1,7 @@
+use std::{intrinsics::transmute_unchecked, mem::MaybeUninit};
+
+use crate::stack_list::RawStackList;
+
 use super::FatVec;
 
 #[test]
@@ -56,3 +60,52 @@ pub fn get_last_heap_resident() {
     svec.push("two").unwrap();
     assert_eq!(svec.get(1), Some(&"two"));
 }
+
+#[test]
+///Remove should not only shift left, but also shift elements from the heap to the left, *onto the stack*.
+pub fn remove_shifts_onto_stack() {
+    let one = "one";
+    let two = "two";
+    let three = "three";
+    let four = "four";
+    let five = "five";
+
+    let mut list = FatVec::with_array([one, two]);
+
+    list.push(three).unwrap();
+    list.push(four).unwrap();
+    list.push(five).unwrap();
+
+    //remove the end of the stack
+
+    list.remove(1);
+
+    //shift onto stack
+    assert_eq!(
+        unsafe { transmute_unchecked::<RawStackList<&str, 2>, [&str; 2]>(list.stack_list) },
+        [one, three]
+    );
+}
+
+#[test]
+///Remove should not only shift left, but also shift elements from the heap to the left, *onto the stack*.
+pub fn remove_shifts_from_heap() {
+    let one = "one";
+    let two = "two";
+    let three = "three";
+    let four = "four";
+    let five = "five";
+
+    let mut list = FatVec::with_array([one, two]);
+
+    list.push(three).unwrap();
+    list.push(four).unwrap();
+    list.push(five).unwrap();
+
+    //remove the end of the stack
+
+    list.remove(1);
+
+    assert_eq!(list.vec, vec![four, five]);
+}
+//shift from heap
