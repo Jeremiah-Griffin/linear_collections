@@ -13,7 +13,7 @@ mod panicking {
 
     use crate::panicking::PanickingLinearMap;
 
-    impl<K: Eq + Serialize, V: Sized + Serialize, T: PanickingLinearMap<K, V>> Serialize for T {
+    impl<K: Eq + Serialize, V: Serialize, T: PanickingLinearMap<K, V>> Serialize for T {
         fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where
             S: serde::Serializer,
@@ -24,7 +24,7 @@ mod panicking {
 }
 
 //custom implementation to ensure this gets (de)serialized as a map instead of a list of tuples
-impl<K: Eq + Serialize, V: Sized + PartialEq + Serialize> Serialize for VecMap<K, V> {
+impl<K: Eq + Serialize, V: PartialEq + Serialize> Serialize for VecMap<K, V> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
@@ -39,12 +39,12 @@ impl<K: Eq + Serialize, V: Sized + PartialEq + Serialize> Serialize for VecMap<K
     }
 }
 
-struct VecMapVisitor<'de, K: Eq + Deserialize<'de>, V: Sized + PartialEq + Deserialize<'de>> {
+struct VecMapVisitor<'de, K: Eq + Deserialize<'de>, V: PartialEq + Deserialize<'de>> {
     marker: PhantomData<fn() -> VecMap<K, V>>,
     blarghnungle: PhantomData<&'de str>,
 }
 
-impl<'de, K: Eq + Deserialize<'de>, V: Sized + PartialEq + Deserialize<'de>> Visitor<'de>
+impl<'de, K: Eq + Deserialize<'de>, V: PartialEq + Deserialize<'de>> Visitor<'de>
     for VecMapVisitor<'de, K, V>
 {
     type Value = VecMap<K, V>;
@@ -67,7 +67,7 @@ impl<'de, K: Eq + Deserialize<'de>, V: Sized + PartialEq + Deserialize<'de>> Vis
     }
 }
 
-impl<'de, K: Eq + Deserialize<'de>, V: Sized + PartialEq + Deserialize<'de>> Deserialize<'de>
+impl<'de, K: Eq + Deserialize<'de>, V: PartialEq + Deserialize<'de>> Deserialize<'de>
     for VecMap<K, V>
 {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>

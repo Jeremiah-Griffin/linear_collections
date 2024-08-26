@@ -1,8 +1,3 @@
-use std::{
-    ops::{Deref, DerefMut},
-    sync::{Arc, Mutex},
-};
-
 use super::FatVec;
 
 #[test]

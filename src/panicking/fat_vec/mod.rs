@@ -1,6 +1,6 @@
 #[cfg(test)]
 pub mod test;
-use std::{array, hash::Hash, mem::MaybeUninit};
+use std::hash::Hash;
 
 use crate::stack_list::RawStackList;
 
