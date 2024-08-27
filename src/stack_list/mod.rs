@@ -1,4 +1,4 @@
-use std::{array, hash::Hash, intrinsics::transmute_unchecked, mem::MaybeUninit};
+use std::{array, hash::Hash, intrinsics::transmute_unchecked, mem::MaybeUninit, ptr::copy};
 
 use error::PushError;
 
@@ -100,27 +100,15 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
         let r = unsafe { self.array.get_unchecked(index).assume_init_read() };
 
         //shift values right of `r` left.
-        //start off by one?
 
-        let mut loop_idx = index + 1;
-        //Using the length of the entire `FatVec` is okay as we've established in the match arm
-        //that all elements are allocated on the array. This saves us the step of reading the next element
-        //to copy for the entire stack *so long as* we ensure all successive elements beyond the array len are MaybeUninit::uninit.
-        while loop_idx < length {
-            //all elements shifted
-            unsafe {
-                //SAFETY: guaranteed safe as loop_idx is guaranteed by the match arm to be <= len.
-                let next = self.array.get_unchecked_mut(loop_idx) as *mut MaybeUninit<T>;
-                //SAFETY: guaranteed safe as loop_idx is guaranteed by the match arm to be <= len *AND* we subtracting one from that.
-                //we ensure that this doesn't underflow above.
-                //saturating sub just to be doubly sure.
-                let curr =
-                    self.array.get_unchecked_mut(loop_idx.saturating_sub(1)) as *mut MaybeUninit<T>;
+        let elements_after_index = (length - index) - 1;
 
-                *curr = next.read();
-            }
-
-            loop_idx += 1;
+        if elements_after_index > 0 {
+            copy(
+                self.array.get_unchecked(index + 1),
+                self.array.get_unchecked_mut(index),
+                elements_after_index,
+            );
         }
 
         r

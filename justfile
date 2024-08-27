@@ -2,6 +2,7 @@ set windows-shell := ["powershell.exe", "-NoLogo", "-Command"]
 
 setup:
 	cargo install cargo-hack
+	rustup +nightly component add miri
 
 default:
 	just -l
@@ -14,7 +15,7 @@ check:
 #Runs all tests specified by FILTER. If not provided, runs all tests in the crate.
 alias t := test
 test *FILTER:
-	cargo hack test --each-feature --release {{FILTER}}
+	cargo hack miri test --each-feature --release {{FILTER}}
 
 
 publish: test
