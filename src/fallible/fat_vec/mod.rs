@@ -148,8 +148,6 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
         r
     }
 
-    fn compact_stack(&mut self) {}
-
     /// Removes the element from a `FatVec` and returns it, or [`None`] if the `FatVec` is empty.
     ///TODO: miri testing stuff.
     pub fn remove(&mut self, index: usize) -> Option<T> {
