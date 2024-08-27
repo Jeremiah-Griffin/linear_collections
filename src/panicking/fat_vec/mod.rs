@@ -176,6 +176,24 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
                 //SAFETY
                 //bound by index means we are guaranteed to be within the initialized portion of the stack list.
                 let r = unsafe { self.stack_list.remove(index, self.array_len()) };
+
+                //Shift elements from heap to stack, if necessary.
+                if self.vec.len() > 0 {
+                    let elem = self.vec.remove(0);
+                    //SAFETY:
+                    //STACK_CAPACITY - 1 is always guaranteed to be last element in the RawStackList.
+                    //Further, we know both that that last element is going to be unoccupied - the prior call to remove guarantees that all elements before it have shifted left -
+                    //and we also knwo that the the RawStackList has space for only one element now, because the vec is non empty.
+                    //
+                    //The only time the RawStackList will have < CAPACITY elements is when no elements have overflowed onto the heap.
+                    unsafe {
+                        //using staurating sub as it's going to be evaluated at compile time anyway, but we technically
+                        //can't bound the  STACK_CAPACITY > 0
+                        self.stack_list
+                            .insert_at(STACK_CAPACITY.saturating_sub(1), elem)
+                    };
+                }
+
                 self.len -= 1;
                 Some(r)
             }

@@ -108,4 +108,3 @@ pub fn remove_shifts_from_heap() {
 
     assert_eq!(list.vec, vec![four, five]);
 }
-//shift from heap

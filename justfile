@@ -14,7 +14,7 @@ check:
 #Runs all tests specified by FILTER. If not provided, runs all tests in the crate.
 alias t := test
 test *FILTER:
-	cargo hack test --each-feature {{FILTER}}
+	cargo hack test --each-feature --release {{FILTER}}
 
 
 publish: test
