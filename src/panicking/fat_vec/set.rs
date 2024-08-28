@@ -49,3 +49,15 @@ impl<T: Eq, const STACK_CAPACITY: usize> PanickingLinearSet<T> for FatSet<T, STA
         &mut self.map
     }
 }
+
+#[cfg(feature = "serde")]
+impl<'a, T: Eq + serde::Serialize, const STACK_CAPACITY: usize> serde::Serialize
+    for FatSet<T, STACK_CAPACITY>
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        crate::serde::panicking::serialize_panicking_set(self, serializer)
+    }
+}

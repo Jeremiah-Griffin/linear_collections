@@ -42,13 +42,12 @@ which may not be teneble, especially for public APIs. For this reason, panicking
 - Added StackMap & StackList, map and set types backed by a StackList.
 - Significantly expanded test coverage
 - Much reorganization
-- Many renames.
-- Array backed types no longer implement LinearMap. An Array's fixed length means a lot of methods needed to be exluded from the traits, either to preserve their `const`ness, or because they needed to heap allocate. Removing these impls frees up the api and makes maintenance and testing of the remaining types easier.
+- Many renames
+- Array backed types no longer implement LinearMap. An Array's fixed length means a lot of methods needed to be excluded from the traits, either to preserve their `const`ness, or because they needed to heap allocate. Removing these impls frees up the api and makes maintenance and testing of the remaining types easier.
 
 
 # TODO:
 - Serde support for array and StackList backed types via serde-big-array
-- Fixed capactity, mutable length types.
 - no_std support
 
 # Stability Policy (pre - 1.0) 

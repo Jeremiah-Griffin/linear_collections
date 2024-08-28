@@ -1,5 +1,8 @@
+#[cfg(feature = "serde")]
+mod serde;
 #[cfg(test)]
 pub mod test;
+
 use std::hash::Hash;
 
 use crate::stack_list::RawStackList;
@@ -49,8 +52,6 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
         }
     }
 
-    /*
-
     ///Creates a `FatVec` with the provided array as the stack resident elements.
     ///The length of the supplied array will become the `STACK_CAPCITY` of the returned `FatVec` *AND* the length of the array.
     ///There is no interface to mutate the length without manipulating the elements on the stack.
@@ -67,11 +68,11 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
             //TODO: REMOVE THIS USE OF TRANSMUTE_UNCHECKED AND CORE_INTRINSICS
             //doing a pointer cast breaks the drop handling of stack resident values of T. We use a `transmute_unchecked` to ensure
             //no copy is made so no `drop` gets run following the assignment.
-            array: unsafe { transmute_unchecked(array) },
+            stack_list: RawStackList::from_array(array),
             vec: Vec::new(),
             len: STACK_CAPACITY,
         }
-    }*/
+    }
 
     ///Gets the length of the array of the stack
     const fn array_len(&self) -> usize {

@@ -88,3 +88,15 @@ impl<K: Eq, V: PartialEq> MapIterMut<K, V> for DequeMap<K, V> {
         self.vecdeque.iter_mut()
     }
 }
+
+#[cfg(feature = "serde")]
+impl<'a, K: Eq + serde::Serialize, V: PartialEq + serde::Serialize> serde::Serialize
+    for DequeMap<K, V>
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        crate::serde::panicking::serialize_panicking_map(self, serializer)
+    }
+}

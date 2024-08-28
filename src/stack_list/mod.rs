@@ -5,6 +5,9 @@ use std::{
     ptr::{addr_of, addr_of_mut, copy},
 };
 
+#[cfg(feature = "serde")]
+mod serde;
+
 use error::PushError;
 
 pub mod error;
@@ -25,13 +28,19 @@ pub(crate) struct RawStackList<T, const CAPACITY: usize> {
 
 ///Safe as
 fn t_to_maybeuninit<T, const LENGTH: usize>(array: [T; LENGTH]) -> [MaybeUninit<T>; LENGTH] {
-    unsafe { core::intrinsics::transmute_unchecked(array) }
-
-    /*
-    #[cfg(not(feature = "nightly_optimizations"))]
+    #[cfg(feature = "nightly")]
     unsafe {
-        unsafe { (array.as_ptr() as *const [MaybeUninit<T>; LENGTH]).read() }
-    }*/
+        core::intrinsics::transmute_unchecked(array)
+    }
+
+    //TODO: this is a disgusting hack that results in doubled stack usage.
+    #[cfg(not(feature = "nightly"))]
+    {
+        ///We use ManuallyDrop to ensure that whil the copied T get deallocated, we dont call drop both for the copy at the end of the scope
+        ///*and* for the returned MaybeUninit<T>
+        let old_array = ManuallyDrop::new(array);
+        unsafe { (old_array.as_ptr() as *const [MaybeUninit<T>; LENGTH]).read() }
+    }
 }
 
 impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
@@ -108,13 +117,11 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
         //shift values right of `r` left.
         let elements_after_index = (length.saturating_sub(index)).saturating_sub(1);
 
-        if elements_after_index > 0 {
-            copy(
-                (addr_of!(self.array) as *const MaybeUninit<T>).add(index + 1),
-                (addr_of_mut!(self.array) as *mut MaybeUninit<T>).add(index),
-                elements_after_index,
-            );
-        }
+        copy(
+            (addr_of!(self.array) as *const MaybeUninit<T>).add(index + 1),
+            (addr_of_mut!(self.array) as *mut MaybeUninit<T>).add(index),
+            elements_after_index,
+        );
 
         r
     }

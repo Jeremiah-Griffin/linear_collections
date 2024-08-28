@@ -101,3 +101,19 @@ impl<K: Eq, V: PartialEq, const STACK_CAPACITY: usize> MapIterMut<K, V>
         self.fatvec.iter_mut()
     }
 }
+
+#[cfg(feature = "serde")]
+impl<
+        'a,
+        K: Eq + serde::Serialize,
+        V: PartialEq + serde::Serialize,
+        const STACK_CAPACITY: usize,
+    > serde::Serialize for FatMap<K, V, STACK_CAPACITY>
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        crate::serde::panicking::serialize_panicking_map(self, serializer)
+    }
+}

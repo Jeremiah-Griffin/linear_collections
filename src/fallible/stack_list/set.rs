@@ -56,3 +56,15 @@ impl<T: Eq, const STACK_CAPACITY: usize> FallibleLinearSet<T> for StackSet<T, ST
         self.map_mut().remove_entry(value).map(|(k, _)| k)
     }
 }
+
+#[cfg(feature = "serde")]
+impl<'a, T: Eq + serde::Serialize, const CAPACITY: usize> serde::Serialize
+    for StackSet<T, CAPACITY>
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        crate::serde::fallible::serialize_fallible_set(self, serializer)
+    }
+}

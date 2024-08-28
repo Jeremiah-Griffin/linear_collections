@@ -45,3 +45,13 @@ impl<T: Eq> FallibleLinearSet<T> for DequeSet<T> {
         &mut self.map
     }
 }
+
+#[cfg(feature = "serde")]
+impl<'a, T: Eq + serde::Serialize> serde::Serialize for DequeSet<T> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        crate::serde::fallible::serialize_fallible_set(self, serializer)
+    }
+}

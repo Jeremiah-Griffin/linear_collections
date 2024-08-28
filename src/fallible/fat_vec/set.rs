@@ -49,3 +49,15 @@ impl<T: Eq, const STACK_CAPACITY: usize> FallibleLinearSet<T> for FatSet<T, STAC
         &mut self.map
     }
 }
+
+#[cfg(feature = "serde")]
+impl<'a, T: Eq + serde::Serialize, const STACK_CAPACITY: usize> serde::Serialize
+    for FatSet<T, STACK_CAPACITY>
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        crate::serde::fallible::serialize_fallible_set(self, serializer)
+    }
+}

@@ -74,3 +74,15 @@ impl<K: Eq, V: PartialEq, const STACK_CAPACITY: usize> MapIterMut<K, V>
         self.stack_list.iter_mut()
     }
 }
+
+#[cfg(feature = "serde")]
+impl<'a, K: Eq + serde::Serialize, V: PartialEq + serde::Serialize, const CAPACITY: usize>
+    serde::Serialize for StackMap<K, V, CAPACITY>
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        crate::serde::fallible::serialize_fallible_map(self, serializer)
+    }
+}

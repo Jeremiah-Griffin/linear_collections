@@ -1,5 +1,8 @@
+#[cfg(feature = "serde")]
+mod serde;
 #[cfg(test)]
 pub mod test;
+
 use std::{collections::TryReserveError, hash::Hash};
 
 use crate::stack_list::RawStackList;
@@ -12,7 +15,7 @@ pub mod set;
 pub struct FatVec<T, const STACK_CAPACITY: usize> {
     stack_list: RawStackList<T, STACK_CAPACITY>,
     //TODO: should replace this vec with an other implementation.
-    //TODO: fallibele collections: replace this with a custom fallible vec implementation.
+    //TODO: fallible collections: replace this with a custom fallible vec implementation.
     ///For now, with panicking operations we call some method that ensures the next call will not panic. This is a bit flimsy.
     ///Vec includes its own `len`, which isn't necessary for us to track two.
     ///RawVec seems to basically work for this

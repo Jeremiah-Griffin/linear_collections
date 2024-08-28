@@ -1,6 +1,6 @@
 #![allow(dead_code)]
-#![allow(internal_features)]
-#![feature(core_intrinsics)]
+#![cfg_attr(feature = "nightly", allow(internal_features))]
+#![cfg_attr(feature = "nightly", feature(core_intrinsics))]
 #![cfg_attr(feature = "nightly_fallible", feature(try_reserve_kind))]
 #![cfg_attr(feature = "nightly_fallible", feature(try_with_capacity))]
 #![cfg_attr(feature = "nightly_fallible", feature(slice_concat_ext))]
@@ -22,10 +22,8 @@ pub mod fallible;
 #[cfg(feature = "panicking")]
 pub mod panicking;
 
-/*
 #[cfg(feature = "serde")]
 mod serde;
-*/
 #[cfg(test)]
 mod test;
 

@@ -1,138 +1,142 @@
-use serde::{de::Visitor, ser::SerializeMap, ser::SerializeSeq, Deserialize, Serialize};
-use std::marker::PhantomData;
-
+/*
 #[cfg(test)]
 mod test;
+*/
+#[cfg(feature = "nightly_fallible")]
+pub(crate) mod fallible {
+    use std::marker::PhantomData;
 
-#[cfg(feature = "fallible")]
-mod fallible {}
+    use serde::{
+        ser::{SerializeMap, SerializeSeq},
+        Deserialize, Serialize, Serializer,
+    };
+
+    use crate::fallible::{FallibleLinearMap, FallibleLinearSet};
+
+    pub(crate) fn serialize_fallible_map<
+        'a,
+        S: Serializer,
+        K: Eq + Serialize,
+        V: PartialEq + Serialize,
+        M: FallibleLinearMap<K, V>,
+    >(
+        fallible_map: &M,
+        serializer: S,
+    ) -> Result<S::Ok, S::Error> {
+        let mut serializer = serializer.serialize_map(Some(fallible_map.len()))?;
+
+        for (k, v) in fallible_map.iter() {
+            serializer.serialize_entry(k, v)?;
+        }
+
+        serializer.end()
+    }
+
+    pub(crate) fn serialize_fallible_set<
+        'a,
+        S: Serializer,
+        T: Eq + Serialize,
+        M: FallibleLinearSet<T>,
+    >(
+        fallible_set: &M,
+        serializer: S,
+    ) -> Result<S::Ok, S::Error> {
+        let mut serializer = serializer.serialize_seq(Some(fallible_set.len()))?;
+
+        for v in fallible_set.values() {
+            serializer.serialize_element(v)?;
+        }
+
+        serializer.end()
+    }
+
+    struct MapVisitor<
+        'de,
+        K: Eq + Deserialize<'de>,
+        V: Sized + PartialEq + Deserialize<'de>,
+        M: FallibleLinearMap<K, V>,
+    > {
+        marker: PhantomData<fn() -> M>,
+        use_generics: PhantomData<(&'de str, K, V)>,
+    }
+
+    /*
+    impl<'de, K: Eq + Deserialize<'de>, V: Eq + Deserialize<'de>, M: FallibleLinearMap<K, V>>
+        Visitor<'de> for MapVisitor<'de, K, V, M>
+    {
+        type Value = M;
+
+        fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+            formatter.write_str("map")
+        }
+    }
+
+    pub(crate) fn deserialize_fallible_map<
+        'a,
+        D: Deserializer<'a>,
+        K: Eq + Deserialize<'a>,
+        V: PartialEq + Deserialize<'a>,
+        M: FallibleLinearMap<K, V>,
+    >(
+        fallible_map: &M,
+        deserializer: D,
+    ) -> Result<M, D::Error> {
+        let mut deserializer = deserializer.deserialize_map(MapVisitor {
+            marker: PhantomData::default(),
+            use_generics: PhantomData::default(),
+        });
+
+        for (k, v) in fallible_map.iter() {
+            serializer.serialize_entry(k, v)?;
+        }
+
+        serializer.end()
+    }*/
+}
 
 #[cfg(feature = "panicking")]
-mod panicking {
-    use serde::Serialize;
+pub(crate) mod panicking {
+    use serde::{
+        ser::{SerializeMap, SerializeSeq},
+        Serialize, Serializer,
+    };
 
-    use crate::panicking::PanickingLinearMap;
+    use crate::panicking::{PanickingLinearMap, PanickingLinearSet};
 
-    impl<K: Eq + Serialize, V: Serialize, T: PanickingLinearMap<K, V>> Serialize for T {
-        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where
-            S: serde::Serializer,
-        {
-            todo!()
-        }
-    }
-}
+    pub(crate) fn serialize_panicking_map<
+        'a,
+        S: Serializer,
+        K: Eq + Serialize,
+        V: PartialEq + Serialize,
+        M: PanickingLinearMap<K, V>,
+    >(
+        panicking_map: &M,
+        serializer: S,
+    ) -> Result<S::Ok, S::Error> {
+        let mut serializer = serializer.serialize_map(Some(panicking_map.len()))?;
 
-//custom implementation to ensure this gets (de)serialized as a map instead of a list of tuples
-impl<K: Eq + Serialize, V: PartialEq + Serialize> Serialize for VecMap<K, V> {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        let mut map = serializer.serialize_map(Some(self.len()))?;
-
-        for (k, v) in self.iter() {
-            map.serialize_entry(k, v)?;
+        for (k, v) in panicking_map.iter() {
+            serializer.serialize_entry(k, v)?;
         }
 
-        map.end()
-    }
-}
-
-struct VecMapVisitor<'de, K: Eq + Deserialize<'de>, V: PartialEq + Deserialize<'de>> {
-    marker: PhantomData<fn() -> VecMap<K, V>>,
-    blarghnungle: PhantomData<&'de str>,
-}
-
-impl<'de, K: Eq + Deserialize<'de>, V: PartialEq + Deserialize<'de>> Visitor<'de>
-    for VecMapVisitor<'de, K, V>
-{
-    type Value = VecMap<K, V>;
-
-    fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-        formatter.write_str("VecMap")
+        serializer.end()
     }
 
-    fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
-    where
-        A: serde::de::MapAccess<'de>,
-    {
-        let mut vecmap = VecMap::with_capacity(map.size_hint().unwrap_or(0));
+    pub(crate) fn serialize_panicking_set<
+        'a,
+        S: Serializer,
+        T: Eq + Serialize,
+        M: PanickingLinearSet<T>,
+    >(
+        panicking_set: &M,
+        serializer: S,
+    ) -> Result<S::Ok, S::Error> {
+        let mut serializer = serializer.serialize_seq(Some(panicking_set.len()))?;
 
-        while let Some((key, value)) = map.next_entry()? {
-            vecmap.insert(key, value);
+        for v in panicking_set.values() {
+            serializer.serialize_element(v)?;
         }
 
-        Ok(vecmap)
-    }
-}
-
-impl<'de, K: Eq + Deserialize<'de>, V: PartialEq + Deserialize<'de>> Deserialize<'de>
-    for VecMap<K, V>
-{
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        deserializer.deserialize_map(VecMapVisitor {
-            marker: PhantomData::default(),
-            blarghnungle: PhantomData::default(),
-        })
-    }
-}
-
-//since the interior of a set is Map<T, ()>, we need custome serialization to ensure that
-//sets get (de)serialized as lists.
-impl<T: Eq + Serialize> Serialize for VecSet<T> {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        let mut list = serializer.serialize_seq(Some(self.len()))?;
-
-        //TODO: Iterators
-        for (t, _) in self.map().iter() {
-            list.serialize_element(t)?;
-        }
-
-        list.end()
-    }
-}
-
-struct VecSetVisitor<'de, T: Eq + Deserialize<'de>> {
-    marker: PhantomData<fn() -> VecSet<T>>,
-    blarghnungle: PhantomData<&'de str>,
-}
-
-impl<'de, T: Eq + Deserialize<'de>> Visitor<'de> for VecSetVisitor<'de, T> {
-    type Value = VecSet<T>;
-
-    fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-        formatter.write_str("VecSet")
-    }
-
-    fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
-    where
-        A: serde::de::SeqAccess<'de>,
-    {
-        let mut set = VecSet::with_capacity(seq.size_hint().unwrap_or(0));
-
-        while let Some(value) = seq.next_element()? {
-            set.insert(value);
-        }
-
-        Ok(set)
-    }
-}
-
-impl<'de, T: Eq + Deserialize<'de>> Deserialize<'de> for VecSet<T> {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        deserializer.deserialize_seq(VecSetVisitor {
-            marker: PhantomData::default(),
-            blarghnungle: PhantomData::default(),
-        })
+        serializer.end()
     }
 }

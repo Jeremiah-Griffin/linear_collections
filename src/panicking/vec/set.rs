@@ -51,3 +51,13 @@ impl<T: Eq> VecSet<T> {
         VecSet { map }
     }
 }
+
+#[cfg(feature = "serde")]
+impl<'a, T: Eq + serde::Serialize> serde::Serialize for VecSet<T> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        crate::serde::panicking::serialize_panicking_set(self, serializer)
+    }
+}
