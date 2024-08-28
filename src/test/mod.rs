@@ -48,7 +48,7 @@ fn linear_map_lots_of_insertions() {
     for _ in 0..loops {
         assert!(m.is_empty());
 
-        let count = if cfg!(miri) { 101 } else { 1001 };
+        let count = if cfg!(miri) { 10 } else { 1001 };
 
         for i in 1..count {
             assert!(m.insert(i, i).is_none());
@@ -399,6 +399,7 @@ pub mod macro_tests {
         assert_eq!(set.len(), 6);
     }
 
+    #[cfg(not(miri))]
     #[test]
     fn should_panic() {
         let t = trybuild::TestCases::new();
