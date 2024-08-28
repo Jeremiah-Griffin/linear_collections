@@ -1,4 +1,10 @@
-use std::{array, hash::Hash, intrinsics::transmute_unchecked, mem::MaybeUninit, ptr::copy};
+use std::{
+    array,
+    hash::Hash,
+    intrinsics::transmute_unchecked,
+    mem::MaybeUninit,
+    ptr::{self, addr_of, addr_of_mut, copy},
+};
 
 use error::PushError;
 
@@ -100,13 +106,12 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
         let r = unsafe { self.array.get_unchecked(index).assume_init_read() };
 
         //shift values right of `r` left.
-
-        let elements_after_index = (length - index) - 1;
+        let elements_after_index = (length.saturating_sub(index)).saturating_sub(1);
 
         if elements_after_index > 0 {
             copy(
-                self.array.get_unchecked(index + 1),
-                self.array.get_unchecked_mut(index),
+                (addr_of!(self.array) as *const MaybeUninit<T>).add(index + 1),
+                (addr_of_mut!(self.array) as *mut MaybeUninit<T>).add(index),
                 elements_after_index,
             );
         }
@@ -114,7 +119,7 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
         r
     }
 
-    ///SAFETY: UB if insertion beyond CAPACITY.
+    ///SAFETY: UB if index >= CAPACITY.
     pub unsafe fn insert_at(&mut self, index: usize, value: T) {
         //SAFETY: addressed by the disclosure on the function signature
         unsafe { self.array.get_unchecked_mut(index).write(value) };
