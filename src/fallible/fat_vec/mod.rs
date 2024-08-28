@@ -42,7 +42,7 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
     ///
     ///Does not allocate to the heap.
     //We use a seperate L so we don't have to declare the STACK_CAPACITY both in the array and the function type parameter.
-    pub const fn with_array(array: [T; STACK_CAPACITY]) -> FatVec<T, STACK_CAPACITY> {
+    pub fn with_array(array: [T; STACK_CAPACITY]) -> FatVec<T, STACK_CAPACITY> {
         Self {
             //SAFETY:
             //MaybeUninit T and T are guaranteed to have the same size, layout, and alignment.

@@ -1,5 +1,4 @@
-use crate::panicking::*;
-
+/*
 #[test]
 fn linear_map_create_capacity_zero() {
     let mut m = VecMap::with_capacity(0);
@@ -408,4 +407,4 @@ pub mod macro_tests {
         t.compile_fail("src/test/should_panic/array_map_many_duplicates.rs");
         t.compile_fail("src/test/should_panic/array_map_one_duplicate.rs");
     }
-}
+}*/

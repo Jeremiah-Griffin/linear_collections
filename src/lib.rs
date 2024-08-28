@@ -1,6 +1,6 @@
 #![allow(dead_code)]
-#![cfg_attr(feature = "nightly_fallible", allow(internal_features))]
-#![cfg_attr(feature = "nightly_fallible", feature(core_intrinsics))]
+#![cfg_attr(feature = "nightly_optimizations", allow(internal_features))]
+#![cfg_attr(feature = "nightly_optimizations", feature(core_intrinsics))]
 #![cfg_attr(feature = "nightly_fallible", feature(try_reserve_kind))]
 #![cfg_attr(feature = "nightly_fallible", feature(try_with_capacity))]
 #![cfg_attr(feature = "nightly_fallible", feature(slice_concat_ext))]

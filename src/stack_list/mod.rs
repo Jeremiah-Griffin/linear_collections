@@ -1,9 +1,8 @@
 use std::{
     array,
     hash::Hash,
-    intrinsics::transmute_unchecked,
     mem::MaybeUninit,
-    ptr::{self, addr_of, addr_of_mut, copy},
+    ptr::{addr_of, addr_of_mut, copy},
 };
 
 use error::PushError;
@@ -24,6 +23,19 @@ pub(crate) struct RawStackList<T, const CAPACITY: usize> {
     array: [MaybeUninit<T>; CAPACITY],
 }
 
+///Safe as
+fn t_to_maybeuninit<T, const LENGTH: usize>(array: [T; LENGTH]) -> [MaybeUninit<T>; LENGTH] {
+    #[cfg(feature = "nightly_optimizations")]
+    unsafe {
+        core::intrinsics::transmute_unchecked(array)
+    }
+
+    #[cfg(not(feature = "nightly_optimizations"))]
+    unsafe {
+        std::mem::transmute_copy(&array)
+    }
+}
+
 impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
     ///initializes all elements of this array to MaybeUninit::uninit.
     pub fn uninit() -> Self {
@@ -38,12 +50,12 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
     ///the length of the array is <= CAPACITY. I am also not comfortable using the const_generic_expr feature
     ///in production code. When that feature stabilizes, this restriction will be loosened and  lists with lengths shorter
     ///than their capacity will become possible to write in safe code.
-    pub const fn from_array(array: [T; CAPACITY]) -> Self {
+    pub fn from_array(array: [T; CAPACITY]) -> Self {
         RawStackList {
             //SAFETY:
             //The representation fo a MaybeUninity T and T are identical.
             //The lengths are the same in this case as well.
-            array: unsafe { transmute_unchecked(array) },
+            array: t_to_maybeuninit(array),
         }
     }
     ///SAFETY: UB if `limit` is beyond CAPACITY.
@@ -57,23 +69,13 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
     ///SAFETY: UB if accessed beyond CAPACITY *OR* into uninitialized memory.
     pub unsafe fn get(&self, index: usize) -> &T {
         //SAFETY: addressed by the disclosure on the function signature
-        let item = unsafe { self.array.get_unchecked(index) };
-
-        //SAFETY: addressed by the disclosure on the function signature
-        let item = unsafe { transmute_unchecked(item) };
-
-        item
+        unsafe { self.array.get_unchecked(index).assume_init_ref() }
     }
 
     ///SAFETY: UB if accessed beyond CAPACITY *OR* into uninitialized memory.
     pub unsafe fn get_mut(&mut self, index: usize) -> &mut T {
         //SAFETY: addressed by the disclosure on the function signature
-        let item = unsafe { self.array.get_unchecked_mut(index) };
-
-        //SAFETY: addressed by the disclosure on the function signature
-        let item = unsafe { transmute_unchecked(item) };
-
-        item
+        unsafe { self.array.get_unchecked_mut(index).assume_init_mut() }
     }
 
     ///Reports wether the specified index is within the capacity of this structure.
@@ -186,7 +188,7 @@ impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
     ///the length of the array is <= CAPACITY. I am also not comfortable using the const_generic_expr feature
     ///in production code. When that feature stabilizes, this restriction will be loosened and  lists with lengths shorter
     ///than their capacity will become possible to write in safe code.
-    pub const fn from_array(array: [T; CAPACITY]) -> Self {
+    pub fn from_array(array: [T; CAPACITY]) -> Self {
         Self {
             raw: RawStackList::from_array(array),
             length: CAPACITY,

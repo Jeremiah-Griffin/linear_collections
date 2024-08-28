@@ -10,7 +10,7 @@ default:
 #Check build with all features enabled.
 alias c := check
 check:
-	cargo check --all-features
+	cargo hack check --each-feature
 
 #Runs all tests specified by FILTER. If not provided, runs all tests in the crate.
 alias t := test
