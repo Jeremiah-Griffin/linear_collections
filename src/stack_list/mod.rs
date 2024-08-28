@@ -1,7 +1,7 @@
 use std::{
     array,
     hash::Hash,
-    mem::MaybeUninit,
+    mem::{ManuallyDrop, MaybeUninit},
     ptr::{addr_of, addr_of_mut, copy},
 };
 
@@ -24,16 +24,31 @@ pub(crate) struct RawStackList<T, const CAPACITY: usize> {
 }
 
 ///Safe as
-fn t_to_maybeuninit<T, const LENGTH: usize>(array: [T; LENGTH]) -> [MaybeUninit<T>; LENGTH] {
+fn t_to_maybeuninit<T, const LENGTH: usize>(mut array: [T; LENGTH]) -> [MaybeUninit<T>; LENGTH] {
+    /*
     #[cfg(feature = "nightly_optimizations")]
     unsafe {
         core::intrinsics::transmute_unchecked(array)
-    }
+    }*/
 
+    /*
     #[cfg(not(feature = "nightly_optimizations"))]
     unsafe {
-        std::mem::transmute_copy(&array)
-    }
+        unsafe { (array.as_ptr() as *const [MaybeUninit<T>; LENGTH]).read() }
+    }*/
+
+    let mut new_array: [MaybeUninit<T>; LENGTH] = array::from_fn(|_| MaybeUninit::uninit());
+
+    let array = unsafe {
+        (array.as_mut_ptr() as *mut [MaybeUninit<T>; LENGTH])
+            .as_mut()
+            .unwrap_unchecked()
+    };
+    std::mem::swap(&mut new_array, array);
+
+    let _array = ManuallyDrop::new(array);
+
+    new_array
 }
 
 impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {

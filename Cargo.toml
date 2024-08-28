@@ -42,7 +42,7 @@ serde = ["dep:serde", "dep:serde_test"]
 #serde_big_array = ["dep:serde", "dep:serde_big_array"]
 
 #macros for panicking types
-panicking_macros = ["dep:fallible_linear_collections_macros", "dep:linear_collections_macros"]
+panicking_macros = ["dep:panicking_linear_collections_macros", "dep:linear_collections_macros"]
 
 #macros for fallible types
-fallible_macros = ["dep:panicking_linear_collections_macros", "dep:linear_collections_macros"]
+fallible_macros = ["dep:fallible_linear_collections_macros", "dep:linear_collections_macros"]
