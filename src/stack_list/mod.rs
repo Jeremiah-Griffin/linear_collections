@@ -112,7 +112,7 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
     pub unsafe fn remove(&mut self, index: usize, length: usize) -> T {
         //SAFETY: addressed by the disclosure on the function signature
         //take value
-        let r = unsafe { self.array.get_unchecked(index).assume_init_read() };
+        let t = unsafe { self.array.get_unchecked(index).assume_init_read() };
 
         //shift values right of `r` left.
         let elements_after_index = (length.saturating_sub(index)).saturating_sub(1);
@@ -123,7 +123,16 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
             elements_after_index,
         );
 
-        r
+        /*
+        if elements_after_index > 0 {
+            std::ptr::copy(
+                self.array.get_unchecked(index + 1).as_ptr(),
+                self.array.get_unchecked_mut(index).as_mut_ptr(),
+                elements_after_index,
+            );
+        }*/
+
+        t
     }
 
     ///SAFETY: UB if index >= CAPACITY.

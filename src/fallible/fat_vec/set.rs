@@ -1,3 +1,5 @@
+use std::collections::TryReserveError;
+
 use crate::fallible::FallibleLinearSet;
 
 use super::map::FatMap;
@@ -20,10 +22,8 @@ impl<T: Eq, const STACK_CAPACITY: usize> FatSet<T, STACK_CAPACITY> {
     ///Creates a new, empty `FatSet` with space to hold at least `capacity` elements without reallocating.
     ///Upon return, this `FatSet` will be able to hold `STACK_CAPACITY + `capacity` elements without
     ///re-allocating.
-    pub fn with_heap_capacity(capacity: usize) -> Self {
-        Self {
-            map: FatMap::with_heap_capacity(capacity),
-        }
+    pub fn with_heap_capacity(capacity: usize) -> Result<Self, TryReserveError> {
+        FatMap::with_heap_capacity(capacity).map(|map| Self { map })
     }
 
     ///**Please only use this method to create maps at compile time if the "macros" feature is unavailable to you**
