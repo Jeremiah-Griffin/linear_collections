@@ -49,10 +49,8 @@ impl<K: Eq, V: PartialEq, const STACK_CAPACITY: usize> FatMap<K, V, STACK_CAPACI
     ///Creates a new, empty `FatMap` with space to hold at least `capacity` elements without reallocating.
     ///Upon return, this `FatMap` will be able to hold `STACK_CAPACITY + `capacity` elements without
     ///re-allocating.
-    pub fn with_heap_capacity(capacity: usize) -> Self {
-        Self {
-            fatvec: FatVec::with_heap_capacity(capacity).unwrap(),
-        }
+    pub fn with_heap_capacity(capacity: usize) -> Result<Self, TryReserveError> {
+        FatVec::with_heap_capacity(capacity).map(|fatvec| FatMap { fatvec })
     }
 }
 
