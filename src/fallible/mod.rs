@@ -68,7 +68,10 @@ pub trait FallibleLinearMap<K: Eq, V: PartialEq>: MapIterMut<K, V> {
 
     ///Gets a reference with the associated key. Will return None if that i
     ///key is not in the map.
-    fn get<'a, 'k>(&'a self, key: &'k K) -> Option<&'a V> {
+    fn get<'a, 'k>(&'a self, key: &'k K) -> Option<&'a V>
+    where
+        K: 'a,
+    {
         self.iter().find(|(k, _)| k == key).map(|(_, v)| v)
     }
 
