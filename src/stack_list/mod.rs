@@ -44,6 +44,7 @@ fn t_to_maybeuninit<T, const LENGTH: usize>(array: [T; LENGTH]) -> [MaybeUninit<
 }
 
 impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
+    //**constructors**//
     ///initializes all elements of this array to MaybeUninit::uninit.
     pub fn uninit() -> Self {
         Self {
@@ -65,12 +66,34 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
             array: t_to_maybeuninit(array),
         }
     }
+
+    //**methods**//
+
     ///SAFETY: UB if `limit` is beyond CAPACITY.
     ///Drops all elements up to `limit`, exclusive.
     pub unsafe fn clear_to(&mut self, limit: usize) {
         self.array[0..limit]
             .iter_mut()
             .for_each(|t| unsafe { t.assume_init_drop() });
+    }
+
+    ///TODO: figure this out in the face of tryclone. What does the sig look like.
+    pub unsafe fn clone_to(&self, limit: usize) -> Self
+    where
+        T: Clone,
+    {
+        let mut array: [MaybeUninit<T>; CAPACITY] = array::from_fn(|_| MaybeUninit::uninit());
+
+        self.array[0..limit]
+            .iter()
+            .enumerate()
+            .for_each(|(idx, t)| {
+                let referenced = unsafe { t.assume_init_ref().clone() };
+
+                unsafe { array.get_unchecked_mut(idx).write(referenced) };
+            });
+
+        Self { array }
     }
 
     ///SAFETY: UB if accessed beyond CAPACITY *OR* into uninitialized memory.
@@ -133,7 +156,7 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
     }
 }
 
-impl<const CAPACITY: usize, T: Clone> Clone for RawStackList<T, CAPACITY> {
+impl<const CAPACITY: usize, T: Clone> RawStackList<T, CAPACITY> {
     fn clone(&self) -> Self {
         //SAFETY:
         //CAPACITY on both types is guaranteed to be identical
@@ -145,6 +168,13 @@ impl<const CAPACITY: usize, T: Clone> Clone for RawStackList<T, CAPACITY> {
                 .read()
         };
 
+        //SAFETY:
+        //we're getting from the array's own index.
+        let array: [MaybeUninit<T>; CAPACITY] = array::from_fn(|i| unsafe {
+            let reference = *(self.array).get_unchecked(i).clone();
+            reference
+        });
+
         Self { array }
     }
 }
@@ -154,11 +184,7 @@ pub struct StackList<T, const CAPACITY: usize> {
     length: usize,
 }
 
-impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
-    pub const fn len(&self) -> usize {
-        self.length
-    }
-}
+impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {}
 
 impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
     pub fn new() -> Self {
@@ -185,6 +211,10 @@ impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
         //SAFETY:
         //bound by length so will not go out of bounds or into uninit memory
         unsafe { self.raw.iter_mut_to(self.length) }
+    }
+
+    pub const fn len(&self) -> usize {
+        self.length
     }
 
     ////Creates a StaticList from an array, with the StaticList assuming the length of the array as its Capacity.

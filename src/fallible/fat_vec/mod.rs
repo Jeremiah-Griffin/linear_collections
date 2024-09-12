@@ -5,12 +5,14 @@ pub mod test;
 
 use std::{collections::TryReserveError, hash::Hash};
 
+use no_panic::no_panic;
+
 use crate::stack_list::RawStackList;
 
 pub mod map;
 pub mod set;
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 ///A vector which allocates at least `STACK_CAPACITY` elements onto the stack.
 pub struct FatVec<T, const STACK_CAPACITY: usize> {
     stack_list: RawStackList<T, STACK_CAPACITY>,
@@ -26,7 +28,7 @@ pub struct FatVec<T, const STACK_CAPACITY: usize> {
 
 impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
     //***constructors***
-
+    #[no_panic]
     ///Creates a new, empty `FatVec`. Without allocating on the heap.
     ///This can contain up to `STACK_CAPACITY` elements without performing any
     ///heap allocations.
