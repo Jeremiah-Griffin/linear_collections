@@ -69,6 +69,7 @@ pub trait FallibleLinearMap<K: Eq, V: PartialEq>: MapIterMut<K, V> {
     ///Gets a reference with the associated key. Will return None if that i
     ///key is not in the map.
     fn get<'a, 'k>(&'a self, key: &'k K) -> Option<&'a V>
+    //this bound confuses the hell out of me.
     where
         K: 'a,
     {
@@ -77,7 +78,10 @@ pub trait FallibleLinearMap<K: Eq, V: PartialEq>: MapIterMut<K, V> {
 
     ///Gets a mutable reference with the associated key. Will return None if that
     ///key is not in the map.
-    fn get_mut<'a>(&'a mut self, key: &'a K) -> Option<&'a mut V> {
+    fn get_mut<'a, 'k>(&'a mut self, key: &'k K) -> Option<&'a mut V>
+    where
+        K: 'a,
+    {
         self.iter_mut().find(|(k, _)| k == key).map(|(_, v)| v)
     }
 
