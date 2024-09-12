@@ -10,7 +10,7 @@ use crate::stack_list::RawStackList;
 pub mod map;
 pub mod set;
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 ///A vector which allocates at least `STACK_CAPACITY` elements onto the stack.
 pub struct FatVec<T, const STACK_CAPACITY: usize> {
     stack_list: RawStackList<T, STACK_CAPACITY>,
@@ -22,6 +22,18 @@ pub struct FatVec<T, const STACK_CAPACITY: usize> {
     vec: Vec<T>,
     ///this tracks both the number of elements inside the vec as well as the array.
     len: usize,
+}
+
+impl<T: Clone, const STACK_CAPACITY: usize> Clone for FatVec<T, STACK_CAPACITY> {
+    fn clone(&self) -> Self {
+        Self {
+            //SAFETY:
+            //bound by length so no risk of reading into uninitialized memory, or memory not owned by the stack list.
+            stack_list: unsafe { self.stack_list.clone_to(self.len) },
+            vec: self.vec.clone(),
+            len: self.len,
+        }
+    }
 }
 
 pub struct Iter<'a, T, const STACK_CAPACITY: usize> {

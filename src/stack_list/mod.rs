@@ -2,6 +2,7 @@ use std::{
     array,
     hash::Hash,
     mem::{ManuallyDrop, MaybeUninit},
+    ops::Deref,
     ptr::{addr_of, addr_of_mut, copy},
 };
 
@@ -165,6 +166,7 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
     }
 }
 
+/*
 impl<const CAPACITY: usize, T: Clone> RawStackList<T, CAPACITY> {
     fn clone(&self) -> Self {
         //SAFETY:
@@ -180,14 +182,14 @@ impl<const CAPACITY: usize, T: Clone> RawStackList<T, CAPACITY> {
         //SAFETY:
         //we're getting from the array's own index.
         let array: [MaybeUninit<T>; CAPACITY] = array::from_fn(|i| unsafe {
-            let reference = *(self.array).get_unchecked(i).clone();
+            let reference = self.array.get_unchecked(i).clone();
             reference
         });
 
         Self { array }
     }
-}
-#[derive(Clone, Debug)]
+}*/
+#[derive(Debug)]
 pub struct StackList<T, const CAPACITY: usize> {
     raw: RawStackList<T, CAPACITY>,
     length: usize,
