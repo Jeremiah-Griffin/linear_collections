@@ -1,4 +1,6 @@
 #![allow(dead_code)]
+//TODO:
+//#[cfg_attr(not(feature = "panicking"), no_panic_whatsoever)]
 #![cfg_attr(feature = "nightly", allow(internal_features))]
 #![cfg_attr(feature = "nightly", feature(core_intrinsics))]
 #![cfg_attr(feature = "nightly_fallible", feature(try_reserve_kind))]
@@ -13,7 +15,6 @@ pub mod stack_list;
 //We make the modules public but *not* the contained types. Certain projects need only one type or the other.
 //It would be unfortunate for a low level library which can only use fallible types to be forced to specify "FallibleFatVec".
 //instead, if a library user *must* use both types, they should use the qualified path up to the module, fallible or panicking.
-
 #[cfg(feature = "nightly_fallible")]
 ///added but not exposed pending miri testing
 ///We always compile fallible as the infallible versions are just fallible with panic called on the additional methods.
