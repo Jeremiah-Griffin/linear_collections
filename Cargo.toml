@@ -1,3 +1,4 @@
+
 [package]
 name = "linear_collections"
 #rember to update changelog whenever 
@@ -8,6 +9,10 @@ license = "MIT"
 repository = "https://github.com/Jeremiah-Griffin/linear_collections"
 categories = ["data-structures"]
 keywords = ["vecmap", "arraymap", "linearmap", "vecset", "arrayset"]
+
+
+[worskpace]
+members = ["macros" , "macros/fallible", "macros/panicking"]
 
 [dependencies]
 serde = { version = "1.*.*", optional = true, default-features = false, features = ["std"]}
