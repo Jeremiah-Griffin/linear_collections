@@ -7,6 +7,45 @@ struct MapLiteral {
     pub inner: Punctuated<ExprTuple, Token![,]>,
 }
 
+impl MapLiteral {
+    fn validate(self) -> Self {
+        let elements = &self.inner;
+        let length = elements.len();
+
+        if length == 0 {
+            panic!("Input may not be empty")
+        };
+
+        //TODO: need to parse elements as tuples, forgor
+        let mut duplicates: Vec<String> = Vec::new();
+        let mut keys: BTreeSet<String> = BTreeSet::new();
+
+        for e in elements.iter() {
+            let element_string = e.to_token_stream().to_string();
+
+            let tuple_pair_count = e.elems.len();
+
+            if tuple_pair_count != 2 {
+                panic!("All elements should have a length of 2 ( a key and a value) but {element_string} is {tuple_pair_count}")
+            }
+
+            let pairs = e.elems.clone().into_pairs().collect::<Vec<_>>();
+
+            let key = pairs[0].clone().into_value().to_token_stream().to_string();
+
+            if keys.insert(key.clone()) == false {
+                duplicates.push(key)
+            }
+        }
+
+        if duplicates.len() > 0 {
+            panic!("Duplicate keys found: {duplicates:?}")
+        };
+
+        self
+    }
+}
+
 impl Parse for MapLiteral {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         Ok(Self {
@@ -29,40 +68,6 @@ impl Parse for SetLiteral {
 
 ///The code for checking the input elements is identical between all maps
 ///and factored into this function.
-fn validate_map_literal(input: &MapLiteral) {
-    let elements = &input.inner;
-    let length = elements.len();
-
-    if length == 0 {
-        panic!("Input may not be empty")
-    };
-
-    //TODO: need to parse elements as tuples, forgor
-    let mut duplicates: Vec<String> = Vec::new();
-    let mut keys: BTreeSet<String> = BTreeSet::new();
-
-    for e in elements.iter() {
-        let element_string = e.to_token_stream().to_string();
-
-        let tuple_pair_count = e.elems.len();
-
-        if tuple_pair_count != 2 {
-            panic!("All elements should have a length of 2 ( a key and a value) but {element_string} is {tuple_pair_count}")
-        }
-
-        let pairs = e.elems.clone().into_pairs().collect::<Vec<_>>();
-
-        let key = pairs[0].clone().into_value().to_token_stream().to_string();
-
-        if keys.insert(key.clone()) == false {
-            duplicates.push(key)
-        }
-    }
-
-    if duplicates.len() > 0 {
-        panic!("Duplicate keys found: {duplicates:?}")
-    }
-}
 
 #[proc_macro]
 ///NOTE: This macro does not currently consider prefixed or suffixed items (r"t" and "t" or 1 and 1usize) to be
@@ -72,9 +77,7 @@ fn validate_map_literal(input: &MapLiteral) {
 ///Example:
 ///`let map: FatMap<Char, i32, 3> = fat_map![('A', 1), ('B', 2), ('C',3)];`
 pub fn fat_map(tokens: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(tokens as MapLiteral);
-
-    validate_map_literal(&input);
+    let input = parse_macro_input!(tokens as MapLiteral).validate();
 
     let iter = input.inner.iter();
     quote! {
@@ -112,9 +115,7 @@ pub fn fat_set(tokens: TokenStream) -> TokenStream {
 ///Example:
 ///`let map: VecMap<Char, i32> = vec_map![('A', 1), ('B', 2), ('C',3)];`
 pub fn vec_map(tokens: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(tokens as MapLiteral);
-
-    validate_map_literal(&input);
+    let input = parse_macro_input!(tokens as MapLiteral).validate();
 
     let iter = input.inner.iter();
     quote! {
@@ -146,9 +147,7 @@ pub fn vec_set(tokens: TokenStream) -> TokenStream {
 
 #[proc_macro]
 pub fn deque_map(tokens: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(tokens as MapLiteral);
-
-    validate_map_literal(&input);
+    let input = parse_macro_input!(tokens as MapLiteral).validate();
 
     let iter = input.inner.iter();
     quote! {
