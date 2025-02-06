@@ -94,6 +94,14 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
         }
     }
 
+    ///Creates a new, empty `FatVec` with space to hold at least `capacity` elements without reallocating
+    ///If `capacity` is less than or equal to `STACK_CAPACITY` the total capacity of this `FatVec` will be equal to `STACK_CAPACITY`.
+    pub fn with_capacity(capacity: usize) -> Self {
+        let heap_capacity = capacity.saturating_sub(STACK_CAPACITY);
+
+        Self::with_heap_capacity(heap_capacity)
+    }
+
     ///Creates a new, empty `FatVec` with space to hold at least `capacity` elements without reallocating.
     ///Upon return, this `FatVec` will be able to hold `STACK_CAPACITY + `capacity` elements without
     ///re-allocating.

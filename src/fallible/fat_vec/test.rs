@@ -32,6 +32,30 @@ pub fn new_stack_capacity_does_not_change_length() {
 }
 
 #[test]
+//When `capacity` is less than `STACK_CAPACITY` fatvec's capacity should be equal to `STACK_CAPCITY`
+pub fn with_capacity_less_than_stack() {
+    let vec = FatVec::<bool, 10>::with_capacity(5).unwrap();
+    assert_eq!(vec.capacity(), 10);
+    assert_eq!(vec.len(), 0);
+}
+
+#[test]
+//When `capacity` is equal to `STACK_CAPACITY` the fatvec's capacity should be equal to `STACK_CAPCITY`
+pub fn with_capacity_equal_stack() {
+    let vec = FatVec::<bool, 10>::with_capacity(10).unwrap();
+    assert_eq!(vec.capacity(), 10);
+    assert_eq!(vec.len(), 0);
+}
+
+#[test]
+//When `capacity` is greater than `STACK_CAPACITY` the fatvec's capacity should be equal to the provided `capacity`
+pub fn with_capacity_greater_than_stack() {
+    let vec = FatVec::<bool, 10>::with_capacity(100).unwrap();
+    assert_eq!(vec.capacity(), 100);
+    assert_eq!(vec.len(), 0);
+}
+
+#[test]
 ///expanding the heap capacity of a  `FatVec` should not change its length
 pub fn with_heap_capacity_does_not_change_length() {
     assert_eq!(FatVec::<bool, 0>::with_heap_capacity(0).unwrap().len(), 0);
