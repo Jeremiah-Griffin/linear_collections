@@ -1,3 +1,5 @@
+use std::collections::TryReserveError;
+
 use crate::fallible::{FallibleLinearMap, FallibleLinearSet};
 
 use super::map::VecMap;
@@ -27,10 +29,8 @@ impl<T: Eq> VecSet<T> {
     }
 
     ///Creates a VecSet that can hold `capacity` elements without reallocating
-    pub fn with_capacity(capacity: usize) -> Self {
-        VecSet {
-            map: VecMap::with_capacity(capacity),
-        }
+    pub fn with_capacity(capacity: usize) -> Result<VecSet<T>, TryReserveError> {
+        VecMap::with_capacity(capacity).map(|map| VecSet { map })
     }
 
     ///Returns a vector with all the elements in the set.

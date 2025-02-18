@@ -28,10 +28,8 @@ impl<K: Eq, V: PartialEq> VecMap<K, V> {
 
     ///Creates a new, empty VecMap with capacity set to the provide value.
     ///Calls Vec::with_capacity() internally.
-    pub fn with_capacity(capacity: usize) -> VecMap<K, V> {
-        VecMap {
-            vector: Vec::with_capacity(capacity),
-        }
+    pub fn with_capacity(capacity: usize) -> Result<VecMap<K, V>, TryReserveError> {
+        Vec::try_with_capacity(capacity).map(|vector| VecMap { vector })
     }
 }
 

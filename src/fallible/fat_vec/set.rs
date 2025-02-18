@@ -19,6 +19,12 @@ impl<T: Eq, const STACK_CAPACITY: usize> FatSet<T, STACK_CAPACITY> {
         Self { map: FatMap::new() }
     }
 
+    ///Creates a new, empty `FatSet` with space to hold at least `capacity` elements without reallocating
+    ///If `capacity` is less than or equal to `STACK_CAPACITY` the total capacity of this `FatVec` will be equal to `STACK_CAPACITY`.
+    pub fn with_capacity(capacity: usize) -> Result<Self, TryReserveError> {
+        FatMap::with_capacity(capacity).map(|map| FatSet { map })
+    }
+
     ///Creates a new, empty `FatSet` with space to hold at least `capacity` elements without reallocating.
     ///Upon return, this `FatSet` will be able to hold `STACK_CAPACITY + `capacity` elements without
     ///re-allocating.

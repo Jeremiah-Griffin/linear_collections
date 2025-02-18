@@ -20,10 +20,6 @@ serde_test = {version = "1.0.176", optional = true}
 linear_collections_macros = {path = "macros", version = "0.4.0", optional = true}
 fallible_linear_collections_macros = {path = "macros/fallible", version = "0.4.0", optional = true}
 panicking_linear_collections_macros = {path = "macros/panicking", version = "0.4.0", optional = true}
-#serde_big_array = {version = 0.5.1, optional = true},
-
-[dev-dependencies]
-trybuild = {version = "1.0.96"}
 
 [features]
 #panicking and nightly_fallible are seperate in case a create wants 
