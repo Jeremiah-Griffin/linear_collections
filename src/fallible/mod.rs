@@ -7,7 +7,7 @@ mod vecdeque;
 
 pub use fat_vec::{map::*, set::*, FatVec};
 pub use stack_list::{map::*, set::*};
-pub use vec::{map::*, set::*};
+pub use vec::{map::*, set::*, Vec};
 pub use vecdeque::{map::*, set::*};
 
 #[cfg(feature = "fallible_macros")]
