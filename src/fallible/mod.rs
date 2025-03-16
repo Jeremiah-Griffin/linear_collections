@@ -176,7 +176,7 @@ pub trait FallibleLinearMap<K: Eq, V: PartialEq>: MapIterMut<K, V> {
 }
 
 //Never implement clone: panics on alloc failure.
-///Set types backed by a FallibleLinearMap<K, ()> where K == T.
+///Set types backed by a FallibleLinearMap<T, ()>.
 pub trait FallibleLinearSet<T: Eq> {
     ///The map type which backs this set.
     type Backing: FallibleLinearMap<T, ()>;
