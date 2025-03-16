@@ -21,5 +21,18 @@ impl<T> self::Vec<T> {
         std::vec::Vec::try_with_capacity(capacity).map(|inner| Vec { inner })
     }
 
-    p
+    pub fn push(&mut self, item: T) -> Result<(), TryReserveError> {
+        self.inner.try_reserve_exact(1)?;
+        self.inner.push(item);
+
+        Ok(())
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = &T> {
+        self.inner.iter()
+    }
+
+    pub fn reserve(&mut self, additional: usize) -> Result<(), TryReserveError> {
+        self.inner.try_reserve_exact(additional)
+    }
 }
