@@ -294,25 +294,3 @@ impl<const STACK_CAPACITY: usize, T: Hash> Hash for FatVec<T, STACK_CAPACITY> {
         self.iter().for_each(|t| t.hash(state))
     }
 }
-<<<<<<< Updated upstream
-=======
-
-pub struct IntoIter<T, const STACK_CAPACITY: usize> {
-    fv: FatVec<MaybeUninit<T>, STACK_CAPACITY>,
-    current: usize,
-}
-
-impl<T, const STACK_CAPACITY: usize> IntoIter<T, STACK_CAPACITY> {
-    pub const fn new(fatvec: FatVec<T, STACK_CAPACITY>) -> Self {
-        Self {
-            //SAFETY:
-            // std::mem::transmute is broken when attempting to transmute between `T` and `MaybeUninit<T>`.
-            //We meet the guarantees of `std::mem::transmute` as MaybeUninit<T> and T have an identical memory representation.
-            //this is transitive to types which contain a `MaybeUninit<T>` and whose remaining fields, if any, are identical.
-            //we used the unchecked variant to skip the broken size check.
-            fv: unsafe { transmute_unchecked(fatvec) },
-            current: 0,
-        }
-    }
-}
->>>>>>> Stashed changes
