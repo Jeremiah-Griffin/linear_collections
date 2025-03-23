@@ -272,13 +272,3 @@ impl<const STACK_CAPACITY: usize, T: Hash> Hash for FatVec<T, STACK_CAPACITY> {
         self.iter().for_each(|t| t.hash(state))
     }
 }
-
-impl<const STACK_CAPACITY: usize, T> IntoIterator for FatVec<T, STACK_CAPACITY> {
-    type Item = T;
-
-    type IntoIter = Iterator<Item = T>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.iter().map(|t| *t)
-    }
-}
