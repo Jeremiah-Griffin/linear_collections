@@ -137,11 +137,96 @@ pub fn get_unchecked_mut_last_stack_resident() {
 }
 #[test]
 pub fn get_unchecked_mut_last_heap_resident() {
-    let mut svec = FatVec::<&str, 1>::new();
+    let mut svec = FatVec::<&str, 2>::new();
 
     svec.push("one").unwrap();
     svec.push("two").unwrap();
     assert_eq!(*unsafe { svec.get_unchecked_mut(1) }, "two");
+}
+
+#[test]
+///Removing at any index from an empty `FatVec` should return `None`.
+pub fn remove_empty() {
+    let mut list = FatVec::<&str, 2>::new();
+    assert_eq!(list.remove(0), None);
+}
+
+#[test]
+///Removing at an index equal to the length of the `FatVec` should return `None`
+///and the `FatVec` should be unchanged.
+pub fn remove_at_length() {
+    let zero = "zero";
+    let one = "one";
+    let two = "two";
+    let three = "three";
+    let four = "four";
+
+    let mut list = FatVec::with_array([zero, one]);
+
+    list.push(two).unwrap();
+    list.push(three).unwrap();
+    list.push(four).unwrap();
+
+    let mut cloned = FatVec::with_array([zero, one]);
+
+    cloned.push(two).unwrap();
+    cloned.push(three).unwrap();
+    cloned.push(four).unwrap();
+    assert_eq!(list.len(), 5);
+
+    assert_eq!(list.remove(list.len()), None);
+    assert_eq!(list, cloned);
+}
+
+#[test]
+///Removing at an index greater than the length of the `FatVec` should return `None`
+///and the `FatVec` should be unchanged.
+pub fn remove_beyond_length() {
+    let zero = "zero";
+    let one = "one";
+    let two = "two";
+    let three = "three";
+    let four = "four";
+
+    let mut list = FatVec::with_array([zero, one]);
+
+    list.push(two).unwrap();
+    list.push(three).unwrap();
+    list.push(four).unwrap();
+
+    let mut cloned = FatVec::with_array([zero, one]);
+
+    cloned.push(two).unwrap();
+    cloned.push(three).unwrap();
+    cloned.push(four).unwrap();
+
+    assert_eq!(list.len(), 5);
+
+    assert_eq!(list.remove(list.len() + 1), None);
+
+    assert_eq!(list, cloned);
+}
+
+#[test]
+pub fn remove_within_length() {
+    let zero = "zero";
+    let one = "one";
+    let two = "two";
+    let three = "three";
+    let four = "four";
+
+    let mut list = FatVec::with_array([zero, one]);
+
+    list.push(two).unwrap();
+    list.push(three).unwrap();
+    list.push(four).unwrap();
+
+    assert_eq!(list.remove(0), Some(zero));
+
+    assert_eq!(list.remove(0), Some(one));
+    assert_eq!(list.remove(0), Some(two));
+    assert_eq!(list.remove(0), Some(three));
+    assert_eq!(list.remove(0), Some(four));
 }
 
 #[test]
@@ -161,7 +246,7 @@ pub fn remove_shifts_onto_stack() {
 
     //remove the end of the stack
 
-    list.remove(1);
+    assert_eq!(list.remove(1), Some("two"));
 
     //shift onto stack
     assert_eq!(
@@ -187,7 +272,55 @@ pub fn remove_shifts_from_heap() {
 
     //remove the end of the stack
 
-    list.remove(1);
+    assert_eq!(list.remove(1), Some("two"));
+
+    assert_eq!(list.vec, vec![four, five]);
+}
+
+#[test]
+///remove_unchecked should not only shift left within its allocation, but also shift elements from the heap to the left, *onto the stack*.
+pub fn remove_unchecked_shifts_onto_stack() {
+    let one = "one";
+    let two = "two";
+    let three = "three";
+    let four = "four";
+    let five = "five";
+
+    let mut list = FatVec::with_array([one, two]);
+
+    list.push(three).unwrap();
+    list.push(four).unwrap();
+    list.push(five).unwrap();
+
+    //remove_unchecked the end of the stack
+
+    assert_eq!(unsafe { list.remove_unchecked(1) }, "two");
+
+    //shift onto stack
+    assert_eq!(
+        unsafe { transmute_unchecked::<RawStackList<&str, 2>, [&str; 2]>(list.stack_list) },
+        [one, three]
+    );
+}
+
+#[test]
+///remove_unchecked should not only shift left, but also shift elements from the heap to the left, *onto the stack*.
+pub fn remove_unchecked_shifts_from_heap() {
+    let one = "one";
+    let two = "two";
+    let three = "three";
+    let four = "four";
+    let five = "five";
+
+    let mut list = FatVec::with_array([one, two]);
+
+    list.push(three).unwrap();
+    list.push(four).unwrap();
+    list.push(five).unwrap();
+
+    //remove_unchecked the end of the stack
+
+    assert_eq!(unsafe { list.remove_unchecked(1) }, "two");
 
     assert_eq!(list.vec, vec![four, five]);
 }

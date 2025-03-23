@@ -4,9 +4,7 @@ mod serde;
 pub mod test;
 
 use crate::stack_list::RawStackList;
-use std::{
-    collections::TryReserveError, hash::Hash, intrinsics::transmute_unchecked, mem::MaybeUninit,
-};
+use std::{collections::TryReserveError, hash::Hash};
 
 pub mod map;
 pub mod set;
@@ -159,18 +157,28 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
         r
     }
 
-    /// Removes the element at `idx` from a `FatVec` and returns it, or `None` if the `FatVec` is empty or if `idx` is greater than or equal to its length.
+    /// Removes the element at `idx` from this `FatVec` and returns it, or `None` if the `FatVec` is empty or if `idx` is greater than or equal to its length.
     ///TODO: miri testing stuff.
     pub fn remove(&mut self, idx: usize) -> Option<T> {
         match self.len() {
-            //SAFETY:
-            //Do not remove this arm without auditing the unsafe blocks below.
-            //guaranteeing that we return None on a len of 0 means we can safely and cheaply subtract from the index without underflowing.
             0 => None,
+            l if idx >= l => None,
+            //SAFETY:
+            //we check both that there are elements in this FatVec,
+            //and that `idx` is in bounds in the match arms above.
+            _ => Some(unsafe { self.remove_unchecked(idx) }),
+        }
+    }
+
+    ///Removes the element at `idx` from this `FatVec`.
+    ///SAFETY:
+    ///Undefined Behavior if `idx` is greater than or equal to the length of this `FatVec`.
+    pub unsafe fn remove_unchecked(&mut self, idx: usize) -> T {
+        match idx <= STACK_CAPACITY {
             //value is resident on stack
-            _ if idx <= STACK_CAPACITY => {
+            true => {
                 //SAFETY
-                //bound by index means we are guaranteed to be within the initialized portion of the stack list.
+                //upheld by caller. See function documentation.
                 let r = unsafe { self.stack_list.remove(idx, self.array_len()) };
 
                 //Shift elements from heap to stack, if necessary.
@@ -179,28 +187,24 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
                     //SAFETY:
                     //STACK_CAPACITY - 1 is always guaranteed to be last element in the RawStackList.
                     //Further, we know both that that last element is going to be unoccupied - the prior call to remove guarantees that all elements before it have shifted left -
-                    //and we also knwo that the the RawStackList has space for only one element now, because the vec is non empty.
+                    //and we also know that the the RawStackList has space for only one element now, because the vec is non empty.
                     //
-                    //The only time the RawStackList will have < CAPACITY elements is when no elements have overflowed onto the heap.
+                    //The only time the RawStackList will have less than STACK_CAPACITY elements is when no elements have overflowed onto the heap.
                     unsafe {
-                        //using staurating sub as it's going to be evaluated at compile time anyway, but we technically
-                        //can't bound the  STACK_CAPACITY > 0
+                        //Saturing sub used as we can't use a `NonZero<usize>` for `STACK_CAPACITY`.
                         self.stack_list
                             .insert_at(STACK_CAPACITY.saturating_sub(1), elem)
                     };
                 }
 
                 self.len -= 1;
-                Some(r)
+                r
             }
             //value is resident on heap
-            _ => {
+            false => {
                 let vec_idx = idx - STACK_CAPACITY;
                 self.len -= 1;
-                match vec_idx > self.vec.len() {
-                    true => None,
-                    false => Some(self.vec.remove(vec_idx)),
-                }
+                self.vec.remove(vec_idx)
             }
         }
     }
