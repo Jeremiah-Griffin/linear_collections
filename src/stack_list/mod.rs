@@ -1,10 +1,12 @@
 use std::{
     array,
     hash::Hash,
-    mem::{ManuallyDrop, MaybeUninit},
-    ops::Deref,
+    mem::MaybeUninit,
     ptr::{addr_of, addr_of_mut, copy},
 };
+
+#[cfg(feature = "nightly")]
+use std::mem::ManuallyDrop;
 
 #[cfg(feature = "serde")]
 mod serde;
@@ -21,20 +23,19 @@ mod test;
 //additionally, we would need to zero ever uninit both initially and avfter every drop. That is a wast of writes.
 //
 #[derive(Debug)]
-///We need the core functionality of ArrayVec throughout the crate, but don't need the overhead
-///of tracking `length` internally. So we don't!
+///We need the core functionality of StackList throughout the crate, but don't need the overhead
+///of tracking `length` internally.
 pub(crate) struct RawStackList<T, const CAPACITY: usize> {
     array: [MaybeUninit<T>; CAPACITY],
 }
 
-///Safe as
 fn t_to_maybeuninit<T, const LENGTH: usize>(array: [T; LENGTH]) -> [MaybeUninit<T>; LENGTH] {
     #[cfg(feature = "nightly")]
     unsafe {
         core::intrinsics::transmute_unchecked(array)
     }
 
-    //TODO: this is a disgusting hack that results in doubled stack usage.
+    //TODO: this is a dumb hack that results in doubled stack usage.
     #[cfg(not(feature = "nightly"))]
     {
         ///We use ManuallyDrop to ensure that whil the copied T get deallocated, we dont call drop both for the copy at the end of the scope
@@ -132,8 +133,9 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
             .map(|t| unsafe { t.assume_init_mut() })
     }
 
-    ///SAFETY: UB if accessed beyond CAPACITY *OR* into uninitialized element.
+    ///SAFETY: UB if accessed beyond `CAPACITY` *OR* into an uninitialized element.
     pub unsafe fn remove(&mut self, index: usize, length: usize) -> T {
+        println!("requested: {index}, length: {length}");
         //SAFETY: addressed by the disclosure on the function signature
         //take value
         let t = unsafe { self.array.get_unchecked(index).assume_init_read() };
@@ -291,7 +293,7 @@ impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
     }
 }
 
-impl<const STACK_CAPACITY: usize, T: PartialEq> PartialEq for StackList<T, STACK_CAPACITY> {
+impl<const CAPACITY: usize, T: PartialEq> PartialEq for StackList<T, CAPACITY> {
     fn eq(&self, other: &Self) -> bool {
         //just want to explicitly evaluate this first as it's much cheaper.
         if self.len() != other.len() {
@@ -304,9 +306,9 @@ impl<const STACK_CAPACITY: usize, T: PartialEq> PartialEq for StackList<T, STACK
     }
 }
 
-impl<const STACK_CAPACITY: usize, T: Eq> Eq for StackList<T, STACK_CAPACITY> {}
+impl<const CAPACITY: usize, T: Eq> Eq for StackList<T, CAPACITY> {}
 
-impl<const STACK_CAPACITY: usize, T: Hash> Hash for StackList<T, STACK_CAPACITY> {
+impl<const CAPACITY: usize, T: Hash> Hash for StackList<T, CAPACITY> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.iter().for_each(|t| t.hash(state))
     }

@@ -174,6 +174,7 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
     ///SAFETY:
     ///Undefined Behavior if `idx` is greater than or equal to the length of this `FatVec`.
     pub unsafe fn remove_unchecked(&mut self, idx: usize) -> T {
+        self.len -= 1;
         match idx <= STACK_CAPACITY {
             //value is resident on stack
             true => {
@@ -197,13 +198,11 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
                     };
                 }
 
-                self.len -= 1;
                 r
             }
             //value is resident on heap
             false => {
                 let vec_idx = idx - STACK_CAPACITY;
-                self.len -= 1;
                 self.vec.remove(vec_idx)
             }
         }
@@ -319,5 +318,11 @@ impl<T, const STACK_CAPACITY: usize> IntoIterator for FatVec<T, STACK_CAPACITY> 
 
     fn into_iter(self) -> Self::IntoIter {
         IntoIter { fv: self }
+    }
+}
+
+impl<T, const STACK_CAPACITY: usize> DoubleEndedIterator for IntoIter<T, STACK_CAPACITY> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        self.fv.len().checked_sub(1).and_then(|i| self.fv.remove(i))
     }
 }

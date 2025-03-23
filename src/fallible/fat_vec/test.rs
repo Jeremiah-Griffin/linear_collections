@@ -1,4 +1,4 @@
-use std::{intrinsics::transmute_unchecked, mem::MaybeUninit};
+use std::intrinsics::transmute_unchecked;
 
 use crate::stack_list::RawStackList;
 
@@ -222,11 +222,15 @@ pub fn remove_within_length() {
     list.push(four).unwrap();
 
     assert_eq!(list.remove(0), Some(zero));
-
+    assert_eq!(list.len(), 4);
     assert_eq!(list.remove(0), Some(one));
+    assert_eq!(list.len(), 3);
     assert_eq!(list.remove(0), Some(two));
+    assert_eq!(list.len(), 2);
     assert_eq!(list.remove(0), Some(three));
+    assert_eq!(list.len(), 1);
     assert_eq!(list.remove(0), Some(four));
+    assert_eq!(list.len(), 0);
 }
 
 #[test]
@@ -323,4 +327,66 @@ pub fn remove_unchecked_shifts_from_heap() {
     assert_eq!(unsafe { list.remove_unchecked(1) }, "two");
 
     assert_eq!(list.vec, vec![four, five]);
+}
+
+#[test]
+pub fn into_iter_next() {
+    let one = "one";
+    let two = "two";
+    let three = "three";
+    let four = "four";
+    let five = "five";
+
+    let mut list = FatVec::with_array([one, two]);
+
+    list.push(three).unwrap();
+    list.push(four).unwrap();
+    list.push(five).unwrap();
+
+    assert_eq!(
+        list.into_iter().collect::<Vec<&str>>(),
+        vec![one, two, three, four, five]
+    );
+}
+
+#[test]
+pub fn into_iter_next_empty() {
+    let list = FatVec::<&str, 2>::new();
+
+    assert_eq!(list.into_iter().next(), None)
+}
+
+#[test]
+pub fn into_iter_next_back() {
+    let one = "one";
+    let two = "two";
+    let three = "three";
+    let four = "four";
+    let five = "five";
+
+    let mut list = FatVec::with_array([one, two]);
+
+    list.push(three).unwrap();
+    list.push(four).unwrap();
+    list.push(five).unwrap();
+    let mut iter = list.into_iter();
+    assert_eq!(iter.next_back(), Some(five));
+    assert_eq!(iter.next_back(), Some(four));
+    assert_eq!(iter.next_back(), Some(three));
+    assert_eq!(iter.next_back(), Some(two));
+    assert_eq!(iter.next_back(), Some(one));
+    assert_eq!(iter.next_back(), None);
+
+    /*
+    assert_eq!(
+        list.into_iter().rev().collect::<Vec<&str>>(),
+        vec![five, four, three, two, one]
+    );*/
+}
+
+#[test]
+pub fn into_iter_next_back_empty() {
+    let list = FatVec::<&str, 2>::new();
+
+    assert_eq!(list.into_iter().rev().next(), None)
 }
