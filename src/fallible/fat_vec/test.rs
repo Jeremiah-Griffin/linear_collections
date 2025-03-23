@@ -86,7 +86,66 @@ pub fn get_last_heap_resident() {
 }
 
 #[test]
-///Remove should not only shift left, but also shift elements from the heap to the left, *onto the stack*.
+pub fn get_unchecked_last_stack_resident() {
+    let mut svec = FatVec::<&str, 1>::new();
+
+    svec.push("one").unwrap();
+    assert_eq!(*unsafe { svec.get_unchecked(0) }, "one");
+
+    svec.push("two").unwrap();
+    assert_eq!(*unsafe { svec.get_unchecked(0) }, "one");
+}
+#[test]
+pub fn get_unchecked_last_heap_resident() {
+    let mut svec = FatVec::<&str, 1>::new();
+
+    svec.push("one").unwrap();
+    svec.push("two").unwrap();
+    assert_eq!(*unsafe { svec.get_unchecked(1) }, "two");
+}
+
+#[test]
+pub fn get_mut_last_stack_resident() {
+    let mut svec = FatVec::<&str, 1>::new();
+
+    svec.push("one").unwrap();
+    assert_eq!(svec.get_mut(0), Some(&mut "one"));
+
+    svec.push("two").unwrap();
+    assert_eq!(svec.get_mut(0), Some(&mut "one"));
+}
+#[test]
+pub fn get_mut_last_heap_resident() {
+    let mut svec = FatVec::<&str, 1>::new();
+
+    svec.push("one").unwrap();
+    assert_eq!(svec.get_mut(1), None);
+
+    svec.push("two").unwrap();
+    assert_eq!(svec.get_mut(1), Some(&mut "two"));
+}
+
+#[test]
+pub fn get_unchecked_mut_last_stack_resident() {
+    let mut svec = FatVec::<&str, 1>::new();
+
+    svec.push("one").unwrap();
+    assert_eq!(*unsafe { svec.get_unchecked_mut(0) }, "one");
+
+    svec.push("two").unwrap();
+    assert_eq!(*unsafe { svec.get_unchecked_mut(0) }, "one");
+}
+#[test]
+pub fn get_unchecked_mut_last_heap_resident() {
+    let mut svec = FatVec::<&str, 1>::new();
+
+    svec.push("one").unwrap();
+    svec.push("two").unwrap();
+    assert_eq!(*unsafe { svec.get_unchecked_mut(1) }, "two");
+}
+
+#[test]
+///Remove should not only shift left within its allocation, but also shift elements from the heap to the left, *onto the stack*.
 pub fn remove_shifts_onto_stack() {
     let one = "one";
     let two = "two";

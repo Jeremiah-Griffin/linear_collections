@@ -1,5 +1,5 @@
 use crate::{fallible::FallibleLinearMap, MapIterMut};
-use std::collections::TryReserveError;
+use std::{collections::TryReserveError, mem::MaybeUninit};
 
 use super::FatVec;
 
@@ -132,3 +132,23 @@ impl<
         crate::serde::fallible::serialize_fallible_map(self, serializer)
     }
 }
+
+/*
+pub struct IntoIterator<T, const STACK_CAPACITY: usize> {
+    fv: FatVec<MaybeUninit<T>, STACK_CAPACITY>,
+    current: usize,
+}
+
+impl<T, const STACK_CAPACITY: usize> Iterator for IntoIterator {
+    type Item = T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.fv.len() {
+            len if self.current > len => None,
+            len if len == 0 => None,
+            _ => {
+                let res = self.fv.get(self.current)
+            }
+        }
+    }
+}*/

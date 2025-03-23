@@ -4,7 +4,9 @@ mod serde;
 pub mod test;
 
 use crate::stack_list::RawStackList;
-use std::{collections::TryReserveError, hash::Hash};
+use std::{
+    collections::TryReserveError, hash::Hash, intrinsics::transmute_unchecked, mem::MaybeUninit,
+};
 
 pub mod map;
 pub mod set;
@@ -157,19 +159,19 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
         r
     }
 
-    /// Removes the element from a `FatVec` and returns it, or [`None`] if the `FatVec` is empty.
+    /// Removes the element at `idx` from a `FatVec` and returns it, or `None` if the `FatVec` is empty or if `idx` is greater than or equal to its length.
     ///TODO: miri testing stuff.
-    pub fn remove(&mut self, index: usize) -> Option<T> {
+    pub fn remove(&mut self, idx: usize) -> Option<T> {
         match self.len() {
             //SAFETY:
             //Do not remove this arm without auditing the unsafe blocks below.
             //guaranteeing that we return None on a len of 0 means we can safely and cheaply subtract from the index without underflowing.
             0 => None,
             //value is resident on stack
-            _ if index <= STACK_CAPACITY => {
+            _ if idx <= STACK_CAPACITY => {
                 //SAFETY
                 //bound by index means we are guaranteed to be within the initialized portion of the stack list.
-                let r = unsafe { self.stack_list.remove(index, self.array_len()) };
+                let r = unsafe { self.stack_list.remove(idx, self.array_len()) };
 
                 //Shift elements from heap to stack, if necessary.
                 if self.vec.len() > 0 {
@@ -193,7 +195,7 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
             }
             //value is resident on heap
             _ => {
-                let vec_idx = index - STACK_CAPACITY;
+                let vec_idx = idx - STACK_CAPACITY;
                 self.len -= 1;
                 match vec_idx > self.vec.len() {
                     true => None,
@@ -203,36 +205,56 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
         }
     }
 
-    ///Gets a shared reference to the item at the requested, returning `None` if idx is outside the range of the `FatVec`.
+    ///Returns a shared reference to the item at the requested, returning `None` if idx is outside the range of the `FatVec`.
     pub fn get(&self, idx: usize) -> Option<&T> {
         if idx >= self.len {
             return None;
         }
 
+        //SAFETY:
+        //the early return above guarantees we do not access
+        //out of bounds
+        unsafe { Some(self.get_unchecked(idx)) }
+    }
+
+    ///Returns a unique reference to the item at `idx`, returning `None` if idx is outside the range of the `FatVec`.
+    pub fn get_mut<'a>(&'a mut self, idx: usize) -> Option<&'a mut T> {
+        if idx >= self.len {
+            return None;
+        }
+        //SAFETY:
+        //the early return above guarantees we do not access
+        //out of bounds
+        unsafe { Some(self.get_unchecked_mut(idx)) }
+    }
+
+    ///Returns a shared reference to the item at `idx`.
+    ///SAFETY:
+    ///UB if idx is >= the length of this `FatVec`.
+    pub unsafe fn get_unchecked(&self, idx: usize) -> &T {
         match STACK_CAPACITY > idx {
             //SAFETY:
             //Because we maintain length seperately of the vec and array, we can rely on IDX not to be out of bounds for
             //either these accesses.
-            true => unsafe { Some(self.stack_list.get(idx)) },
+            true => unsafe { self.stack_list.get(idx) },
             //subtract as the first element of vec is 0, but in the whole `FatVec`, it's
             //always STACK_CAPACITY + idx. The subtraction accounts for this for this.
-            false => self.vec.get(idx - STACK_CAPACITY),
+            false => self.vec.get_unchecked(idx - STACK_CAPACITY),
         }
     }
 
-    ///Gets a unique reference to the item at the requested, returning `None` if idx is outside the range of the `FatVec`.
-    pub fn get_mut<'a>(&'a mut self, idx: usize) -> Option<&'a mut T> {
-        if idx > self.len {
-            return None;
-        }
+    ///Returns a unique reference to the item at `idx`.
+    ///SAFETY:
+    ///UB if idx is >= the length of this `FatVec`.
+    pub unsafe fn get_unchecked_mut(&mut self, idx: usize) -> &mut T {
         match STACK_CAPACITY > idx {
             //SAFETY:
             //Because we maintain length seperately from the vec and array, we can rely on IDX not to be out of bounds for
             //either these accesses.
-            true => unsafe { Some(self.stack_list.get_mut(idx)) },
+            true => unsafe { self.stack_list.get_mut(idx) },
             //subtract as the first element of vec is 0, but in the whole `FatVec`, it's
             //always STACK_CAPACITY + idx. The subtraction accounts for this for this.
-            false => self.vec.get_mut(idx - STACK_CAPACITY),
+            false => self.vec.get_unchecked_mut(idx - STACK_CAPACITY),
         }
     }
 
@@ -272,3 +294,25 @@ impl<const STACK_CAPACITY: usize, T: Hash> Hash for FatVec<T, STACK_CAPACITY> {
         self.iter().for_each(|t| t.hash(state))
     }
 }
+<<<<<<< Updated upstream
+=======
+
+pub struct IntoIter<T, const STACK_CAPACITY: usize> {
+    fv: FatVec<MaybeUninit<T>, STACK_CAPACITY>,
+    current: usize,
+}
+
+impl<T, const STACK_CAPACITY: usize> IntoIter<T, STACK_CAPACITY> {
+    pub const fn new(fatvec: FatVec<T, STACK_CAPACITY>) -> Self {
+        Self {
+            //SAFETY:
+            // std::mem::transmute is broken when attempting to transmute between `T` and `MaybeUninit<T>`.
+            //We meet the guarantees of `std::mem::transmute` as MaybeUninit<T> and T have an identical memory representation.
+            //this is transitive to types which contain a `MaybeUninit<T>` and whose remaining fields, if any, are identical.
+            //we used the unchecked variant to skip the broken size check.
+            fv: unsafe { transmute_unchecked(fatvec) },
+            current: 0,
+        }
+    }
+}
+>>>>>>> Stashed changes
