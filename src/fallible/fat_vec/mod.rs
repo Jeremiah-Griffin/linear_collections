@@ -298,3 +298,26 @@ impl<const STACK_CAPACITY: usize, T: Hash> Hash for FatVec<T, STACK_CAPACITY> {
         self.iter().for_each(|t| t.hash(state))
     }
 }
+
+pub struct IntoIter<T, const STACK_CAPACITY: usize> {
+    fv: FatVec<T, STACK_CAPACITY>,
+}
+
+impl<T, const STACK_CAPACITY: usize> Iterator for IntoIter<T, STACK_CAPACITY> {
+    type Item = T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        //TODO: all the left shifting is going to be slow.
+        self.fv.remove(0)
+    }
+}
+
+impl<T, const STACK_CAPACITY: usize> IntoIterator for FatVec<T, STACK_CAPACITY> {
+    type Item = T;
+
+    type IntoIter = IntoIter<T, STACK_CAPACITY>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        IntoIter { fv: self }
+    }
+}
