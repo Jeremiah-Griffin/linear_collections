@@ -15,10 +15,10 @@ check:
 
 #Runs all tests specified by FILTER. If not provided, runs all tests in the crate.
 alias t := test
-test *FILTER:
+test PATTERN = "":
 	#test once with all features to hit the trybuild macro tests which dont work under miri.
-	cargo test --all-features
-	cargo hack miri test --feature-powerset --no-dev-deps {{FILTER}} --group-features nightly_fallible,fallible_macros --group-features panicking,panicking_macros
+	cargo test {{PATTERN}} --all-features
+	cargo hack miri test --feature-powerset --no-dev-deps {{PATTERN}} --group-features nightly_fallible,fallible_macros --group-features panicking,panicking_macros
 
 
 publish: test

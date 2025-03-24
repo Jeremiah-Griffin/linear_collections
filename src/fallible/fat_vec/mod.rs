@@ -76,8 +76,8 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
 
     //***methods***
 
-    pub fn array_len(&self) -> usize {
-        match self.len <= STACK_CAPACITY {
+    pub const fn array_len(&self) -> usize {
+        match self.len() <= STACK_CAPACITY {
             true => self.len(),
             false => STACK_CAPACITY,
         }
@@ -97,6 +97,7 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
         unsafe { self.stack_list.iter_mut_to(len) }.chain(self.vec.iter_mut())
     }
 
+    #[inline(always)]
     ///Returns the number of items in this `FatVec`
     pub const fn len(&self) -> usize {
         self.len
@@ -144,17 +145,15 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
         //as we can just decrement the "stack pointer" and leave the type as is. Drop handling is done by moving
         //the T out of pop. Remove can't do this as it needs to be able to pull elements arbitrarily from within the array
         //meaning it needs to shift left to keep the values contiguous.
-        let r = match self.len() {
+        match self.len() {
             0 => None,
+            //resident on stack
             idx if idx <= STACK_CAPACITY => unsafe {
                 Some(self.stack_list.remove(idx, self.array_len()))
             },
+            //resident on heap
             _ => self.vec.pop(),
-        };
-
-        self.len = self.len.saturating_sub(1);
-
-        r
+        }
     }
 
     /// Removes the element at `idx` from this `FatVec` and returns it, or `None` if the `FatVec` is empty or if `idx` is greater than or equal to its length.
@@ -174,10 +173,11 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
     ///SAFETY:
     ///Undefined Behavior if `idx` is greater than or equal to the length of this `FatVec`.
     pub unsafe fn remove_unchecked(&mut self, idx: usize) -> T {
-        self.len -= 1;
-        match idx <= STACK_CAPACITY {
+        let r = match idx <= STACK_CAPACITY {
             //value is resident on stack
             true => {
+                println!("idx: {idx}");
+                println!("vec length: {}", self.vec.len());
                 //SAFETY
                 //upheld by caller. See function documentation.
                 let r = unsafe { self.stack_list.remove(idx, self.array_len()) };
@@ -205,7 +205,9 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
                 let vec_idx = idx - STACK_CAPACITY;
                 self.vec.remove(vec_idx)
             }
-        }
+        };
+        self.len -= 1;
+        r
     }
 
     ///Returns a shared reference to the item at the requested, returning `None` if idx is outside the range of the `FatVec`.
@@ -323,6 +325,6 @@ impl<T, const STACK_CAPACITY: usize> IntoIterator for FatVec<T, STACK_CAPACITY> 
 
 impl<T, const STACK_CAPACITY: usize> DoubleEndedIterator for IntoIter<T, STACK_CAPACITY> {
     fn next_back(&mut self) -> Option<Self::Item> {
-        self.fv.len().checked_sub(1).and_then(|i| self.fv.remove(i))
+        self.fv.pop()
     }
 }

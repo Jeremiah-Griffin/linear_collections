@@ -1,12 +1,9 @@
 use std::{
     array,
     hash::Hash,
-    mem::MaybeUninit,
+    mem::{ManuallyDrop, MaybeUninit},
     ptr::{addr_of, addr_of_mut, copy},
 };
-
-#[cfg(feature = "nightly")]
-use std::mem::ManuallyDrop;
 
 #[cfg(feature = "serde")]
 mod serde;
@@ -135,7 +132,7 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
 
     ///SAFETY: UB if accessed beyond `CAPACITY` *OR* into an uninitialized element.
     pub unsafe fn remove(&mut self, index: usize, length: usize) -> T {
-        println!("requested: {index}, length: {length}");
+        println!("requested: {index}, stack length: {length}");
         //SAFETY: addressed by the disclosure on the function signature
         //take value
         let t = unsafe { self.array.get_unchecked(index).assume_init_read() };
@@ -148,15 +145,6 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
             (addr_of_mut!(self.array) as *mut MaybeUninit<T>).add(index),
             elements_after_index,
         );
-
-        /*
-        if elements_after_index > 0 {
-            std::ptr::copy(
-                self.array.get_unchecked(index + 1).as_ptr(),
-                self.array.get_unchecked_mut(index).as_mut_ptr(),
-                elements_after_index,
-            );
-        }*/
 
         t
     }
@@ -244,7 +232,8 @@ impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
     }
 
     pub fn pop(&mut self) -> Option<T> {
-        self.remove(self.length)
+        self.length.checked_sub(1).and_then(|l| self.remove(l))
+        //self.remove(self.length)
     }
 
     pub fn push(&mut self, value: T) -> Result<(), PushError> {

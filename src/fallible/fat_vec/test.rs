@@ -376,7 +376,6 @@ pub fn into_iter_next_back() {
     assert_eq!(iter.next_back(), Some(two));
     assert_eq!(iter.next_back(), Some(one));
     assert_eq!(iter.next_back(), None);
-
     /*
     assert_eq!(
         list.into_iter().rev().collect::<Vec<&str>>(),
@@ -389,4 +388,31 @@ pub fn into_iter_next_back_empty() {
     let list = FatVec::<&str, 2>::new();
 
     assert_eq!(list.into_iter().rev().next(), None)
+}
+
+#[test]
+pub fn pop() {
+    let zero = "zero";
+    let one = "one";
+    let two = "two";
+    let three = "three";
+    let four = "four";
+
+    let mut list = FatVec::with_array([zero, one]);
+    list.push(two).unwrap();
+    list.push(three).unwrap();
+    list.push(four).unwrap();
+
+    assert_eq!(list.pop(), Some(four));
+    assert_eq!(list.len(), 4);
+    assert_eq!(list.pop(), Some(three));
+    assert_eq!(list.len(), 3);
+    assert_eq!(list.pop(), Some(two));
+    assert_eq!(list.len(), 2);
+    assert_eq!(list.pop(), Some(one));
+    assert_eq!(list.len(), 1);
+    assert_eq!(list.pop(), Some(zero));
+    assert_eq!(list.len(), 0);
+    assert_eq!(list.pop(), None);
+    assert_eq!(list.len(), 0);
 }
