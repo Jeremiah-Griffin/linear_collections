@@ -332,3 +332,10 @@ impl<T, const STACK_CAPACITY: usize> DoubleEndedIterator for IntoIter<T, STACK_C
         self.fv.pop()
     }
 }
+
+impl<T, const STACK_CAPACITY: usize> ExactSizeIterator for IntoIter<T, STACK_CAPACITY> {
+    ///custom impl to avoid panicking assertion of default implementation
+    fn len(&self) -> usize {
+        self.fv.len()
+    }
+}
