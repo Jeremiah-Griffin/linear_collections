@@ -201,7 +201,7 @@ pub fn remove_beyond_length() {
     cloned.push(four).unwrap();
 
     assert_eq!(list.len(), 5);
-
+    assert_eq!(list.remove(list.len()), None);
     assert_eq!(list.remove(list.len() + 1), None);
 
     assert_eq!(list, cloned);
@@ -221,6 +221,7 @@ pub fn remove_within_length() {
     list.push(three).unwrap();
     list.push(four).unwrap();
 
+    assert_eq!(list.len(), 5)
     assert_eq!(list.remove(0), Some(zero));
     assert_eq!(list.len(), 4);
     assert_eq!(list.remove(0), Some(one));
@@ -376,18 +377,13 @@ pub fn into_iter_next_back() {
     assert_eq!(iter.next_back(), Some(two));
     assert_eq!(iter.next_back(), Some(one));
     assert_eq!(iter.next_back(), None);
-    /*
-    assert_eq!(
-        list.into_iter().rev().collect::<Vec<&str>>(),
-        vec![five, four, three, two, one]
-    );*/
 }
 
 #[test]
 pub fn into_iter_next_back_empty() {
     let list = FatVec::<&str, 2>::new();
 
-    assert_eq!(list.into_iter().rev().next(), None)
+    assert_eq!(list.into_iter().next_back(), None)
 }
 
 #[test]
