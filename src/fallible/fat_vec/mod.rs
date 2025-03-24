@@ -76,7 +76,7 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
 
     //***methods***
 
-    pub const fn array_len(&self) -> usize {
+    pub fn array_len(&self) -> usize {
         match self.len() <= STACK_CAPACITY {
             true => self.len(),
             false => STACK_CAPACITY,
@@ -99,7 +99,8 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
 
     #[inline(always)]
     ///Returns the number of items in this `FatVec`
-    pub const fn len(&self) -> usize {
+    pub fn len(&self) -> usize {
+        println!("{}", self.len);
         self.len
     }
 
@@ -148,11 +149,15 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
         match self.len() {
             0 => None,
             //resident on stack
-            idx if idx <= STACK_CAPACITY => unsafe {
-                Some(self.stack_list.remove(idx, self.array_len()))
-            },
+            idx if idx <= STACK_CAPACITY => {
+                self.len = self.len.saturating_sub(1);
+                unsafe { Some(self.stack_list.remove(idx, self.array_len())) }
+            }
             //resident on heap
-            _ => self.vec.pop(),
+            _ => {
+                self.len = self.len.saturating_sub(1);
+                self.vec.pop()
+            }
         }
     }
 

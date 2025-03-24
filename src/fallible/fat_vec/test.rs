@@ -403,6 +403,7 @@ pub fn pop() {
     list.push(three).unwrap();
     list.push(four).unwrap();
 
+    assert_eq!(list.len(), 5);
     assert_eq!(list.pop(), Some(four));
     assert_eq!(list.len(), 4);
     assert_eq!(list.pop(), Some(three));
