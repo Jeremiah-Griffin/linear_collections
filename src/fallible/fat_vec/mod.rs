@@ -180,8 +180,6 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
         let r = match idx <= STACK_CAPACITY {
             //value is resident on stack
             true => {
-                println!("idx: {idx}");
-                println!("vec length: {}", self.vec.len());
                 //SAFETY
                 //upheld by caller. See function documentation.
                 let r = unsafe { self.stack_list.remove(idx, self.array_len()) };

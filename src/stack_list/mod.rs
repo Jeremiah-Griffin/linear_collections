@@ -132,7 +132,6 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
 
     ///SAFETY: UB if accessed beyond `CAPACITY` *OR* into an uninitialized element.
     pub unsafe fn remove(&mut self, index: usize, length: usize) -> T {
-        println!("requested: {index}, stack length: {length}");
         //SAFETY: addressed by the disclosure on the function signature
         //take value
         let t = unsafe { self.array.get_unchecked(index).assume_init_read() };
