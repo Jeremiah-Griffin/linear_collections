@@ -36,4 +36,8 @@ impl<T> self::Vec<T> {
     pub fn reserve(&mut self, additional: usize) -> Result<(), TryReserveError> {
         self.inner.try_reserve_exact(additional)
     }
+
+    pub fn into_iter(self) -> impl Iterator<Item = T> {
+        self.inner.into_iter()
+    }
 }
