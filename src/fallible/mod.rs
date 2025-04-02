@@ -5,7 +5,7 @@ mod stack_list;
 mod vec;
 mod vecdeque;
 
-pub use fat_vec::{map::*, set::*, FatVec};
+pub use fat_vec::{map::*, set::*, FatVec, FatVecIterator};
 pub use stack_list::{map::*, set::*};
 pub use vec::{map::*, set::*, Vec};
 pub use vecdeque::{map::*, set::*};

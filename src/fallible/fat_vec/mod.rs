@@ -302,11 +302,11 @@ impl<const STACK_CAPACITY: usize, T: Hash> Hash for FatVec<T, STACK_CAPACITY> {
     }
 }
 
-pub struct IntoIter<T, const STACK_CAPACITY: usize> {
+pub struct FatVecIterator<T, const STACK_CAPACITY: usize> {
     fv: FatVec<T, STACK_CAPACITY>,
 }
 
-impl<T, const STACK_CAPACITY: usize> Iterator for IntoIter<T, STACK_CAPACITY> {
+impl<T, const STACK_CAPACITY: usize> Iterator for FatVecIterator<T, STACK_CAPACITY> {
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -318,20 +318,20 @@ impl<T, const STACK_CAPACITY: usize> Iterator for IntoIter<T, STACK_CAPACITY> {
 impl<T, const STACK_CAPACITY: usize> IntoIterator for FatVec<T, STACK_CAPACITY> {
     type Item = T;
 
-    type IntoIter = IntoIter<T, STACK_CAPACITY>;
+    type IntoIter = FatVecIterator<T, STACK_CAPACITY>;
 
     fn into_iter(self) -> Self::IntoIter {
-        IntoIter { fv: self }
+        FatVecIterator { fv: self }
     }
 }
 
-impl<T, const STACK_CAPACITY: usize> DoubleEndedIterator for IntoIter<T, STACK_CAPACITY> {
+impl<T, const STACK_CAPACITY: usize> DoubleEndedIterator for FatVecIterator<T, STACK_CAPACITY> {
     fn next_back(&mut self) -> Option<Self::Item> {
         self.fv.pop()
     }
 }
 
-impl<T, const STACK_CAPACITY: usize> ExactSizeIterator for IntoIter<T, STACK_CAPACITY> {
+impl<T, const STACK_CAPACITY: usize> ExactSizeIterator for FatVecIterator<T, STACK_CAPACITY> {
     ///custom impl to avoid panicking assertion of default implementation
     fn len(&self) -> usize {
         self.fv.len()

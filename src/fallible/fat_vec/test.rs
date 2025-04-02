@@ -221,7 +221,7 @@ pub fn remove_within_length() {
     list.push(three).unwrap();
     list.push(four).unwrap();
 
-    assert_eq!(list.len(), 5)
+    assert_eq!(list.len(), 5);
     assert_eq!(list.remove(0), Some(zero));
     assert_eq!(list.len(), 4);
     assert_eq!(list.remove(0), Some(one));
