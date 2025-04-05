@@ -5,7 +5,7 @@ use crate::fallible::{FallibleLinearMap, FallibleLinearSet};
 use super::map::VecMap;
 
 ///A set backed by a VecMap where the value for each key is ().
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[derive(Debug, PartialEq, Eq, Hash, Default)]
 pub struct VecSet<T: Eq> {
     map: VecMap<T, ()>,
 }

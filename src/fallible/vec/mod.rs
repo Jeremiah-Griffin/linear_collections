@@ -3,7 +3,7 @@ use std::collections::TryReserveError;
 pub mod map;
 pub mod set;
 
-#[derive(Debug, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Debug, Eq, PartialEq, Hash)]
 ///TODO: replace this with a rawvec type. RawVec panic on out_of_capacity as well.
 ///Need to catch everything as an error.
 #[repr(transparent)]

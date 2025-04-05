@@ -1,4 +1,4 @@
-#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 ///A map type backed by an Array, stack allocated and fixed in size.
 ///
 ///ArrayMap is the only map type in linear_collections which does *not* implement either LinearMap nor InfallibleLinearMap, which relies on

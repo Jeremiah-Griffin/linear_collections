@@ -3,7 +3,7 @@ use std::collections::TryReserveError;
 use crate::{fallible::FallibleLinearMap, MapIterMut};
 
 ///A map type backed by a Vector. Useful for small collections whose size can change.
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[derive(Debug, PartialEq, Eq, Hash, Default)]
 pub struct VecMap<K: Eq, V> {
     vector: Vec<(K, V)>,
 }
