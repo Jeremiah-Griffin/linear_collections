@@ -22,7 +22,7 @@ use crate::MapIterMut;
 ///Because arrays may implement this type, we cannot assume that implementors will be dynamically sized.
 ///Only methods which do not require manipulating the length or capacity of the store are provided here:
 ///this is to permit the implementation of fixed sized types backed by arrays.
-pub trait FallibleLinearMap<K: Eq, V: PartialEq>: MapIterMut<K, V> {
+pub trait FallibleLinearMap<K: Eq, V>: MapIterMut<K, V> {
     type Backing;
     //Aliasing the InsertionError allows us to implement this for both heap allocated types which return TryReserveError
     //and the stack allocated ArrayVec which return ArrayVecError.
@@ -57,7 +57,10 @@ pub trait FallibleLinearMap<K: Eq, V: PartialEq>: MapIterMut<K, V> {
     }
 
     ///Returns true if this map contains a given value. False otherwise.
-    fn contains_value(&self, value: &V) -> bool {
+    fn contains_value(&self, value: &V) -> bool
+    where
+        V: PartialEq,
+    {
         for (_, v) in self.iter() {
             if v == value {
                 return true;

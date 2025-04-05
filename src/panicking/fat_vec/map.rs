@@ -5,11 +5,11 @@ use super::FatVec;
 #[derive(Eq, PartialEq, Debug, Hash, Clone)]
 ///A map type backed by an FatVec, a vector with stack space to hold up to
 ///`STACK_CAPACITY` items on the stack. The remaining overflow onto the heap.
-pub struct FatMap<K: Eq, V: PartialEq, const STACK_CAPACITY: usize> {
+pub struct FatMap<K: Eq, V, const STACK_CAPACITY: usize> {
     fatvec: FatVec<(K, V), STACK_CAPACITY>,
 }
 
-impl<K: Eq, V: PartialEq, const STACK_CAPACITY: usize> FatMap<K, V, STACK_CAPACITY> {
+impl<K: Eq, V, const STACK_CAPACITY: usize> FatMap<K, V, STACK_CAPACITY> {
     ///Creates a new, empty `FatMap`. Without allocating on the heap.
     ///This can contain up to `STACK_CAPACITY` elements without performing any
     ///heap allocations.    
@@ -45,7 +45,7 @@ impl<K: Eq, V: PartialEq, const STACK_CAPACITY: usize> FatMap<K, V, STACK_CAPACI
     }
 }
 
-impl<K: Eq, V: PartialEq, const STACK_CAPACITY: usize> PanickingLinearMap<K, V>
+impl<K: Eq, V, const STACK_CAPACITY: usize> PanickingLinearMap<K, V>
     for FatMap<K, V, STACK_CAPACITY>
 {
     type Backing = FatVec<(K, V), STACK_CAPACITY>;
@@ -90,9 +90,7 @@ impl<K: Eq, V: PartialEq, const STACK_CAPACITY: usize> PanickingLinearMap<K, V>
     }
 }
 
-impl<K: Eq, V: PartialEq, const STACK_CAPACITY: usize> MapIterMut<K, V>
-    for FatMap<K, V, STACK_CAPACITY>
-{
+impl<K: Eq, V, const STACK_CAPACITY: usize> MapIterMut<K, V> for FatMap<K, V, STACK_CAPACITY> {
     fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut (K, V)>
     where
         K: 'a,

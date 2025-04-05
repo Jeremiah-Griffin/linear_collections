@@ -34,11 +34,11 @@ impl<K: Eq, V, const LENGTH: usize> ArrayMap<K, V, LENGTH> {
         LENGTH == 0
     }
 
-    pub fn get<'a>(&'a self, key: &K) -> Option<&V> {
+    pub fn get<'a>(&'a self, key: &K) -> Option<&'a V> {
         self.array.iter().find(|(k, _)| k == key).map(|(_, v)| v)
     }
 
-    pub fn get_mut<'a>(&'a mut self, key: &K) -> Option<&mut V> {
+    pub fn get_mut<'a>(&'a mut self, key: &K) -> Option<&'a mut V> {
         self.array
             .iter_mut()
             .find(|(k, _)| k == key)
@@ -49,7 +49,7 @@ impl<K: Eq, V, const LENGTH: usize> ArrayMap<K, V, LENGTH> {
         self.array
     }
 
-    pub fn iter<'a>(&'a self) -> impl Iterator<Item = &(K, V)>
+    pub fn iter<'a>(&'a self) -> impl Iterator<Item = &'a (K, V)>
     where
         K: 'a,
         V: 'a,
@@ -57,15 +57,15 @@ impl<K: Eq, V, const LENGTH: usize> ArrayMap<K, V, LENGTH> {
         self.array.iter()
     }
 
-    pub fn keys<'a>(&'a self) -> impl Iterator<Item = &K> {
+    pub fn keys<'a>(&'a self) -> impl Iterator<Item = &'a K> {
         self.iter().map(|(k, _)| k)
     }
 
-    pub fn values<'a>(&'a self) -> impl Iterator<Item = &V> {
+    pub fn values<'a>(&'a self) -> impl Iterator<Item = &'a V> {
         self.iter().map(|(_, v)| v)
     }
 
-    pub fn values_mut<'a>(&'a mut self) -> impl Iterator<Item = &mut V> {
+    pub fn values_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut V> {
         self.array.iter_mut().map(|(_, v)| v)
     }
 }
