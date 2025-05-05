@@ -1,0 +1,8 @@
+error[E0080]: evaluation of `linear_collections::fallible::FatVec::<u8, 10>::with_partial_array::<11>::{constant#0}` failed
+ --> src/fallible/fat_vec/mod.rs
+  |
+  |           [(); ((STACK_CAPACITY >= ITEMS) as usize)
+  |  ______________^
+  | |             .checked_sub(1)
+  | |             .expect("The length of the items must be less than or equal to STACK_CAPACITY.")]:,
+  | |____________________________________________________________________________________________^ evaluation panicked: The length of the items must be less than or equal to STACK_CAPACITY.

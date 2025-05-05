@@ -413,3 +413,38 @@ pub fn pop() {
     assert_eq!(list.pop(), None);
     assert_eq!(list.len(), 0);
 }
+
+#[test]
+pub fn with_array() {
+    let nums = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+    let fv = FatVec::<u8, 10>::with_array(nums);
+
+    assert_eq!(fv.len(), 10);
+    assert_eq!(Vec::from(nums), fv.into_iter().collect::<Vec<u8>>());
+}
+
+#[test]
+pub fn with_partial_array() {
+    let nums = [0, 1, 2];
+    let fv = FatVec::<u8, 10>::with_partial_array(nums);
+
+    assert_eq!(fv.len(), 3);
+    assert_eq!(Vec::from(nums), fv.into_iter().collect::<Vec<u8>>());
+}
+
+#[test]
+pub fn with_partial_array_full() {
+    let nums = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+    let fv = FatVec::<u8, 10>::with_partial_array(nums);
+
+    assert_eq!(fv.len(), 10);
+    assert_eq!(Vec::from(nums), fv.into_iter().collect::<Vec<u8>>());
+}
+//miri does not support dev deps
+#[cfg(not(miri))]
+#[test]
+pub fn with_partial_array_trybuild() {
+    let t = trybuild::TestCases::new();
+    t.compile_fail("src/fallible/fat_vec/trybuild/items_gt_stack_capacity.rs");
+    t.compile_fail("src/fallible/fat_vec/trybuild/empty_items.rs");
+}

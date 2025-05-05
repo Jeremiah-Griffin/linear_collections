@@ -1,0 +1,8 @@
+error[E0080]: evaluation of `linear_collections::fallible::FatVec::<u8, 10>::with_partial_array::<0>::{constant#1}` failed
+ --> src/fallible/fat_vec/mod.rs
+  |
+  |           [(); ITEMS
+  |  ______________^
+  | |             .checked_sub(1)
+  | |             .expect("The length of `items` must be nonzero")]:,
+  | |____________________________________________________________^ evaluation panicked: The length of `items` must be nonzero

@@ -7,6 +7,7 @@
 #![cfg_attr(feature = "nightly_fallible", feature(try_with_capacity))]
 #![cfg_attr(feature = "nightly_fallible", feature(slice_concat_ext))]
 #![cfg_attr(feature = "nightly_fallible", feature(slice_concat_trait))]
+#![cfg_attr(feature = "nightly_fallible", feature(generic_const_exprs))]
 pub mod array;
 ///This is in the crate root because it's used internally but we still need it throughout the
 ///fallible module internally.

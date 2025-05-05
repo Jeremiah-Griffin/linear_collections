@@ -66,6 +66,10 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
         }
     }
 
+    pub fn from_maybe_uninit(array: [MaybeUninit<T>; CAPACITY]) -> Self {
+        RawStackList { array }
+    }
+
     //**methods**//
 
     ///SAFETY: UB if `limit` is beyond CAPACITY.

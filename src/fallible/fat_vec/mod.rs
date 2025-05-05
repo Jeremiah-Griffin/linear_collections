@@ -4,7 +4,10 @@ mod serde;
 pub mod test;
 
 use crate::stack_list::RawStackList;
-use std::{collections::TryReserveError, hash::Hash};
+use std::{
+    array, collections::TryReserveError, hash::Hash, intrinsics::transmute_unchecked,
+    mem::MaybeUninit,
+};
 
 pub mod map;
 pub mod set;
@@ -39,10 +42,6 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
     ///Creates a `FatVec` with the provided array as the stack resident elements.
     ///The length of the supplied array will become the `STACK_CAPCITY` of the returned `FatVec` *AND* the length of the array.
     ///There is no interface to mutate the length without manipulating the elements on the stack.
-    ///
-    ///
-    ///Does not allocate to the heap.
-    //We use a seperate L so we don't have to declare the STACK_CAPACITY both in the array and the function type parameter.
     pub fn with_array(array: [T; STACK_CAPACITY]) -> FatVec<T, STACK_CAPACITY> {
         Self {
             //SAFETY:
@@ -52,6 +51,40 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
             stack_list: RawStackList::from_array(array),
             vec: Vec::new(),
             len: STACK_CAPACITY,
+        }
+    }
+
+    ///Create a `StackList` from an array with fewer elements than `STACK_CAPACITY`, permitting infallible construction.
+    ///If `ITEMS` is always guaranteed to be identical to `STACK_CAPACITY`, it's best to use `with_array` instead.
+    pub fn with_partial_array<const ITEMS: usize>(items: [T; ITEMS]) -> FatVec<T, STACK_CAPACITY>
+    where
+        //if `STACK_CAPACITY` cannot hold at least `ITEMS` the boolean 0 will be cast to usize, one will be subtracted, and this will failt o compile.
+        [(); ((STACK_CAPACITY >= ITEMS) as usize)
+            .checked_sub(1)
+            .expect("The length of the items must be less than or equal to STACK_CAPACITY.")]:,
+        //Disallow 0 sized `items` as a hedge in case we need to do transmutes which rely on non ZST.
+        [(); ITEMS
+            .checked_sub(1)
+            .expect("The length of `items` must be nonzero")]:,
+    {
+        //SAFETY:
+        //MaybeUninit<T> and T have identical representation in memory.
+        let mut items =
+            unsafe { transmute_unchecked::<[T; ITEMS], [MaybeUninit<T>; ITEMS]>(items) };
+
+        let stack_list: [MaybeUninit<T>; STACK_CAPACITY] =
+            array::from_fn(|i| match items.get_mut(i) {
+                //SAFETY:
+                // we know all elements in `Items` are valid. The maybe uninit is used to extract the
+                // bytes of the elements into the stack list, but preclude the compiler from running drop on the now duplicated elements of `items`.
+                Some(i) => MaybeUninit::new(unsafe { i.assume_init_read() }),
+                None => MaybeUninit::uninit(),
+            });
+
+        Self {
+            stack_list: RawStackList::from_maybe_uninit(stack_list),
+            vec: Vec::new(),
+            len: ITEMS,
         }
     }
 

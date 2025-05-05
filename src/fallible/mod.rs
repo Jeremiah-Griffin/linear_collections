@@ -231,3 +231,14 @@ pub trait FallibleLinearSet<T: Eq> {
         self.map_mut().remove_entry(value).map(|(k, _)| k)
     }
 }
+
+pub struct InfallibleMapWindow<
+    'backing,
+    K: Eq,
+    V,
+    Backing: FallibleLinearMap<K, V>,
+    const SLOTS: usize,
+> {
+    backing: &'backing mut Backing,
+    phantom: (K, V),
+}

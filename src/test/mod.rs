@@ -1,4 +1,5 @@
 /*
+use crate::panicking::{PanickingLinearMap, VecMap};
 #[test]
 fn linear_map_create_capacity_zero() {
     let mut m = VecMap::with_capacity(0);
