@@ -6,8 +6,8 @@ default:
 
 branch BRANCH_NAME:
 	git branch "{{BRANCH_NAME}}"
-	just commit "created {{BRANCH_NAME}}"
 	git checkout "{{BRANCH_NAME}}"
+	just commit "created {{BRANCH_NAME}}"
 
 
 alias c := check
