@@ -1,6 +1,6 @@
 use std::collections::{TryReserveError, VecDeque};
 
-use crate::{fallible::FallibleLinearMap, MapIterMut};
+use crate::{FallibleLinearMap, MapIterMut};
 
 pub struct DequeMap<K: Eq, V> {
     deque: VecDeque<(K, V)>,
@@ -100,6 +100,6 @@ impl<'a, K: Eq + serde::Serialize, V: PartialEq + serde::Serialize> serde::Seria
     where
         S: serde::Serializer,
     {
-        crate::serde::fallible::serialize_fallible_map(self, serializer)
+        crate::serde::serialize_fallible_map(self, serializer)
     }
 }

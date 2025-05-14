@@ -1,5 +1,6 @@
 #[cfg(feature = "serde")]
 mod serde;
+
 #[cfg(test)]
 pub mod test;
 
@@ -279,7 +280,7 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
             true => unsafe { self.stack_list.get(idx) },
             //subtract as the first element of vec is 0, but in the whole `FatVec`, it's
             //always STACK_CAPACITY + idx. The subtraction accounts for this for this.
-            false => self.vec.get_unchecked(idx - STACK_CAPACITY),
+            false => unsafe { self.vec.get_unchecked(idx - STACK_CAPACITY) },
         }
     }
 
@@ -294,7 +295,7 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
             true => unsafe { self.stack_list.get_mut(idx) },
             //subtract as the first element of vec is 0, but in the whole `FatVec`, it's
             //always STACK_CAPACITY + idx. The subtraction accounts for this for this.
-            false => self.vec.get_unchecked_mut(idx - STACK_CAPACITY),
+            false => unsafe { self.vec.get_unchecked_mut(idx - STACK_CAPACITY) },
         }
     }
 

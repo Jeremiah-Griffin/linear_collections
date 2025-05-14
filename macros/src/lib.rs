@@ -102,7 +102,7 @@ pub fn fat_map(tokens: TokenStream) -> TokenStream {
     let iter = input.inner.iter();
     quote! {
         unsafe{
-            linear_collections::fallible::FatMap::from_fatvec_unchecked(linear_collections::fallible::fat_vec![#(#iter),*])
+            linear_collections::FatMap::from_fatvec_unchecked(linear_collections::fallible::fat_vec![#(#iter),*])
         }
     }
     .into()
@@ -121,7 +121,7 @@ pub fn fat_set(tokens: TokenStream) -> TokenStream {
 
     quote! {
         unsafe{
-            linear_collections::fallible::FatSet::from_map_unchecked(linear_collections::fallible::fat_map![#((#iter, ())),*])
+            linear_collections::FatSet::from_map_unchecked(linear_collections::fallible::fat_map![#((#iter, ())),*])
         }
     }
     .into()
@@ -142,7 +142,7 @@ pub fn vec_map(tokens: TokenStream) -> TokenStream {
     let iter = input.inner.iter();
     quote! {
         unsafe{
-            linear_collections::fallible::VecMap::from_vec_unchecked(vec![#(#iter),*])
+            linear_collections::VecMap::from_vec_unchecked(vec![#(#iter),*])
         }
     }
     .into()
@@ -161,7 +161,7 @@ pub fn vec_set(tokens: TokenStream) -> TokenStream {
 
     quote! {
         unsafe{
-            linear_collections::fallible::VecSet::from_map_unchecked(linear_collections::fallible::vec_map![#((#iter, ())),*])
+            linear_collections::VecSet::from_map_unchecked(linear_collections::fallible::vec_map![#((#iter, ())),*])
         }
     }
     .into()
@@ -176,7 +176,7 @@ pub fn deque_map(tokens: TokenStream) -> TokenStream {
     let iter = input.inner.iter();
     quote! {
         unsafe{
-            linear_collections::fallible::DequeMap::from_vecdeque_unchecked(std::collections::VecDeque::from::([#(#iter),*]))
+            linear_collections::DequeMap::from_vecdeque_unchecked(std::collections::VecDeque::from::([#(#iter),*]))
         }
     }
     .into()
@@ -189,7 +189,7 @@ pub fn deque_set(tokens: TokenStream) -> TokenStream {
 
     quote! {
         unsafe{
-            linear_collections::fallible::DequeSet::from_map_unchecked(linear_collections::fallible::deque_map![#((#iter, ())),*])
+            linear_collections::DequeSet::from_map_unchecked(linear_collections::fallible::deque_map![#((#iter, ())),*])
         }
     }
     .into()

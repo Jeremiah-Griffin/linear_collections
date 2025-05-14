@@ -1,6 +1,6 @@
 use std::collections::TryReserveError;
 
-use crate::fallible::FallibleLinearSet;
+use crate::FallibleLinearSet;
 
 use super::map::DequeMap;
 
@@ -52,6 +52,6 @@ impl<'a, T: Eq + serde::Serialize> serde::Serialize for DequeSet<T> {
     where
         S: serde::Serializer,
     {
-        crate::serde::fallible::serialize_fallible_set(self, serializer)
+        crate::serde::serialize_fallible_set(self, serializer)
     }
 }

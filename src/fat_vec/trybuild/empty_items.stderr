@@ -1,5 +1,5 @@
-error[E0080]: evaluation of `linear_collections::fallible::FatVec::<u8, 10>::with_partial_array::<0>::{constant#1}` failed
- --> src/fallible/fat_vec/mod.rs
+error[E0080]: evaluation of `linear_collections::FatVec::<u8, 10>::with_partial_array::<0>::{constant#1}` failed
+ --> src/fat_vec/mod.rs
   |
   |           [(); ITEMS
   |  ______________^

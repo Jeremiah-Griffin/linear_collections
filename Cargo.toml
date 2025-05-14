@@ -24,14 +24,8 @@ trybuild = {version = "1.0.96"}
 kani-verifier = "0.62.0"
 
 [features]
-#panicking and nightly_fallible are seperate in case a create wants 
-#only fallible collections. Choosing no default features and nightly_fallible will achieve this.
 default = []
 
-#Types which handle allocation failure by returning an error. 
-nightly_fallible = ["nightly"]
-#Performance optimizations and aditional functionality available only on nightly rust.
-nightly = []
 #Adds support for ser/deserialization of *non-array types* with serde.
 #To serialize array backed types, enable the "serde-big-array" feature as well.
 serde = ["dep:serde", "dep:serde_test"]
@@ -39,4 +33,4 @@ serde = ["dep:serde", "dep:serde_test"]
 #serde_big_array = ["dep:serde", "dep:serde_big_array"]
 
 
-maros = ["dep:linear_collections_macros"]
+macros = ["dep:linear_collections_macros"]

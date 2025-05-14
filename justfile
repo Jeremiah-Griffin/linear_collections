@@ -15,7 +15,7 @@ merge TO_MERGE:
 
 alias c := check
 check:
-	cargo hack check --feature-powerset --no-dev-deps  --group-features nightly_fallible,
+	cargo hack check --feature-powerset --no-dev-deps 
 
 commit MESSAGE:
 	echo "committing to {{current_branch}}..."

@@ -445,6 +445,6 @@ pub fn with_partial_array_full() {
 #[test]
 pub fn with_partial_array_trybuild() {
     let t = trybuild::TestCases::new();
-    t.compile_fail("src/fallible/fat_vec/trybuild/items_gt_stack_capacity.rs");
-    t.compile_fail("src/fallible/fat_vec/trybuild/empty_items.rs");
+    t.compile_fail("src/fat_vec/trybuild/items_gt_stack_capacity.rs");
+    t.compile_fail("src//fat_vec/trybuild/empty_items.rs");
 }

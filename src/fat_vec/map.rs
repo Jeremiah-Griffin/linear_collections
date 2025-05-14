@@ -1,4 +1,4 @@
-use crate::{fallible::FallibleLinearMap, MapIterMut};
+use crate::{FallibleLinearMap, MapIterMut};
 use std::collections::TryReserveError;
 
 use super::FatVec;
@@ -127,7 +127,7 @@ impl<
     where
         S: serde::Serializer,
     {
-        crate::serde::fallible::serialize_fallible_map(self, serializer)
+        crate::serde::serialize_fallible_map(self, serializer)
     }
 }
 

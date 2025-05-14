@@ -1,6 +1,6 @@
 pub mod map;
 
-#[cfg(any(feature = "fallible_macros", feature = "panicking_macros"))]
+#[cfg(feature = "macros")]
 pub use linear_collections_macros::array_map;
 
 #[cfg(test)]

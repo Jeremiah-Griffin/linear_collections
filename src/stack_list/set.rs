@@ -1,4 +1,4 @@
-use crate::fallible::{FallibleLinearMap, FallibleLinearSet};
+use crate::{FallibleLinearMap, FallibleLinearSet};
 
 use super::map::StackMap;
 
@@ -32,7 +32,7 @@ impl<T: Eq, const STACK_CAPACITY: usize> FallibleLinearSet<T> for StackSet<T, ST
     fn insert(
         &mut self,
         value: T,
-    ) -> Result<bool, <Self::Backing as crate::fallible::FallibleLinearMap<T, ()>>::InsertionError>
+    ) -> Result<bool, <Self::Backing as crate::FallibleLinearMap<T, ()>>::InsertionError>
     {
         self.map_mut().insert(value, ()).map(|r| r.is_none())
     }
@@ -65,6 +65,6 @@ impl<'a, T: Eq + serde::Serialize, const CAPACITY: usize> serde::Serialize
     where
         S: serde::Serializer,
     {
-        crate::serde::fallible::serialize_fallible_set(self, serializer)
+        crate::serde::serialize_fallible_set(self, serializer)
     }
 }

@@ -1,5 +1,5 @@
 use crate::{
-    fallible::FallibleLinearMap,
+    FallibleLinearMap,
     stack_list::{error::PushError, StackList},
     MapIterMut,
 };
@@ -79,6 +79,6 @@ impl<'a, K: Eq + serde::Serialize, V: PartialEq + serde::Serialize, const CAPACI
     where
         S: serde::Serializer,
     {
-        crate::serde::fallible::serialize_fallible_map(self, serializer)
+        crate::serde::serialize_fallible_map(self, serializer)
     }
 }

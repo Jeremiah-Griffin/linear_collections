@@ -1,7 +1,0 @@
-error: proc macro panicked
- --> src/test/should_panic/array_map_one_duplicate.rs:2:5
-  |
-2 |     linear_collections_macros::array_map![("k", "v"), ("k", "v")]
-  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  |
-  = help: message: Duplicate keys found: ["\"k\""]

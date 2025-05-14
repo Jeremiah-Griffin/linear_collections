@@ -1,6 +1,6 @@
 use std::collections::TryReserveError;
 
-use crate::fallible::FallibleLinearSet;
+use crate::FallibleLinearSet;
 
 use super::map::FatMap;
 
@@ -64,6 +64,6 @@ impl<'a, T: Eq + serde::Serialize, const STACK_CAPACITY: usize> serde::Serialize
     where
         S: serde::Serializer,
     {
-        crate::serde::fallible::serialize_fallible_set(self, serializer)
+        crate::serde::serialize_fallible_set(self, serializer)
     }
 }

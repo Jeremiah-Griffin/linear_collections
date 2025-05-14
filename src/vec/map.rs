@@ -1,6 +1,6 @@
 use std::collections::TryReserveError;
 
-use crate::{fallible::FallibleLinearMap, MapIterMut};
+use crate::{FallibleLinearMap, MapIterMut};
 
 ///A map type backed by a Vector. Useful for small collections whose size can change.
 #[derive(Debug, PartialEq, Eq, Hash, Default)]
@@ -99,6 +99,6 @@ impl<'a, K: Eq + serde::Serialize, V: PartialEq + serde::Serialize> serde::Seria
     where
         S: serde::Serializer,
     {
-        crate::serde::fallible::serialize_fallible_map(self, serializer)
+        crate::serde::serialize_fallible_map(self, serializer)
     }
 }

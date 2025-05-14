@@ -1,6 +1,6 @@
 use std::collections::TryReserveError;
 
-use crate::fallible::{FallibleLinearMap, FallibleLinearSet};
+use crate::{FallibleLinearMap, FallibleLinearSet};
 
 use super::map::VecMap;
 
@@ -58,6 +58,6 @@ impl<'a, T: Eq + serde::Serialize> serde::Serialize for VecSet<T> {
     where
         S: serde::Serializer,
     {
-        crate::serde::fallible::serialize_fallible_set(self, serializer)
+        crate::serde::serialize_fallible_set(self, serializer)
     }
 }
