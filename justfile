@@ -1,17 +1,14 @@
 current_branch := `git branch --show-current`
 
-
 default:
 	just -l
 
-merge TO_MERGE:
-	just pre_commit
-	echo "merging {{TO_MERGE}} into {{current_branch}}..."
-	git merge "{{TO_MERGE}}"
-	git branch --delete "{{TO_MERGE}}"
-	#mostly to ensure that the branch actually gets integrated and closed.
-	just commit_inner "merged {{TO_MERGE}} into {{current_branch}}"
-	echo "Merge complete."	
+
+branch BRANCH_NAME:
+	git branch "{{BRANCH_NAME}}"
+	just commit "created {{BRANCH_NAME}}"
+	git checkout "{{BRANCH_NAME}}"
+
 
 alias c := check
 check:
@@ -26,6 +23,15 @@ commit MESSAGE:
 commit_inner MESSAGE:
 	git commit  --message "{{MESSAGE}}" -a
 	git push --all -u
+
+merge TO_MERGE:
+	just pre_commit
+	echo "merging {{TO_MERGE}} into {{current_branch}}..."
+	git merge "{{TO_MERGE}}"
+	git branch --delete "{{TO_MERGE}}"
+	#mostly to ensure that the branch actually gets integrated and closed.
+	just commit_inner "merged {{TO_MERGE}} into {{current_branch}}"
+	echo "Merge complete."	
 
 [private]
 pre_commit:
