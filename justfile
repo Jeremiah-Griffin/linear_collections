@@ -4,12 +4,14 @@ current_branch := `git branch --show-current`
 default:
 	just -l
 
-merge VERSION:
-	echo "merging {{VERSION}} into {{current_branch}}..."
+merge TO_MERGE:
+	echo "merging {{TO_MERGE}} into {{current_branch}}..."
 	fossil addremove --dotfiles
-	git merge {{VERSION}} --integrate
+	git merge "{{TO_MERGE}}"
+	git branch --delete "{{TO_MERGE}}"
 	#mostly to ensure that the branch actually gets integrated and closed.
-	just commit "merged {{VERSION}} into {{current_branch}}"	
+	just commit
+	echo "merged {{TO_MERGE}} into {{current_branch}}"	
 
 alias c := check
 check:
@@ -18,6 +20,8 @@ check:
 commit MESSAGE:
 	just pre_commit
 	git commit  --message "{{MESSAGE}}" -a
+	git sync
+	git push
 
 #runs before all commits
 [private]
