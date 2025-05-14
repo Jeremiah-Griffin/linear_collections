@@ -1,9 +1,8 @@
-
 [package]
 name = "linear_collections"
 #rember to update changelog whenever 
-version = "0.4.0"
-edition = "2021"
+version = "0.3.1"
+edition = "2024"
 description = "Map and Set types backed by linear data structures."
 license = "MIT"
 repository = "https://github.com/Jeremiah-Griffin/linear_collections"
@@ -24,6 +23,7 @@ panicking_linear_collections_macros = {path = "macros/panicking", version = "0.4
 
 [dev-dependencies]
 trybuild = {version = "1.0.96"}
+kani-verifier = "0.62.0"
 
 [features]
 #panicking and nightly_fallible are seperate in case a create wants 

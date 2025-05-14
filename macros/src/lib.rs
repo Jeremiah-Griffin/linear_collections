@@ -31,7 +31,7 @@ fn validate_map_literal(input: &MapLiteral) {
     let mut keys: BTreeSet<String> = BTreeSet::new();
 
     for e in elements.iter() {
-        let element_string = e.to_token_stream().to_string();
+        let element_string = e.into_token_stream().to_string();
 
         let tuple_pair_count = e.elems.len();
 
