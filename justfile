@@ -25,7 +25,7 @@ commit MESSAGE:
 [private]
 commit_inner MESSAGE:
 	git commit  --message "{{MESSAGE}}" -a
-	git push
+	git push --all -u
 
 [private]
 pre_commit:
