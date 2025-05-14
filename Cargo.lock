@@ -77,7 +77,6 @@ dependencies = [
  "fallible_linear_collections_macros",
  "kani-verifier",
  "linear_collections_macros",
- "panicking_linear_collections_macros",
  "serde",
  "serde_test",
  "trybuild",
@@ -111,14 +110,6 @@ checksum = "41fc863e2ca13dc2d5c34fb22ea4a588248ac14db929616ba65c45f21744b1e9"
 dependencies = [
  "log",
  "windows-sys 0.52.0",
-]
-
-[[package]]
-name = "panicking_linear_collections_macros"
-version = "0.4.0"
-dependencies = [
- "quote",
- "syn",
 ]
 
 [[package]]

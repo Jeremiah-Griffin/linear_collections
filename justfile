@@ -27,11 +27,10 @@ commit_inner MESSAGE:
 	git commit  --message "{{MESSAGE}}" -a
 	git push
 
-#runs before all commits
 [private]
 pre_commit:
 	git add --all
-	git pull
+	git fetch --all
 	just {{ if current_branch == "trunk" {"prepare_master_commit"} else {"prepare_other_commit"} }}
 
 [private]
@@ -54,8 +53,7 @@ alias t := test
 test PATTERN = "":
 	#test once with all features to hit the trybuild macro tests which dont work under miri.
 	cargo test {{PATTERN}} --all-features
-	cargo hack miri test --feature-powerset --no-dev-deps {{PATTERN}} --group-features nightly_fallible,fallible_macros --group-features panicking,panicking_macros
-
+	cargo hack miri test --feature-powerset --no-dev-deps {{PATTERN}}
 
 update:
 	cargo update

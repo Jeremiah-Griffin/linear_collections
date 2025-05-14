@@ -2,7 +2,7 @@ use std::collections::BTreeSet;
 
 use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
-use syn::{parse::Parse, parse_macro_input, punctuated::Punctuated, ExprTuple, Token};
+use syn::{parse::Parse, parse_macro_input, punctuated::Punctuated, Expr, ExprTuple, Token};
 
 struct MapLiteral {
     pub inner: Punctuated<ExprTuple, Token![,]>,
@@ -16,6 +16,17 @@ impl Parse for MapLiteral {
     }
 }
 
+struct SetLiteral {
+    pub inner: Punctuated<Expr, Token![,]>,
+}
+
+impl Parse for SetLiteral {
+    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+        Ok(Self {
+            inner: Punctuated::parse_terminated(input)?,
+        })
+    }
+}
 ///The code for checking the input elements is identical between all maps
 ///and factored into this function.
 fn validate_map_literal(input: &MapLiteral) {

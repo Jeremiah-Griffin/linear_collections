@@ -10,15 +10,14 @@ categories = ["data-structures"]
 keywords = ["vecmap", "arraymap", "linearmap", "vecset", "arrayset"]
 
 
-[worskpace]
-members = ["macros" , "macros/fallible", "macros/panicking"]
+[workspace]
+members = ["macros"]
 
 [dependencies]
 serde = { version = "1.*.*", optional = true, default-features = false, features = ["std"]}
 serde_test = {version = "1.0.176", optional = true}
 linear_collections_macros = {path = "macros", version = "0.4.0", optional = true}
 fallible_linear_collections_macros = {path = "macros/fallible", version = "0.4.0", optional = true}
-panicking_linear_collections_macros = {path = "macros/panicking", version = "0.4.0", optional = true}
 #serde_big_array = {version = 0.5.1, optional = true},
 
 [dev-dependencies]
@@ -30,9 +29,6 @@ kani-verifier = "0.62.0"
 #only fallible collections. Choosing no default features and nightly_fallible will achieve this.
 default = []
 
-
-#Types which handle allocation failure by panicking.
-panicking = []
 #Types which handle allocation failure by returning an error. 
 nightly_fallible = ["nightly"]
 #Performance optimizations and aditional functionality available only on nightly rust.
@@ -43,8 +39,5 @@ serde = ["dep:serde", "dep:serde_test"]
 #Enables ser/deserialization of array backed types with serde
 #serde_big_array = ["dep:serde", "dep:serde_big_array"]
 
-#macros for panicking types
-panicking_macros = ["dep:panicking_linear_collections_macros", "dep:linear_collections_macros"]
 
-#macros for fallible types
-fallible_macros = ["dep:fallible_linear_collections_macros", "dep:linear_collections_macros"]
+maros = ["dep:linear_collections_macros", "dep:fallible_linear_collections_macros"]
