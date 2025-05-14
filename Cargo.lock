@@ -15,14 +15,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f"
 
 [[package]]
-name = "fallible_linear_collections_macros"
-version = "0.4.0"
-dependencies = [
- "quote",
- "syn",
-]
-
-[[package]]
 name = "glob"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -74,7 +66,6 @@ dependencies = [
 name = "linear_collections"
 version = "0.3.1"
 dependencies = [
- "fallible_linear_collections_macros",
  "kani-verifier",
  "linear_collections_macros",
  "serde",

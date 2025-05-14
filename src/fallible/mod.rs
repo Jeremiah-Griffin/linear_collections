@@ -10,8 +10,7 @@ pub use stack_list::{map::*, set::*};
 pub use vec::{map::*, set::*, Vec};
 pub use vecdeque::{map::*, set::*};
 
-#[cfg(feature = "fallible_macros")]
-pub use fallible_linear_collections_macros::*;
+
 
 use crate::MapIterMut;
 
