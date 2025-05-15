@@ -7,6 +7,7 @@ default:
 branch BRANCH_NAME:
 	git branch "{{BRANCH_NAME}}"
 	git checkout "{{BRANCH_NAME}}"
+	#this always fails to commit due to the working tree being clean. I don't use git and will fix this later
 	just commit "created {{BRANCH_NAME}}"
 
 
