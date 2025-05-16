@@ -1,7 +1,7 @@
 use super::{RawStackList, StackList};
 
 #[test]
-fn stack_list_remove_start_is_same_as_vec() {
+fn remove_start_is_same_as_vec() {
     let one = "one";
     let two = "two";
     let three = "three";
@@ -28,7 +28,7 @@ fn stack_list_remove_start_is_same_as_vec() {
 }
 
 #[test]
-fn stack_list_remove_mid_is_same_as_vec() {
+fn remove_mid_is_same_as_vec() {
     let one = "one";
     let two = "two";
     let three = "three";
@@ -55,7 +55,7 @@ fn stack_list_remove_mid_is_same_as_vec() {
 }
 
 #[test]
-fn stack_list_remove_end_is_same_as_vec() {
+fn remove_end_is_same_as_vec() {
     let one = "one";
     let two = "two";
     let three = "three";
@@ -82,7 +82,7 @@ fn stack_list_remove_end_is_same_as_vec() {
 }
 
 #[test]
-pub fn stack_list_get_0th_empty() {
+pub fn get_0th_empty() {
     let no_stack = StackList::<&str, 0>::new();
     let some_stack = StackList::<&str, 5>::new();
 
@@ -91,7 +91,7 @@ pub fn stack_list_get_0th_empty() {
 }
 
 #[test]
-pub fn stack_list_get_1th_empty() {
+pub fn get_1th_empty() {
     let no_stack = StackList::<&str, 0>::new();
     let some_stack = StackList::<&str, 5>::new();
 
@@ -100,7 +100,7 @@ pub fn stack_list_get_1th_empty() {
 }
 
 #[test]
-pub fn stack_list_eq_is_eq() {
+pub fn eq_is_eq() {
     const ARRAY: [usize; 5] = [5; 5];
     assert_eq!(
         StackList::<usize, 5>::from_array(ARRAY),
@@ -109,7 +109,7 @@ pub fn stack_list_eq_is_eq() {
 }
 
 #[test]
-fn stack_list_remove_front_is_same_as_vec() {
+fn remove_front_is_same_as_vec() {
     let one = "one";
     let two = "two";
     let three = "three";
@@ -138,7 +138,7 @@ fn stack_list_remove_front_is_same_as_vec() {
 }
 
 #[test]
-pub fn stack_list_clear_is_clear() {
+pub fn clear_is_clear() {
     let mut svec = StackList::from_array(["one", "two", "three", "four", "five"].clone());
 
     svec.clear();

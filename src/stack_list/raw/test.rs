@@ -34,7 +34,7 @@ fn dropper_checks_drop() {
     assert_eq!(*was_dropped.lock().unwrap().deref(), true);
 }
 #[test]
-fn raw_stack_list_remove_front_is_same_as_vec() {
+fn remove_front_shifts_left() {
     let one = "one";
     let two = "two";
     let three = "three";
@@ -63,7 +63,7 @@ fn raw_stack_list_remove_front_is_same_as_vec() {
 }
 
 #[test]
-fn raw_stack_list_remove_mid_is_same_as_vec() {
+fn remove_mid_is_same_as_vec() {
     let one = "one";
     let two = "two";
     let three = "three";
@@ -92,7 +92,7 @@ fn raw_stack_list_remove_mid_is_same_as_vec() {
 }
 
 #[test]
-fn raw_stack_list_remove_end_is_same_as_vec() {
+fn remove_end_is_same_as_vec() {
     let one = "one";
     let two = "two";
     let three = "three";
@@ -123,7 +123,7 @@ fn raw_stack_list_remove_end_is_same_as_vec() {
 /*
 ///I dont really know how to test this without internal length trackign
 #[test]
-pub fn raw_stack_list_clear_is_clear() {
+pub fn clear_is_clear() {
     let mut svec = RawStackList::from_array(["one", "two", "three", "four", "five"].clone());
 
     unsafe { svec.clear_to(5) };
@@ -132,7 +132,7 @@ pub fn raw_stack_list_clear_is_clear() {
 }*/
 
 #[test]
-pub fn raw_stack_list_clear_to_drops() {
+pub fn clear_to_drops() {
     //If drop tracking works we can run the actual test.
     let first_was_dropped = Arc::new(Mutex::new(false));
     let second_was_dropped = Arc::new(Mutex::new(false));

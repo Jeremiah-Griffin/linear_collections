@@ -6,6 +6,7 @@ mod test;
 mod verification;
 
 #[derive(Debug)]
+#[cfg_attr(kani, derive(kani::Arbitrary))]
 ///A list resident on the stack which does not track the lenght of its contents, allowing it to
 ///be efficiently wrapped by other types which do.
 pub struct RawStackList<T, const CAPACITY: usize> {
@@ -22,11 +23,6 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
     }
 
     ////Creates a RawStaticList from an array.
-    ///LIMITATIONS:
-    ///Unfortunately, because of the instability of const generic expressions, we can't assert statically that
-    ///the length of the array is <= CAPACITY. I am also not comfortable using the const_generic_expr feature
-    ///in production code. When that feature stabilizes, this restriction will be loosened and  lists with lengths shorter
-    ///than their capacity will become possible to write in safe code.
     pub fn from_array(array: [T; CAPACITY]) -> Self {
         RawStackList {
             //SAFETY:
@@ -55,23 +51,28 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
     }
 
 
-    ///SAFETY: UB if accessed beyond CAPACITY *OR* into uninitialized memory.
+    ///SAFETY: UB if accessed beyond CAPACITY *OR* into uninitialized element.
     pub unsafe fn get(&self, index: usize) -> &T {
-        //SAFETY: addressed by the disclosure on the function signature
+        //SAFETY: upheld by caller
         unsafe { self.array.get_unchecked(index).assume_init_ref() }
     }
 
-    ///SAFETY: UB if accessed beyond CAPACITY *OR* into uninitialized memory.
+    ///SAFETY: UB if accessed beyond CAPACITY *OR* into uninitialized element.
     pub unsafe fn get_mut(&mut self, index: usize) -> &mut T {
-        //SAFETY: addressed by the disclosure on the function signature
+        //SAFETY: upheld by caller
         unsafe { self.array.get_unchecked_mut(index).assume_init_mut() }
     }
 
-    ///Reports wether the specified index is within the capacity of this structure.
-    pub const fn is_within_capacity(&self, index: usize) -> bool {
-        CAPACITY > index
-    }
+    ///SAFETY: UB if index >= CAPACITY.
+    pub unsafe fn insert_at(&mut self, index: usize, value: T) {
+        //SAFETY: upheld by caller
+        unsafe { self.array.get_unchecked_mut(index).write(value) };
+    }    
 
+    
+
+    ///SAFETY:
+    ///It must be guaranteed that all items <= index are initialized.
     pub unsafe fn iter_to<'a>(&'a self, index: usize) -> impl Iterator<Item = &'a T> {
         //TODO: This can panic
         self.array[0..index]
@@ -108,10 +109,5 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
 
         t
     }
-
-    ///SAFETY: UB if index >= CAPACITY.
-    pub unsafe fn insert_at(&mut self, index: usize, value: T) {
-        //SAFETY: addressed by the disclosure on the function signature
-        unsafe { self.array.get_unchecked_mut(index).write(value) };
-    }
 }
+ 

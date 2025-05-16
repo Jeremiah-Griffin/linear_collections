@@ -81,7 +81,10 @@ impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
     }
 
     pub fn remove(&mut self, index: usize) -> Option<T> {
-        match self.raw.is_within_capacity(index) && self.length > 0 {
+        match ({
+            let this = &self.raw;
+            CAPACITY > index
+        }) && self.length > 0 {
             //SAFETY: we track len and know it is not > CAPACITY in this arm
             //so there is no possibility of UB
             true => {
@@ -96,7 +99,7 @@ impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
     }
 
     pub fn get(&self, index: usize) -> Option<&T> {
-        match self.raw.is_within_capacity(index) && index < self.length {
+        match CAPACITY > index  && index < self.length {
             //SAFETY: we track len and know it is not > CAPACITY in this arm
             //so there is no possibility of UB
             true => unsafe { Some(self.raw.get(index)) },
@@ -105,7 +108,7 @@ impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
     }
 
     pub fn get_mut(&mut self, index: usize) -> Option<&mut T> {
-        match self.raw.is_within_capacity(index) && index < self.length {
+        match CAPACITY > index && index < self.length {
             //SAFETY: we track len and know it is not > CAPACITY in this arm
             //so there is no possibility of UB
             true => unsafe { Some(self.raw.get_mut(index)) },

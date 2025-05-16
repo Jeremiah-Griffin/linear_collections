@@ -68,5 +68,6 @@ update:
 	cargo update
 	cd macros && cargo update
 
+alias v := verify
 verify HARNESS = "":
-	cargo kani --randomize-layout --harness "{{HARNESS}}" --force-build -Z unstable-options --run-sanity-checks
+	cargo kani --randomize-layout --harness "{{HARNESS}}" --force-build -Z unstable-options -Z loop-contracts -Z concrete-playback --concrete-playback=print
