@@ -9,6 +9,9 @@ repository = "https://github.com/Jeremiah-Griffin/linear_collections"
 categories = ["data-structures"]
 keywords = ["vecmap", "arraymap", "linearmap", "vecset", "arrayset"]
 
+[lints.rust]
+#Registers Kani cfg. Forbid failed matches as it's pretty important verification gets run.
+unexpected_cfgs = { level = "forbid", check-cfg = ['cfg(kani)'] }
 
 [workspace]
 members = ["macros"]

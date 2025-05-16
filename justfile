@@ -1,3 +1,5 @@
+set quiet
+
 current_branch := `git branch --show-current`
 
 default:
@@ -65,3 +67,6 @@ test PATTERN = "":
 update:
 	cargo update
 	cd macros && cargo update
+
+verify HARNESS = "":
+	cargo kani --randomize-layout --harness "{{HARNESS}}" --force-build -Z unstable-options --run-sanity-checks

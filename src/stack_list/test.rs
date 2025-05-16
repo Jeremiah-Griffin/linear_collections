@@ -145,5 +145,3 @@ pub fn stack_list_clear_is_clear() {
 
     assert_eq!(svec.iter().nth(0), None);
 }
-
-

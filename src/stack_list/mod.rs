@@ -1,18 +1,15 @@
-use std::{
-     hash::Hash, 
-};
-
 #[cfg(feature = "serde")]
 mod serde;
 mod raw;
 pub mod set;
 pub mod map;
-use error::PushError;
-pub use raw::RawStackList;
 pub mod error;
 #[cfg(test)]
 mod test;
 
+use error::PushError;
+pub use raw::RawStackList;
+use std::hash::Hash;
 
 #[derive(Debug)]
 ///A list growable to `CAPACITY` which places all its items on the stack.

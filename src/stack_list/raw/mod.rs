@@ -2,7 +2,7 @@ use std::{array, mem::MaybeUninit, ptr::{addr_of, addr_of_mut}};
 
 #[cfg(test)]
 mod test;
-//#[cfg(kani)]
+#[cfg(kani)]
 mod verification;
 
 #[derive(Debug)]
@@ -44,12 +44,14 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
 
     //**methods**//
 
-    ///SAFETY: UB if `limit` is beyond CAPACITY.
+    ///SAFETY: UB if `limit` is beyond CAPACITY OR > the lenght of the list.
     ///Drops all elements up to `limit`, exclusive.
     pub unsafe fn clear_to(&mut self, limit: usize) {
         self.array[0..limit]
             .iter_mut()
-            .for_each(|t| unsafe { t.assume_init_drop() });
+            //SAFETY: upheld by caller
+            .for_each(|i| unsafe { i.assume_init_drop() });
+       
     }
 
 
@@ -113,27 +115,3 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
         unsafe { self.array.get_unchecked_mut(index).write(value) };
     }
 }
-
-/*
-impl<const CAPACITY: usize, T: Clone> RawStackList<T, CAPACITY> {
-    fn clone(&self) -> Self {
-        //SAFETY:
-        //CAPACITY on both types is guaranteed to be identical
-        //The representation of two MaybeUninit<T> where T == T are identical.
-        let array = unsafe {
-            self.array
-                .as_ptr()
-                .cast::<[MaybeUninit<T>; CAPACITY]>()
-                .read()
-        };
-
-        //SAFETY:
-        //we're getting from the array's own index.
-        let array: [MaybeUninit<T>; CAPACITY] = array::from_fn(|i| unsafe {
-            let reference = self.array.get_unchecked(i).clone();
-            reference
-        });
-
-        Self { array }
-    }
-}*/

@@ -9,6 +9,7 @@
 #![feature(slice_concat_ext)]
 #![feature(slice_concat_trait)]
 #![feature(generic_const_exprs)]
+#![feature(stmt_expr_attributes)]
 pub mod array;
 ///This is in the crate root because it's used internally but we still need it throughout the
 ///fallible module internally.
