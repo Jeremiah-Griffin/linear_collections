@@ -1,4 +1,4 @@
-use std::{array, mem::MaybeUninit, ptr::{addr_of, addr_of_mut}};
+use std::{array, mem::MaybeUninit, num::NonZero, ptr::{addr_of, addr_of_mut}};
 
 #[cfg(test)]
 mod test;
@@ -40,14 +40,24 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
 
     //**methods**//
 
-    ///SAFETY: UB if `limit` is beyond CAPACITY OR > the lenght of the list.
+    ///SAFETY: UB if `limit` is greater than the length (cum CAPACITY) of the list.
     ///Drops all elements up to `limit`, exclusive.
-    pub unsafe fn clear_to(&mut self, limit: usize) {
-        self.array[0..limit]
-            .iter_mut()
-            //SAFETY: upheld by caller
-            .for_each(|i| unsafe { i.assume_init_drop() });
-       
+    pub unsafe fn clear_to(&mut self, limit: NonZero<usize>) {
+            let mut i = 0;
+
+            //While it is possible to supply a `limit` > CAPACITY, this is already UB so there is no  utility in checking it.
+            #[cfg_attr(kani, kani::loop_invariant(i < CAPACITY))]
+             while i < limit.get(){
+                 //SAFETY
+                 // Bounds checking of `limit` is upheld by caller.
+                let item = unsafe {self.array.get_unchecked_mut(i)};
+
+                //SAFETY
+                //indexing into only valid items is upheld by caller.
+                unsafe{item.assume_init_drop();}
+
+                i = i.saturating_add(1);             
+             }
     }
 
 
@@ -68,23 +78,23 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
         //SAFETY: upheld by caller
         unsafe { self.array.get_unchecked_mut(index).write(value) };
     }    
-
-    
-
+  
     ///SAFETY:
     ///It must be guaranteed that all items <= index are initialized.
-    pub unsafe fn iter_to<'a>(&'a self, index: usize) -> impl Iterator<Item = &'a T> {
-        //TODO: This can panic
-        self.array[0..index]
+    ///Creates an iterator to `limit`, inclusive.
+    pub unsafe fn iter_to<'a>(&'a self, limit: usize) -> impl Iterator<Item = &'a T> {
+        self.array[0..limit]
             .iter()
             //SAFETY:
             //Initializing is tied to the idx. all items <= to idx are guaranteed to be init.
-            .map(|t| unsafe { t.assume_init_ref() })
-    }
+            .map(|t| unsafe { t.assume_init_ref() })    }
 
-    pub unsafe fn iter_mut_to<'a>(&'a mut self, index: usize) -> impl Iterator<Item = &'a mut T> {
+    ///SAFETY:
+    ///It must be guaranteed that all items <= index are initialized.
+    ///Creates an iterator to `limit`, inclusive.
+     pub unsafe fn iter_mut_to<'a>(&'a mut self, limit: usize) -> impl Iterator<Item = &'a mut T> {
         //TODO: This can panic
-        self.array[0..index]
+        self.array[0..limit]
             .iter_mut()
             //SAFETY:
             //Initializing is tied to the idx. all items <= to idx are guaranteed to be init.
@@ -110,4 +120,6 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
         t
     }
 }
- 
+
+
+

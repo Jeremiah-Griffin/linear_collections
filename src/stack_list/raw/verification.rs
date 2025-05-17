@@ -1,12 +1,15 @@
+use crate::verification_utils::{Dropper};
 use super::RawStackList;
-use std::mem::MaybeUninit;
-#[kani::proof]
+use kani::proof;
+
+use std::{num::NonZero,mem::MaybeUninit};
+#[proof]
 fn uninit(){
     let list: RawStackList<u8,10> = RawStackList::uninit();
 }
 
 
-#[kani::proof]
+#[proof]
 ///Any array passed should be valid.
 /// We can't place Kany::any() in type position, so we have to be a bit less general.
 fn from_array(){
@@ -14,14 +17,13 @@ fn from_array(){
 }
 
 
-#[kani::proof]
+#[proof]
 fn from_maybe_uninit(){
     RawStackList::<u8, 2>::from_maybe_uninit([MaybeUninit::new(kani::any()), MaybeUninit::uninit()]);
 }
 
-#[kani::proof]
+#[proof]
 //we don't do any branching depending on `limit` so this should be fine.
-#[kani::unwind(10)]
 ///Every value less than or equal to the lenght of the RawStackList must be safe
 /// to clear to.
 fn clear_to(){
@@ -31,15 +33,14 @@ fn clear_to(){
 
     let mut list = RawStackList::from_array(array);
 
-    let end = kani::any();
+    let end: NonZero<usize> = kani::any();
 
-    kani::assume(end <= length);
+    kani::assume(end.get() <= length);
 
     unsafe{list.clear_to(end)};
-
 }
 
-#[kani::proof]
+#[proof]
 ///Any insertion at any index < LENGTH must be retrievable.
 fn get(){
     let inserted: u8 = kani::any();
@@ -66,7 +67,7 @@ fn get(){
     assert_eq!(*got, inserted);        
 }
 
-#[kani::proof]
+#[proof]
 ///Any insertion at any index < LENGTH must be retrievable.
 fn get_mut(){
     let inserted: u8 = kani::any();
@@ -94,7 +95,7 @@ fn get_mut(){
 }
 
 
-#[kani::proof]
+#[proof]
 ///Insertation at any idx less than LENGTH is not UB
 fn insert_at(){
 
@@ -111,15 +112,30 @@ fn insert_at(){
 
 }
 /*
+Temporarily exempted from proofs
+#[proof]
+fn iter(){
 
-#[kani::proof]
-fn iter_to(){todo!()}
+    const LENGTH:usize = 5;
+    let arr: [u8;LENGTH] = [0,1,2,3,4];
 
-#[kani::proof]
+    let vec = std::vec::Vec::from(arr);
+
+    let list = RawStackList::from_array(arr);
+
+    let to: usize = kani::any();
+
+    kani::assume(to < LENGTH);
+
+    assert_eq!(vec[0..to].into_iter().map(|i| *i).collect::<Vec<u8>>(), unsafe{list.iter_to(to).map(|i| *i).collect::<Vec<u8>>()});    
+}
+
+Temporarily exempted from proofs
+#[proof]
 fn iter_mut_to(){todo!()}
 */
 
-#[kani::proof]
+#[proof]
 fn remove_correct_value(){
  let inserted: u8 = kani::any();
 
@@ -146,7 +162,7 @@ fn remove_correct_value(){
 }
 
 
-#[kani::proof]
+#[proof]
 ///All values right of the removed item must be shifted left to remain contiguous.
 fn remove_shifts_left(){
 

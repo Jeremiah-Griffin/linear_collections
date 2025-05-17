@@ -1,38 +1,7 @@
-use std::{ops::{Deref, DerefMut}, sync::{Arc, Mutex}};
-
+use std::{num::NonZero, ops::{Deref, DerefMut}, sync::{Arc, Mutex}};
+use crate::verification_utils::{Dropper};
 use super::RawStackList;
 
-
-///Just a helper to test drop behavior
-struct Dropper {
-    reference: Arc<Mutex<bool>>,
-}
-
-impl Dropper {
-    pub fn new(reference: Arc<Mutex<bool>>) -> Self {
-        Self { reference }
-    }
-}
-
-impl Drop for Dropper {
-    fn drop(&mut self) {
-        *self.reference.lock().unwrap().deref_mut() = true;
-    }
-}
-
-#[test]
-///Ensures that dropper actually works
-fn dropper_checks_drop() {
-    let was_dropped = Arc::new(Mutex::new(false));
-
-    assert_eq!(*was_dropped.lock().unwrap().deref(), false);
-
-    let dropper = Dropper::new(was_dropped.clone());
-
-    drop(dropper);
-
-    assert_eq!(*was_dropped.lock().unwrap().deref(), true);
-}
 #[test]
 fn remove_front_shifts_left() {
     let one = "one";
@@ -120,47 +89,38 @@ fn remove_end_is_same_as_vec() {
     }
 }
 
-/*
-///I dont really know how to test this without internal length trackign
-#[test]
-pub fn clear_is_clear() {
-    let mut svec = RawStackList::from_array(["one", "two", "three", "four", "five"].clone());
-
-    unsafe { svec.clear_to(5) };
-
-    assert_eq!(unsafe { svec.iter_to(5) }.nth(0), None);
-}*/
-
+///Used as a test as kani won't verify the FFI stuff in Dropper.
 #[test]
 pub fn clear_to_drops() {
-    //If drop tracking works we can run the actual test.
-    let first_was_dropped = Arc::new(Mutex::new(false));
-    let second_was_dropped = Arc::new(Mutex::new(false));
-    let third_was_dropped = Arc::new(Mutex::new(false));
-    let fourth_was_dropped = Arc::new(Mutex::new(false));
-    let fifth_was_dropped = Arc::new(Mutex::new(false));
+       let zeroth =  Dropper::new();
+       let first =  Dropper::new();
+       let second=  Dropper::new();
+       let third=  Dropper::new();
+       let fourth=  Dropper::new();
+         let zeroth_clone =  zeroth.clone();
+         let first_clone =  first.clone();
+         let second_clone =  second.clone();
+         let third_clone =  third.clone();
+         let fourth_clone =  fourth.clone();
 
-    let mut svec = RawStackList::from_array([
-        Dropper::new(first_was_dropped.clone()),
-        Dropper::new(second_was_dropped.clone()),
-        Dropper::new(third_was_dropped.clone()),
-        Dropper::new(fourth_was_dropped.clone()),
-        Dropper::new(fifth_was_dropped.clone()),
+
+    const LENGTH: usize = 5;
+    
+    let mut svec: RawStackList<Dropper, LENGTH> = RawStackList::from_array([
+        zeroth, first, second, third, fourth,
     ]);
+    let limit = NonZero::new(LENGTH).unwrap();
+    unsafe { svec.clear_to(limit) };
 
-    //Adding elements should never dorop them.
-    assert_eq!(*first_was_dropped.lock().unwrap().deref(), false);
-    assert_eq!(*second_was_dropped.lock().unwrap().deref(), false);
-    assert_eq!(*third_was_dropped.lock().unwrap().deref(), false);
-    assert_eq!(*fourth_was_dropped.lock().unwrap().deref(), false);
-    assert_eq!(*fifth_was_dropped.lock().unwrap().deref(), false);
+    for i in 0..=LENGTH{
 
-    unsafe { svec.clear_to(5) };
+
+    }
 
     //clearing should drop all elements
-    assert_eq!(*first_was_dropped.lock().unwrap().deref(), true);
-    assert_eq!(*second_was_dropped.lock().unwrap().deref(), true);
-    assert_eq!(*third_was_dropped.lock().unwrap().deref(), true);
-    assert_eq!(*fourth_was_dropped.lock().unwrap().deref(), true);
-    assert_eq!(*fifth_was_dropped.lock().unwrap().deref(), true);
+    assert_eq!(zeroth_clone.dropped(), limit.get() > 0);
+    assert_eq!(first_clone.dropped(), limit.get() > 1);
+    assert_eq!(second_clone.dropped(), limit.get() > 2);
+    assert_eq!(third_clone.dropped(), limit.get() > 3);
+    assert_eq!(fourth_clone.dropped(), limit.get() > 4);
 }

@@ -32,6 +32,9 @@ pub use vecdeque::{map::*, set::*};
 mod serde;
 #[cfg(test)]
 mod test;
+///Functions and types useful to assit verification with Kani.
+pub (crate) mod verification_utils;
+
 
 ///Sealed trait to provide mutable iteration without allowing consumers
 ///to violate the invariants of the map types

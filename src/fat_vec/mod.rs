@@ -7,7 +7,7 @@ pub mod test;
 use crate::stack_list::RawStackList;
 use std::{
     array, collections::TryReserveError, hash::Hash, intrinsics::transmute_unchecked,
-    mem::MaybeUninit,
+    mem::MaybeUninit, num::NonZero,
 };
 
 pub mod map;
@@ -143,12 +143,20 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
         self.vec.capacity() + STACK_CAPACITY
     }
     pub fn clear(&mut self) {
+
+        match NonZero::new(self.len){
         //SAFETY:
         //Ensure that all  elements are dropped. Bounded by array len means this cannot find uninitalized
-        //memory.
-        unsafe { self.stack_list.clear_to(self.array_len()) }
-        self.vec.clear();
-        self.len = 0;
+        //memory.            
+            Some(len) => {                
+                unsafe{ self.stack_list.clear_to(len)};
+                self.vec.clear();
+                self.len = 0;
+        },
+            None => (),
+        }
+
+
     }
 
     ///Appends the element to this `FatVec`, returning an error on failure.

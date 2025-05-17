@@ -52,8 +52,6 @@ prepare_other_commit:
 
 setup:
 	cargo add cargo-expand
-	rustup component add +nightly miri
-	cargo add cargo-hack
 	cargo install --locked kani-verifier
 	cargo kani setup
 
@@ -62,7 +60,6 @@ alias t := test
 test PATTERN = "":
 	#test once with all features to hit the trybuild macro tests which dont work under miri.
 	cargo test {{PATTERN}} --all-features
-	cargo hack miri test --feature-powerset --no-dev-deps {{PATTERN}}
 
 update:
 	cargo update

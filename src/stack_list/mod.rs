@@ -6,10 +6,12 @@ pub mod map;
 pub mod error;
 #[cfg(test)]
 mod test;
+#[cfg(kani)]
+mod verification;
 
 use error::PushError;
 pub use raw::RawStackList;
-use std::hash::Hash;
+use std::{hash::Hash, num::NonZero};
 
 #[derive(Debug)]
 ///A list growable to `CAPACITY` which places all its items on the stack.
@@ -31,10 +33,16 @@ impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
 
     ///Calls `drop` on all elements in this list, in place.
     pub fn clear(&mut self) {
-        //SAFETY:
-        //bound by length so will not go out of bounds or into uninit memory
-        unsafe { self.raw.clear_to(self.length) };
-        self.length = 0;
+        match NonZero::new(self.len()){
+            Some(len) => {
+                //SAFETY:
+                //bound by length so will not go out of bounds or into uninit memory
+                unsafe { self.raw.clear_to(len)};
+                self.length = 0;
+            },
+
+            None => (),
+        }
     }
 
     ///Returns an iterator over the elements of this `StackList`.
@@ -69,22 +77,18 @@ impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
     }
 
     pub fn push(&mut self, value: T) -> Result<(), PushError> {
-        match self.length < CAPACITY {
-            true => {
+        match self.length.checked_add(1){
+            Some(new) => {
                 unsafe { self.raw.insert_at(self.length, value) };
-                self.length += 1;
-
+                self.length = new;
                 Ok(())
-            }
-            false => Err(PushError::WouldExceedCapacity),
-        }
+            },
+            None => Err(PushError::WouldExceedCapacity),
+        }       
     }
 
     pub fn remove(&mut self, index: usize) -> Option<T> {
-        match ({
-            let this = &self.raw;
-            CAPACITY > index
-        }) && self.length > 0 {
+        match CAPACITY > index && self.length > 0 {
             //SAFETY: we track len and know it is not > CAPACITY in this arm
             //so there is no possibility of UB
             true => {
@@ -98,6 +102,7 @@ impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
         }
     }
 
+    ///Retrieves element at `index`, returning `None` if `index` is out of bounsd. 
     pub fn get(&self, index: usize) -> Option<&T> {
         match CAPACITY > index  && index < self.length {
             //SAFETY: we track len and know it is not > CAPACITY in this arm
@@ -107,6 +112,7 @@ impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
         }
     }
 
+
     pub fn get_mut(&mut self, index: usize) -> Option<&mut T> {
         match CAPACITY > index && index < self.length {
             //SAFETY: we track len and know it is not > CAPACITY in this arm
@@ -115,6 +121,7 @@ impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
             false => None,
         }
     }
+
 }
 
 impl<const CAPACITY: usize, T: PartialEq> PartialEq for StackList<T, CAPACITY> {
