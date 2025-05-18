@@ -1,7 +1,6 @@
 #![allow(dead_code)]
 //TODO:
 //#[cfg_attr(not(feature = "panicking"), no_panic_whatsoever)]
-
 #![allow(internal_features)]
 #![feature(core_intrinsics)]
 #![feature(try_reserve_kind)]
@@ -18,14 +17,11 @@ pub mod stack_list;
 mod fat_vec;
 mod vec;
 mod vecdeque;
-
 use std::error::Error;
-
 pub use fat_vec::{map::*, set::*, FatVec, FatVecIterator};
 pub use stack_list::{map::*, set::*};
 pub use vec::{map::*, set::*, Vec};
 pub use vecdeque::{map::*, set::*};
-
 
 
 #[cfg(feature = "serde")]
@@ -52,7 +48,7 @@ pub(crate) trait MapIterMut<K, V> {
 ///Because arrays may implement this type, we cannot assume that implementors will be dynamically sized.
 ///Only methods which do not require manipulating the length or capacity of the store are provided here:
 ///this is to permit the implementation of fixed sized types backed by arrays.
-pub trait FallibleLinearMap<K: Eq, V>: MapIterMut<K, V> {
+pub trait Map<K: Eq, V>: MapIterMut<K, V> {
     type Backing;
     //Aliasing the InsertionError allows us to implement this for both heap allocated types which return TryReserveError
     //and the stack allocated ArrayVec which return ArrayVecError.
@@ -208,11 +204,10 @@ pub trait FallibleLinearMap<K: Eq, V>: MapIterMut<K, V> {
     }
 }
 
-//Never implement clone: panics on alloc failure.
-///Set types backed by a FallibleLinearMap<T, ()>.
-pub trait FallibleLinearSet<T: Eq> {
+///Set types backed by a Map<T, ()>.
+pub trait Set<T: Eq> {
     ///The map type which backs this set.
-    type Backing: FallibleLinearMap<T, ()>;
+    type Backing: Map<T, ()>;
 
     ///Sets in rust are often backed by a map type of some sort, with value of every key set to `()`. FallibleLinearSets are no different, and this method
     //permits shared access to the internal backing map.
@@ -234,7 +229,7 @@ pub trait FallibleLinearSet<T: Eq> {
     fn insert(
         &mut self,
         value: T,
-    ) -> Result<bool, <Self::Backing as FallibleLinearMap<T, ()>>::InsertionError> {
+    ) -> Result<bool, <Self::Backing as Map<T, ()>>::InsertionError> {
         self.map_mut().insert(value, ()).map(|r| r.is_none())
     }
 
@@ -266,7 +261,7 @@ pub struct InfallibleMapWindow<
     'backing,
     K: Eq,
     V,
-    Backing: FallibleLinearMap<K, V>,
+    Backing: Map<K, V>,
     const SLOTS: usize,
 > {
     backing: &'backing mut Backing,
