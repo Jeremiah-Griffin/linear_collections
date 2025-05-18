@@ -51,7 +51,7 @@ prepare_master_commit:
 prepare_other_commit:
 
 setup:
-	cargo add cargo-expand
+	cargo install cargo-expand
 	cargo install --locked kani-verifier
 	cargo kani setup
 

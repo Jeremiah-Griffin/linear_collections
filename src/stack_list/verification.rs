@@ -14,10 +14,15 @@ fn new(){
 #[proof]
 fn clear(){
     let length: usize = kani::any();
+
+    const CAPACITY: usize = 5;
+
+    kani::assume(length <= CAPACITY);
+
     let mut list = StackList{
         //Array is any valid [T;CAPACITY]. This ensures the internal
         // MaybeUninit are init and valid memory.
-        raw: RawStackList::<u8,5>::from_array(kani::any()),
+        raw: RawStackList::<u8,CAPACITY>::from_array(kani::any()),
         length,
     };
 

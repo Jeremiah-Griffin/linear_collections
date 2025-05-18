@@ -122,6 +122,3 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
         t
     }
 }
-
-
-
