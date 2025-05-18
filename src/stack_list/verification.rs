@@ -21,13 +21,15 @@ fn clear(){
         length,
     };
 
-    assert_eq!(length, 0);    
+    list.clear();
+
+    assert_eq!(list.length, 0);    
 }
 #[proof]
 fn len(){
     let list: StackList<u8, 5> = kani::any();
 
-    assert_eq!(list.len(), list.len());
+    assert_eq!(list.length, list.len());
 }
 
 #[proof]
@@ -45,16 +47,17 @@ fn pop(){
     const CAPACITY: usize = 5;
 
     let arr: [u8;CAPACITY] = kani::any();
+    let mut arr_iter = arr.iter().rev();
 
-    let mut list: StackList<u8, CAPACITY> = StackList::from_array(arr.clone());
+    let mut list: StackList<u8, CAPACITY> = StackList::from_array(arr.clone());   
 
-
-    let mut i: usize = CAPACITY;
+    let mut i: usize = 0;
 
     //All calls to pop should return the same as indexing from the back of an array.
-    while i > 0 {
-        assert_eq!(list.pop().unwrap(), *arr.get(i).unwrap());
-        i -= 1;
+    while i < CAPACITY {
+
+        assert_eq!(list.pop().unwrap(), *arr_iter.next().unwrap());
+        i += 1;
     }
 
 

@@ -34,7 +34,7 @@ impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
 
     ///Calls `drop` on all elements in this list, in place.
     pub fn clear(&mut self) {
-        match NonZero::new(self.len()){
+        match NonZero::new(self.length){
             Some(len) => {
                 //SAFETY:
                 //bound by length so will not go out of bounds or into uninit memory
