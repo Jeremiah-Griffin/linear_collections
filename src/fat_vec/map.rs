@@ -1,4 +1,4 @@
-use crate::{FallibleLinearMap, MapIterMut};
+use crate::{Map, MapIterMut};
 use std::collections::TryReserveError;
 
 use super::FatVec;
@@ -60,7 +60,7 @@ impl<K: Eq, V, const STACK_CAPACITY: usize> FatMap<K, V, STACK_CAPACITY> {
     }
 }
 
-impl<K: Eq, V, const STACK_CAPACITY: usize> FallibleLinearMap<K, V>
+impl<K: Eq, V, const STACK_CAPACITY: usize> Map<K, V>
     for FatMap<K, V, STACK_CAPACITY>
 {
     type Backing = FatVec<(K, V), STACK_CAPACITY>;

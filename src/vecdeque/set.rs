@@ -1,6 +1,6 @@
 use std::collections::TryReserveError;
 
-use crate::FallibleLinearSet;
+use crate::Set;
 
 use super::map::DequeMap;
 
@@ -34,7 +34,7 @@ impl<T: Eq> DequeSet<T> {
     }
 }
 
-impl<T: Eq> FallibleLinearSet<T> for DequeSet<T> {
+impl<T: Eq> Set<T> for DequeSet<T> {
     type Backing = DequeMap<T, ()>;
 
     fn map(&self) -> &Self::Backing {

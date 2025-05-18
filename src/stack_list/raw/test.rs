@@ -1,5 +1,5 @@
 use std::{num::NonZero, ops::{Deref, DerefMut}, sync::{Arc, Mutex}};
-use crate::verification_utils::{Dropper};
+use crate::verification_utils::Dropper;
 use super::RawStackList;
 
 #[test]
@@ -103,16 +103,16 @@ pub fn clear_is_clear() {
 ///Used as a test as kani won't verify the FFI stuff in Dropper.
 #[test]
 pub fn clear_to_drops() {
-       let zeroth =  Dropper::new();
-       let first =  Dropper::new();
-       let second=  Dropper::new();
-       let third=  Dropper::new();
-       let fourth=  Dropper::new();
-         let zeroth_clone =  zeroth.clone();
-         let first_clone =  first.clone();
-         let second_clone =  second.clone();
-         let third_clone =  third.clone();
-         let fourth_clone =  fourth.clone();
+    let zeroth =  Dropper::new();
+    let first =  Dropper::new();
+    let second=  Dropper::new();
+    let third=  Dropper::new();
+    let fourth=  Dropper::new();
+    let zeroth_clone =  zeroth.clone();
+    let first_clone =  first.clone();
+    let second_clone =  second.clone();
+    let third_clone =  third.clone();
+    let fourth_clone =  fourth.clone();
 
 
     const LENGTH: usize = 5;

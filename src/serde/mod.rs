@@ -9,14 +9,14 @@ use serde::{
     Deserialize, Serialize, Serializer,
 };
 
-use crate::{FallibleLinearMap, FallibleLinearSet};
+use crate::{Map, Set};
 
 pub(crate) fn serialize_fallible_map<
     'a,
     S: Serializer,
     K: Eq + Serialize,
     V: PartialEq + Serialize,
-    M: FallibleLinearMap<K, V>,
+    M: Map<K, V>,
 >(
     fallible_map: &M,
     serializer: S,
@@ -34,7 +34,7 @@ pub(crate) fn serialize_fallible_set<
     'a,
     S: Serializer,
     T: Eq + Serialize,
-    M: FallibleLinearSet<T>,
+    M: Set<T>,
 >(
     fallible_set: &M,
     serializer: S,
@@ -52,7 +52,7 @@ struct MapVisitor<
     'de,
     K: Eq + Deserialize<'de>,
     V: Sized + PartialEq + Deserialize<'de>,
-    M: FallibleLinearMap<K, V>,
+    M: Map<K, V>,
 > {
     marker: PhantomData<fn() -> M>,
     use_generics: PhantomData<(&'de str, K, V)>,

@@ -1,3 +1,5 @@
+use crate::verification_utils::Dropper;
+
 use super::{RawStackList, StackList};
 
 #[test]
@@ -144,4 +146,29 @@ pub fn clear_is_clear() {
     svec.clear();
 
     assert_eq!(svec.iter().nth(0), None);
+}
+
+#[test]
+///All elements should be cleared.
+fn clear_drops_to_length() {
+    const CAPACITY: usize = 5;
+
+    for length in 0..=CAPACITY{
+        let droppers: [Dropper; CAPACITY] = Dropper::new_arr();
+        let cloned_droppers = droppers.clone();
+
+
+        let mut list = StackList{
+            raw: RawStackList::from_array(cloned_droppers),
+            length,
+        };
+
+        list.clear();
+
+        assert_eq!(list.length, 0);
+            
+
+        droppers.iter().enumerate().for_each(|(i, dropper)| assert_eq!(dropper.dropped(), length > i)); 
+
+    }
 }

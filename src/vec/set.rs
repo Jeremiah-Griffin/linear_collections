@@ -1,6 +1,6 @@
 use std::collections::TryReserveError;
 
-use crate::{FallibleLinearMap, FallibleLinearSet};
+use crate::{Map, Set};
 
 use super::map::VecMap;
 
@@ -10,7 +10,7 @@ pub struct VecSet<T: Eq> {
     map: VecMap<T, ()>,
 }
 
-impl<T: Eq> FallibleLinearSet<T> for VecSet<T> {
+impl<T: Eq> Set<T> for VecSet<T> {
     type Backing = VecMap<T, ()>;
 
     fn map(&self) -> &Self::Backing {

@@ -1,4 +1,3 @@
-use crate::verification_utils::{Dropper};
 use super::RawStackList;
 use kani::proof;
 

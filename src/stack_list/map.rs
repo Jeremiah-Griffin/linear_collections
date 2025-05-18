@@ -1,5 +1,5 @@
 use crate::{
-    FallibleLinearMap,
+    Map,
     stack_list::{error::PushError, StackList},
     MapIterMut,
 };
@@ -17,7 +17,7 @@ impl<K: Eq, V, const CAPACITY: usize> StackMap<K, V, CAPACITY> {
     }
 }
 
-impl<K: Eq, V, const CAPACITY: usize> FallibleLinearMap<K, V> for StackMap<K, V, CAPACITY> {
+impl<K: Eq, V, const CAPACITY: usize> Map<K, V> for StackMap<K, V, CAPACITY> {
     type Backing = StackList<(K, V), CAPACITY>;
     type InsertionError = PushError;
 

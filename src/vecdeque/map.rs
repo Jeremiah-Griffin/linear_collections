@@ -1,6 +1,6 @@
 use std::collections::{TryReserveError, VecDeque};
 
-use crate::{FallibleLinearMap, MapIterMut};
+use crate::{Map, MapIterMut};
 
 pub struct DequeMap<K: Eq, V> {
     deque: VecDeque<(K, V)>,
@@ -32,7 +32,7 @@ impl<K: Eq, V> DequeMap<K, V> {
     }
 }
 
-impl<K: Eq, V> FallibleLinearMap<K, V> for DequeMap<K, V> {
+impl<K: Eq, V> Map<K, V> for DequeMap<K, V> {
     type Backing = VecDeque<(K, V)>;
     type InsertionError = TryReserveError;
 

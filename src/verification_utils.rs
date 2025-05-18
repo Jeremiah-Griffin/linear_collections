@@ -13,6 +13,10 @@ impl Dropper {
 
     }
 
+    pub fn new_arr<const LENGTH: usize>() -> [Dropper;LENGTH]{
+        std::array::from_fn(|_| Dropper::new())
+    }
+
     pub fn dropped(&self) -> bool{
         *self.reference.lock().unwrap()
     }

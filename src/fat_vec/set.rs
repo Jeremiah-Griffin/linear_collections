@@ -1,6 +1,6 @@
 use std::collections::TryReserveError;
 
-use crate::FallibleLinearSet;
+use crate::Set;
 
 use super::map::FatMap;
 
@@ -44,7 +44,7 @@ impl<T: Eq, const STACK_CAPACITY: usize> FatSet<T, STACK_CAPACITY> {
         Self { map }
     }
 }
-impl<T: Eq, const STACK_CAPACITY: usize> FallibleLinearSet<T> for FatSet<T, STACK_CAPACITY> {
+impl<T: Eq, const STACK_CAPACITY: usize> Set<T> for FatSet<T, STACK_CAPACITY> {
     type Backing = FatMap<T, (), STACK_CAPACITY>;
 
     fn map(&self) -> &Self::Backing {

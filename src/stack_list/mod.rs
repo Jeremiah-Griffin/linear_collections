@@ -14,6 +14,7 @@ pub use raw::RawStackList;
 use std::{hash::Hash, num::NonZero};
 
 #[derive(Debug)]
+#[cfg_attr(kani, derive(kani::Arbitrary))]
 ///A list growable to `CAPACITY` which places all its items on the stack.
 pub struct StackList<T, const CAPACITY: usize> {
     raw: RawStackList<T, CAPACITY>,
@@ -41,7 +42,7 @@ impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
                 self.length = 0;
             },
 
-            None => (),
+            None => return,
         }
     }
 
@@ -71,10 +72,14 @@ impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
         }
     }
 
+    ///Removes the last element in this `StackList`, returning `None` if this list is empty.
     pub fn pop(&mut self) -> Option<T> {
-        self.length.checked_sub(1).and_then(|l| self.remove(l))
+        self.length
+            .checked_sub(1)
+            .and_then(|new| self.remove(new))
+        }
         //self.remove(self.length)
-    }
+    
 
     pub fn push(&mut self, value: T) -> Result<(), PushError> {
         match self.length.checked_add(1){
@@ -84,9 +89,10 @@ impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
                 Ok(())
             },
             None => Err(PushError::WouldExceedCapacity),
-        }       
+        }
     }
 
+    ///Removes the element at `index` from this `StackList`.
     pub fn remove(&mut self, index: usize) -> Option<T> {
         match CAPACITY > index && self.length > 0 {
             //SAFETY: we track len and know it is not > CAPACITY in this arm

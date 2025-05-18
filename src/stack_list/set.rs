@@ -1,4 +1,4 @@
-use crate::{FallibleLinearMap, FallibleLinearSet};
+use crate::{Map, Set};
 
 use super::map::StackMap;
 
@@ -14,7 +14,7 @@ impl<T: Eq, const STACK_CAPACITY: usize> StackSet<T, STACK_CAPACITY> {
     }
 }
 
-impl<T: Eq, const STACK_CAPACITY: usize> FallibleLinearSet<T> for StackSet<T, STACK_CAPACITY> {
+impl<T: Eq, const STACK_CAPACITY: usize> Set<T> for StackSet<T, STACK_CAPACITY> {
     type Backing = StackMap<T, (), STACK_CAPACITY>;
 
     fn map(&self) -> &Self::Backing {
@@ -32,7 +32,7 @@ impl<T: Eq, const STACK_CAPACITY: usize> FallibleLinearSet<T> for StackSet<T, ST
     fn insert(
         &mut self,
         value: T,
-    ) -> Result<bool, <Self::Backing as crate::FallibleLinearMap<T, ()>>::InsertionError>
+    ) -> Result<bool, <Self::Backing as crate::Map<T, ()>>::InsertionError>
     {
         self.map_mut().insert(value, ()).map(|r| r.is_none())
     }

@@ -1,6 +1,6 @@
 use std::collections::TryReserveError;
 
-use crate::{FallibleLinearMap, MapIterMut};
+use crate::{Map, MapIterMut};
 
 ///A map type backed by a Vector. Useful for small collections whose size can change.
 #[derive(Debug, PartialEq, Eq, Hash, Default)]
@@ -33,7 +33,7 @@ impl<K: Eq, V> VecMap<K, V> {
     }
 }
 
-impl<K: Eq, V> FallibleLinearMap<K, V> for VecMap<K, V> {
+impl<K: Eq, V> Map<K, V> for VecMap<K, V> {
     type Backing = Vec<(K, V)>;
     type InsertionError = TryReserveError;
 
