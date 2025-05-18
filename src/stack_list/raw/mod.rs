@@ -73,6 +73,8 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
         unsafe { self.array.get_unchecked_mut(index).assume_init_mut() }
     }
 
+
+
     ///SAFETY: UB if index >= CAPACITY.
     pub unsafe fn insert_at(&mut self, index: usize, value: T) {
         //SAFETY: upheld by caller
