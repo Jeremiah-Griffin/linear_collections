@@ -5,7 +5,6 @@ current_branch := `git branch --show-current`
 default:
 	just -l
 
-
 branch BRANCH_NAME:
 	git branch "{{BRANCH_NAME}}"
 	git checkout "{{BRANCH_NAME}}"
@@ -27,15 +26,6 @@ commit_inner MESSAGE:
 	git commit  --message "{{MESSAGE}}" -a
 	git push --all -u
 
-merge TO_MERGE:
-	just pre_commit
-	echo "merging {{TO_MERGE}} into {{current_branch}}..."
-	git merge "{{TO_MERGE}}"
-	git branch --delete "{{TO_MERGE}}"
-	#mostly to ensure that the branch actually gets integrated and closed.
-	just commit_inner "merged {{TO_MERGE}} into {{current_branch}}"
-	echo "Merge complete."	
-
 [private]
 pre_commit:
 	git add --all
@@ -50,6 +40,19 @@ prepare_master_commit:
 [private]
 prepare_other_commit:
 
+merge TO_MERGE:
+	just pre_commit
+	echo "merging {{TO_MERGE}} into {{current_branch}}..."
+	git merge "{{TO_MERGE}}"
+	git branch --delete "{{TO_MERGE}}"
+	#mostly to ensure that the branch actually gets integrated and closed.
+	just commit_inner "merged {{TO_MERGE}} into {{current_branch}}"
+	echo "Merge complete."
+
+rebuild:
+	cargo clean
+	cargo build
+	
 setup:
 	cargo install cargo-expand
 	cargo install --locked kani-verifier
@@ -67,4 +70,4 @@ update:
 
 alias v := verify
 verify HARNESS = "":
-	cargo kani --randomize-layout --harness "{{HARNESS}}" --force-build -Z unstable-options -Z loop-contracts -Z concrete-playback --concrete-playback=print
+	cargo kani --randomize-layout --harness "{{HARNESS}}" --force-build -Z unstable-options -Z loop-contracts

@@ -1,6 +1,7 @@
 #[cfg(feature = "serde")]
 mod serde;
-mod raw;
+
+pub mod raw_stack_list;
 pub mod set;
 pub mod map;
 pub mod error;
@@ -10,7 +11,7 @@ mod test;
 mod verification;
 
 use error::PushError;
-pub use raw::RawStackList;
+pub use raw_stack_list::RawStackList;
 use std::{hash::Hash, num::NonZero};
 
 #[derive(Debug)]
@@ -110,20 +111,24 @@ impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
 
     ///Retrieves element at `index`, returning `None` if `index` is out of bounsd. 
     pub fn get(&self, index: usize) -> Option<&T> {
+        let raw = &self.raw;
         match CAPACITY > index  && index < self.length {
             //SAFETY: we track len and know it is not > CAPACITY in this arm
             //so there is no possibility of UB
-            true => unsafe { Some(self.raw.get(index)) },
+            true => Some(unsafe { raw_stack_list::get!(raw, index) }),
             false => None,
         }
     }
 
 
     pub fn get_mut(&mut self, index: usize) -> Option<&mut T> {
+        let raw  = &self.raw;
         match CAPACITY > index && index < self.length {
+            //TODO: REPLACE WITH GET_MUT mMACRO
+            true => unsafe { std::intrinsics::transmute_unchecked(self.raw.array.get_unchecked_mut(index))},
             //SAFETY: we track len and know it is not > CAPACITY in this arm
             //so there is no possibility of UB
-            true => unsafe { Some(self.raw.get_mut(index)) },
+            //true => Some(unsafe {raw_stack_list::get!(raw, index)}),
             false => None,
         }
     }

@@ -2,6 +2,8 @@ use std::{array, mem::MaybeUninit, num::NonZero, ptr::{addr_of, addr_of_mut}};
 
 #[cfg(test)]
 mod test;
+#[doc(hidden)]
+pub mod utils;
 #[cfg(kani)]
 mod verification;
 
@@ -9,8 +11,10 @@ mod verification;
 #[cfg_attr(kani, derive(kani::Arbitrary))]
 ///A list resident on the stack which does not track the lenght of its contents, allowing it to
 ///be efficiently wrapped by other types which do.
+///This struct has no methods which perform indexing.. This is done 
 pub struct RawStackList<T, const CAPACITY: usize> {
-    array: [MaybeUninit<T>; CAPACITY],
+    ///temp compile hack
+    pub array: [MaybeUninit<T>; CAPACITY],
 }
 
 impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
@@ -60,20 +64,21 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
              }
     }
 
+    ///SAFETY: Undefined Behavior if accessing an uninitialized element.
+    ///Retrieves a reference the element at `INDEX`, checking at compile time whether it is within `CAPACITY`.
+    ///Note it does not check within the length, which, if tracked, is done at runtime by the parent of this type.
+    ///
+    ///To index by a variable use the `get` macro from this module.
+    pub unsafe fn get<const INDEX: usize>(&self) -> & T where [(); CAPACITY
+        //the final index of a list with CAPACITY is CAPACITY - 1.
+        .checked_sub(1)
+        .expect("CAPACITY must be nonzero")
+        .checked_sub(INDEX)
+        .expect("INDEX must be less than CAPACITY.")]: {
 
-    ///SAFETY: UB if accessed beyond CAPACITY *OR* into uninitialized element.
-    pub unsafe fn get(&self, index: usize) -> &T {
         //SAFETY: upheld by caller
-        unsafe { self.array.get_unchecked(index).assume_init_ref() }
+        unsafe { self.array.get_unchecked(INDEX).assume_init_ref()}
     }
-
-    ///SAFETY: UB if accessed beyond CAPACITY *OR* into uninitialized element.
-    pub unsafe fn get_mut(&mut self, index: usize) -> &mut T {
-        //SAFETY: upheld by caller
-        unsafe { self.array.get_unchecked_mut(index).assume_init_mut() }
-    }
-
-
 
     ///SAFETY: UB if index >= CAPACITY.
     pub unsafe fn insert_at(&mut self, index: usize, value: T) {
@@ -121,4 +126,30 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
 
         t
     }
+}
+
+
+use crate as linear_collections;
+
+///`get!(list: ident, index: ident OR literal)`
+///
+///SAFETY: Undefined Behavior if accessing an uninitialized element.
+///if `index` is an ident, undefined behavor if accessing beyond the `CAPACITY` of the RawStackList.
+/// 
+///Retrieves a reference to element from `list` at `index`.
+///if `index` is a literal this will run a bounds check to ensure it is less than the `CAPACITY` of `list`.
+/// 
+///Unfortunately, this macro is unable to bounds check constants, statics, etc; passing the
+///identifier of a constant or static *is* safe, but will not provide compile time bound checking.
+///If this is required use the `RawStackList::get_bounded` instead.
+pub macro get {
+    ($list_binding: ident, $index_literal: literal) => {
+        //We use the fully qualified path be used here to catch type errors with other types which also have a get_bounded method
+        // Wrapped in `{}` to support complex expressions.
+        linear_collections::stack_list::raw_stack_list::RawStackList::get::<$index_literal>($list_binding)
+    },
+    //Note that this will not match constant bindings; those are idents. 
+    ($list_binding: ident, $index_binding: ident) => {
+        linear_collections::stack_list::raw_stack_list::utils::get($list_binding, $index_binding)
+    },
 }

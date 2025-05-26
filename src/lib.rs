@@ -10,6 +10,8 @@
 #![feature(generic_const_exprs)]
 #![feature(stmt_expr_attributes)]
 #![feature(proc_macro_hygiene)]
+#![feature(decl_macro)]
+
 pub mod array;
 ///This is in the crate root because it's used internally but we still need it throughout the
 ///fallible module internally.
@@ -255,15 +257,4 @@ pub trait Set<T: Eq> {
     fn remove(&mut self, value: &T) -> Option<T> {
         self.map_mut().remove_entry(value).map(|(k, _)| k)
     }
-}
-
-pub struct InfallibleMapWindow<
-    'backing,
-    K: Eq,
-    V,
-    Backing: Map<K, V>,
-    const SLOTS: usize,
-> {
-    backing: &'backing mut Backing,
-    phantom: (K, V),
 }

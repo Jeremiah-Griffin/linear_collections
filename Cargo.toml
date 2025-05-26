@@ -19,7 +19,7 @@ members = ["macros"]
 [dependencies]
 serde = { version = "1.*.*", optional = true, default-features = false, features = ["std"]}
 serde_test = {version = "1.0.176", optional = true}
-linear_collections_macros = {path = "macros", version = "0.4.0", optional = true}
+linear_collections_macros = {path = "macros", version = "0.4.0"}
 #serde_big_array = {version = 0.5.1, optional = true},
 [dev-dependencies]
 trybuild = {version = "1.0.96"}
@@ -33,4 +33,3 @@ serde = ["dep:serde", "dep:serde_test"]
 #Enables ser/deserialization of array backed types with serde
 #serde_big_array = ["dep:serde", "dep:serde_big_array"]
 
-macros = ["dep:linear_collections_macros"]

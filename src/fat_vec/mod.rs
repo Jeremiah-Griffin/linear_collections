@@ -4,7 +4,7 @@ mod serde;
 #[cfg(test)]
 pub mod test;
 
-use crate::stack_list::RawStackList;
+use crate::stack_list::{raw_stack_list, RawStackList};
 use std::{
     array, collections::TryReserveError, hash::Hash, intrinsics::transmute_unchecked,
     mem::MaybeUninit, num::NonZero,
@@ -59,9 +59,7 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
     ///If `ITEMS` is always guaranteed to be identical to `STACK_CAPACITY`, it's best to use `with_array` instead.
     pub fn with_partial_array<const ITEMS: usize>(items: [T; ITEMS]) -> FatVec<T, STACK_CAPACITY>
     where
-        //if `STACK_CAPACITY` cannot hold at least `ITEMS` the boolean 0 will be cast to usize, one will be subtracted, and this will failt o compile.
-        [(); ((STACK_CAPACITY >= ITEMS) as usize)
-            .checked_sub(1)
+        [(); STACK_CAPACITY.checked_sub(ITEMS)
             .expect("The length of the items must be less than or equal to STACK_CAPACITY.")]:,
         //Disallow 0 sized `items` as a hedge in case we need to do transmutes which rely on non ZST.
         [(); ITEMS
@@ -281,11 +279,13 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
     ///SAFETY:
     ///UB if idx is >= the length of this `FatVec`.
     pub unsafe fn get_unchecked(&self, idx: usize) -> &T {
+
+        let list = &self.stack_list;
         match STACK_CAPACITY > idx {
             //SAFETY:
             //Because we maintain length seperately of the vec and array, we can rely on IDX not to be out of bounds for
             //either these accesses.
-            true => unsafe { self.stack_list.get(idx) },
+            true => unsafe {raw_stack_list::get!(list, idx)},
             //subtract as the first element of vec is 0, but in the whole `FatVec`, it's
             //always STACK_CAPACITY + idx. The subtraction accounts for this for this.
             false => unsafe { self.vec.get_unchecked(idx - STACK_CAPACITY) },
@@ -296,11 +296,14 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
     ///SAFETY:
     ///UB if idx is >= the length of this `FatVec`.
     pub unsafe fn get_unchecked_mut(&mut self, idx: usize) -> &mut T {
+        let list = &self.stack_list;
         match STACK_CAPACITY > idx {
+            //TODO: REPLACE WITH GET_MUT mMACRO
+            //true => Some(unsafe {raw_stack_list::get_mut!(raw, index)}),
             //SAFETY:
             //Because we maintain length seperately from the vec and array, we can rely on IDX not to be out of bounds for
             //either these accesses.
-            true => unsafe { self.stack_list.get_mut(idx) },
+            true => unsafe { std::intrinsics::transmute_unchecked(self.stack_list.array.get_unchecked_mut(idx))},
             //subtract as the first element of vec is 0, but in the whole `FatVec`, it's
             //always STACK_CAPACITY + idx. The subtraction accounts for this for this.
             false => unsafe { self.vec.get_unchecked_mut(idx - STACK_CAPACITY) },

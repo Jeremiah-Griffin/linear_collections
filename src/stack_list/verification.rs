@@ -1,7 +1,6 @@
 use std::mem::MaybeUninit;
 use crate::verification_utils::Dropper;
-use crate::stack_list::raw::RawStackList;
-use crate::stack_list::StackList;
+use crate::stack_list::{raw_stack_list::RawStackList, StackList};
 
 use kani::{proof, loop_invariant};
 #[proof]
@@ -97,10 +96,7 @@ fn remove(){
     while i < num_removals{
         let index: usize = kani::any();
         kani::assume(index < list.len());
-
-        let from_list = list.remove(index);
-        assert!(from_list.is_some());
-        let from_list = from_list.unwrap();
+        let from_list = list.remove(index).unwrap();
         let from_vec = vec.remove(index);
 
         assert_eq!(from_list, from_vec);
