@@ -61,7 +61,6 @@ setup:
 
 alias t := test
 test PATTERN = "":
-	#test once with all features to hit the trybuild macro tests which dont work under miri.
 	cargo test {{PATTERN}} --all-features
 
 update:

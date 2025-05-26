@@ -122,10 +122,10 @@ impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
 
 
     pub fn get_mut(&mut self, index: usize) -> Option<&mut T> {
-        let raw  = &self.raw;
+        let list = &mut self.raw;
         match CAPACITY > index && index < self.length {
-            //TODO: REPLACE WITH GET_MUT mMACRO
-            true => unsafe { std::intrinsics::transmute_unchecked(self.raw.array.get_unchecked_mut(index))},
+
+            true => Some(unsafe { raw_stack_list::get_mut!(list, index)}),
             //SAFETY: we track len and know it is not > CAPACITY in this arm
             //so there is no possibility of UB
             //true => Some(unsafe {raw_stack_list::get!(raw, index)}),

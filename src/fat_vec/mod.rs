@@ -201,7 +201,6 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
     }
 
     /// Removes the element at `idx` from this `FatVec` and returns it, or `None` if the `FatVec` is empty or if `idx` is greater than or equal to its length.
-    ///TODO: miri testing stuff.
     pub fn remove(&mut self, idx: usize) -> Option<T> {
         match self.len() {
             0 => None,
@@ -296,14 +295,12 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
     ///SAFETY:
     ///UB if idx is >= the length of this `FatVec`.
     pub unsafe fn get_unchecked_mut(&mut self, idx: usize) -> &mut T {
-        let list = &self.stack_list;
+        let list = &mut self.stack_list;
         match STACK_CAPACITY > idx {
-            //TODO: REPLACE WITH GET_MUT mMACRO
-            //true => Some(unsafe {raw_stack_list::get_mut!(raw, index)}),
             //SAFETY:
             //Because we maintain length seperately from the vec and array, we can rely on IDX not to be out of bounds for
-            //either these accesses.
-            true => unsafe { std::intrinsics::transmute_unchecked(self.stack_list.array.get_unchecked_mut(idx))},
+            //either these accesses.            
+            true => unsafe {raw_stack_list::get_mut!(list, idx)},           
             //subtract as the first element of vec is 0, but in the whole `FatVec`, it's
             //always STACK_CAPACITY + idx. The subtraction accounts for this for this.
             false => unsafe { self.vec.get_unchecked_mut(idx - STACK_CAPACITY) },

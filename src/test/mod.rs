@@ -399,7 +399,6 @@ pub mod macro_tests {
         assert_eq!(set.len(), 6);
     }
 
-    #[cfg(not(miri))]
     #[test]
     fn should_panic() {
         let t = trybuild::TestCases::new();
