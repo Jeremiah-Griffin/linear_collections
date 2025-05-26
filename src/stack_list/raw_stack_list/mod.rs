@@ -80,6 +80,21 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
         unsafe { self.array.get_unchecked(INDEX).assume_init_ref()}
     }
 
+    ///SAFETY: Undefined Behavior if accessing an uninitialized element.
+    ///Retrieves a reference the element at `INDEX`, checking at compile time whether it is within `CAPACITY`.
+    ///Note it does not check within the length, which, if tracked, is done at runtime by the parent of this type.
+    ///
+    ///To index by a variable use the `get_mut` macro from this module.
+    pub unsafe fn get_mut<const INDEX: usize>(& mut self) -> & T where [(); CAPACITY
+        //the final index of a list with CAPACITY is CAPACITY - 1.
+        .checked_sub(1)
+        .expect("CAPACITY must be nonzero")
+        .checked_sub(INDEX)
+        .expect("INDEX must be less than CAPACITY.")]: {
+
+        //SAFETY: upheld by caller
+        unsafe { self.array.get_unchecked_mut(INDEX).assume_init_ref()}
+    }
     ///SAFETY: UB if index >= CAPACITY.
     pub unsafe fn insert_at(&mut self, index: usize, value: T) {
         //SAFETY: upheld by caller
@@ -151,5 +166,28 @@ pub macro get {
     //Note that this will not match constant bindings; those are idents. 
     ($list_binding: ident, $index_binding: ident) => {
         linear_collections::stack_list::raw_stack_list::utils::get($list_binding, $index_binding)
+    },
+}
+
+///`get_mut!(list: ident, index: ident OR literal)`
+///
+///SAFETY: Undefined Behavior if accessing an uninitialized element.
+///if `index` is an ident, undefined behavor if accessing beyond the `CAPACITY` of the RawStackList.
+/// 
+///Retrieves a unique reference to element from `list` at `index`.
+///if `index` is a literal this will run a bounds check to ensure it is less than the `CAPACITY` of `list`.
+/// 
+///Unfortunately, this macro is unable to bounds check constants, statics, etc; passing the
+///identifier of a constant or static *is* safe, but will not provide compile time bound checking.
+///If this is required use the `RawStackList::get_bounded_mut` instead.
+pub macro get_mut {
+    ($list_binding: ident, $index_literal: literal) => {
+        //We use the fully qualified path be used here to catch type errors with other types which also have a get_mut_bounded method
+        // Wrapped in `{}` to support complex expressions.
+        linear_collections::stack_list::raw_stack_list::RawStackList::get_mut::<$index_literal>($list_binding)
+    },
+    //Note that this will not match constant bindings; those are idents. 
+    ($list_binding: ident, $index_binding: ident) => {
+        linear_collections::stack_list::raw_stack_list::utils::get_mut($list_binding, $index_binding)
     },
 }
