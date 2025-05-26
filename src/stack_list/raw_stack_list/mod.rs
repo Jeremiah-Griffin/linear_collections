@@ -38,6 +38,7 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
         }
     }
 
+
     pub fn from_maybe_uninit(array: [MaybeUninit<T>; CAPACITY]) -> Self {
         RawStackList { array }
     }
@@ -85,7 +86,7 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
     ///Note it does not check within the length, which, if tracked, is done at runtime by the parent of this type.
     ///
     ///To index by a variable use the `get_mut` macro from this module.
-    pub unsafe fn get_mut<const INDEX: usize>(& mut self) -> & T where [(); CAPACITY
+    pub unsafe fn get_mut<const INDEX: usize>(& mut self) -> & mut T where [(); CAPACITY
         //the final index of a list with CAPACITY is CAPACITY - 1.
         .checked_sub(1)
         .expect("CAPACITY must be nonzero")
@@ -93,7 +94,7 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
         .expect("INDEX must be less than CAPACITY.")]: {
 
         //SAFETY: upheld by caller
-        unsafe { self.array.get_unchecked_mut(INDEX).assume_init_ref()}
+        unsafe { self.array.get_unchecked_mut(INDEX).assume_init_mut()}
     }
     ///SAFETY: UB if index >= CAPACITY.
     pub unsafe fn insert_at(&mut self, index: usize, value: T) {
