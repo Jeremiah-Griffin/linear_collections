@@ -12,6 +12,8 @@
 #![feature(proc_macro_hygiene)]
 #![feature(decl_macro)]
 
+///Methods used internally throughout the crate.
+mod private;
 pub mod array;
 ///This is in the crate root because it's used internally but we still need it throughout the
 ///fallible module internally.

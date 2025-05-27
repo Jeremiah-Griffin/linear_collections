@@ -1,4 +1,4 @@
-use std::{array, mem::MaybeUninit, num::NonZero, ptr::{addr_of, addr_of_mut}};
+use std::{array, mem::MaybeUninit, num::{NonZero}, ptr::{addr_of, addr_of_mut}};
 
 #[cfg(test)]
 mod test;
@@ -7,14 +7,19 @@ pub mod utils;
 #[cfg(kani)]
 mod verification;
 
+
+///These consts should really be statics, but using statics in where bounds
+///seems unsupported. Hopefully they get const promoted by the compiler.
+
+const CAPACITY_NONZERO: & 'static str = "CAPACITY must be nonzero";
+const INDEX_LT_CAPACITY: & 'static str = "INDEX must be less than CAPACITY.";
 #[derive(Debug)]
 #[cfg_attr(kani, derive(kani::Arbitrary))]
 ///A list resident on the stack which does not track the lenght of its contents, allowing it to
 ///be efficiently wrapped by other types which do.
 ///This struct has no methods which perform indexing.. This is done 
 pub struct RawStackList<T, const CAPACITY: usize> {
-    ///temp compile hack
-    pub array: [MaybeUninit<T>; CAPACITY],
+    array: [MaybeUninit<T>; CAPACITY],
 }
 
 impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
@@ -38,12 +43,34 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
         }
     }
 
-
+    ///While this method on its own is safe, if the parent of this `RawStackList` is 
     pub fn from_maybe_uninit(array: [MaybeUninit<T>; CAPACITY]) -> Self {
         RawStackList { array }
     }
 
     //**methods**//
+    ///SAFETY: Undefined Behavior if any element 0..LIMIT is uninitialized.
+    ///Drops all elements up to `limit`, *exclusive*.
+    ///This may be switched to inclusive in a future release. If so, this method will be deprecated
+    ///to avoid silently changing behavior.
+    pub unsafe fn clear_to<const LIMIT: usize>(& mut self) where [(); CAPACITY
+        .checked_sub(LIMIT)
+        .expect("LIMIT must not be greater than CAPACITY")]:,
+
+        [(); LIMIT.checked_sub(1).expect("LIMIT must be nonzero")]:
+
+    {
+        //SAFETY
+        //LIMIT being nonzero is checked at compile time.
+        let limit = unsafe { NonZero::new_unchecked(LIMIT)};
+
+        //SAFETY:
+        //LIMIT is guaranteed to be within capacity. Limit elements 0..LIMIT being initialized
+        //is upheld by caller.
+        unsafe {utils::clear_to(self, limit)}
+    }
+
+    /*
 
     ///SAFETY: UB if `limit` is greater than the length (cum CAPACITY) of the list.
     ///Drops all elements up to `limit`, exclusive.
@@ -63,7 +90,7 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
 
                 i = i.saturating_add(1);             
              }
-    }
+    }*/
 
     ///SAFETY: Undefined Behavior if accessing an uninitialized element.
     ///Retrieves a reference the element at `INDEX`, checking at compile time whether it is within `CAPACITY`.
@@ -73,12 +100,14 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
     pub unsafe fn get<const INDEX: usize>(&self) -> & T where [(); CAPACITY
         //the final index of a list with CAPACITY is CAPACITY - 1.
         .checked_sub(1)
-        .expect("CAPACITY must be nonzero")
+        .expect(CAPACITY_NONZERO)
         .checked_sub(INDEX)
-        .expect("INDEX must be less than CAPACITY.")]: {
+        .expect(INDEX_LT_CAPACITY)]: {
 
-        //SAFETY: upheld by caller
-        unsafe { self.array.get_unchecked(INDEX).assume_init_ref()}
+        //SAFETY: bounding to length is upheld by caller.
+        unsafe { utils::get(self, INDEX)}
+
+
     }
 
     ///SAFETY: Undefined Behavior if accessing an uninitialized element.
@@ -89,12 +118,12 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
     pub unsafe fn get_mut<const INDEX: usize>(& mut self) -> & mut T where [(); CAPACITY
         //the final index of a list with CAPACITY is CAPACITY - 1.
         .checked_sub(1)
-        .expect("CAPACITY must be nonzero")
+        .expect(CAPACITY_NONZERO)
         .checked_sub(INDEX)
-        .expect("INDEX must be less than CAPACITY.")]: {
+        .expect(INDEX_LT_CAPACITY)]: {
 
-        //SAFETY: upheld by caller
-        unsafe { self.array.get_unchecked_mut(INDEX).assume_init_mut()}
+        //SAFETY: bounding to length is upheld by caller.
+        unsafe { utils::get_mut(self, INDEX)}
     }
     ///SAFETY: UB if index >= CAPACITY.
     pub unsafe fn insert_at(&mut self, index: usize, value: T) {
@@ -104,7 +133,7 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
   
     ///SAFETY:
     ///It must be guaranteed that all items <= index are initialized.
-    ///Creates an iterator to `limit`, inclusive.
+    ///Creates an iterator to `limit`, *inclusive*.
     pub unsafe fn iter_to<'a>(&'a self, limit: usize) -> impl Iterator<Item = &'a T> {
         self.array[0..limit]
             .iter()
@@ -192,3 +221,24 @@ pub macro get_mut {
         linear_collections::stack_list::raw_stack_list::utils::get_mut($list_binding, $index_binding)
     },
 }
+
+///`clear_to!(list: ident, limit: ident OR literal)`
+///
+///SAFETY: Undefined Behavior if any element from 0..`limit` is not initialized.
+///if `limit` is an ident, it is Undefined Behavior to supply if `limit` is greater than CAPACITY.
+///If providing an identifier, it must be of the type `NonZero<usize>`. However, literals supplied must be of type `usize`.
+/// 
+///Unfortunately, this macro is unable to bounds check constants, statics, etc; passing the
+///identifier of a constant or static *is* safe, but will not provide compile time bound checking.
+///If this is required use the `RawStackList::get_bounded_mut` instead.
+pub macro clear_to {
+    ($list_binding: ident, $limit_literal: literal) => {
+        //We use the fully qualified path be used here to catch type errors with other types which also have a clear_to_bounded method
+        // Wrapped in `{}` to support complex expressions.
+        linear_collections::stack_list::raw_stack_list::RawStackList::clear_to::<$limit_literal>($list_binding)
+    },
+    //Note that this will not match constant bindings; those are idents. 
+    ($list_binding: ident, $limit_binding: ident) => {
+        linear_collections::stack_list::raw_stack_list::utils::clear_to($list_binding, $limit_binding)
+    },
+}    

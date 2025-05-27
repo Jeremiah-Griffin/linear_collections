@@ -1,4 +1,3 @@
-#![feature(generic_arg_infer)]
 use linear_collections::stack_list::raw_stack_list::get;
 use linear_collections::stack_list::RawStackList;
 

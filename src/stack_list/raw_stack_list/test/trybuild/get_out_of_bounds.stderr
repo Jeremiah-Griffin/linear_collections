@@ -5,7 +5,7 @@ error[E0080]: evaluation of `linear_collections::stack_list::RawStackList::<u8, 
   |  ____________________________________________________________________^
   | |         //the final index of a list with CAPACITY is CAPACITY - 1.
   | |         .checked_sub(1)
-  | |         .expect("CAPACITY must be nonzero")
+  | |         .expect(CAPACITY_NONZERO)
   | |         .checked_sub(INDEX)
-  | |         .expect("INDEX must be less than CAPACITY.")]: {
-  | |____________________________________________________^ evaluation panicked: INDEX must be less than CAPACITY.
+  | |         .expect(INDEX_LT_CAPACITY)]: {
+  | |__________________________________^ evaluation panicked: INDEX must be less than CAPACITY.

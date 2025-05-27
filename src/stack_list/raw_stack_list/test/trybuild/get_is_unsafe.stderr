@@ -1,7 +1,7 @@
 error[E0133]: call to unsafe function `RawStackList::<T, CAPACITY>::get` is unsafe and requires unsafe block
- --> src/stack_list/raw_stack_list/test/trybuild/get_is_unsafe.rs:9:13
+ --> src/stack_list/raw_stack_list/test/trybuild/get_is_unsafe.rs:8:13
   |
-9 |     let _ = get!(list, 0);
+8 |     let _ = get!(list, 0);
   |             ^^^^^^^^^^^^^ call to unsafe function
   |
   = note: consult the function's documentation for information on how to avoid undefined behavior

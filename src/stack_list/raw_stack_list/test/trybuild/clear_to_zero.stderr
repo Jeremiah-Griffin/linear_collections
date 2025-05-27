@@ -1,0 +1,5 @@
+error[E0080]: evaluation of `linear_collections::stack_list::RawStackList::<u8, 5>::clear_to::<0>::{constant#1}` failed
+ --> src/stack_list/raw_stack_list/mod.rs
+  |
+  |         [(); LIMIT.checked_sub(1).expect("LIMIT must be nonzero")]:
+  |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ evaluation panicked: LIMIT must be nonzero

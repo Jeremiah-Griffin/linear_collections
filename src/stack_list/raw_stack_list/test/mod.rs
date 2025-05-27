@@ -1,5 +1,5 @@
 use std::{num::NonZero, ops::{Deref, DerefMut}, sync::{Arc, Mutex}};
-use crate::verification_utils::Dropper;
+use crate::{stack_list::raw_stack_list, verification_utils::Dropper};
 use super::RawStackList;
 
 #[test]
@@ -117,11 +117,13 @@ pub fn clear_to_drops() {
 
     const LENGTH: usize = 5;
     
-    let mut svec: RawStackList<Dropper, LENGTH> = RawStackList::from_array([
+    let mut list: RawStackList<Dropper, LENGTH> = RawStackList::from_array([
         zeroth, first, second, third, fourth,
     ]);
+
+    let list_ref = &mut list;
     let limit = NonZero::new(LENGTH).unwrap();
-    unsafe { svec.clear_to(limit) };
+    unsafe { raw_stack_list::clear_to!(list_ref, limit) };
 
 
 
@@ -180,5 +182,37 @@ pub fn clear_to_drops_broken() {
 }
 */
 
+#[test]
+pub fn trybuild(){
+    let t = trybuild::TestCases::new();
+    //get
+    //Expansion of the macro should require an unsafe block.
+    t.compile_fail("src/stack_list/raw_stack_list/test/trybuild/get_is_unsafe.rs");
+    //Indexing beyond capacity should failt to compile because of the where bound
+    t.compile_fail("src/stack_list/raw_stack_list/test/trybuild/get_out_of_bounds.rs");
+    //Temporarily disabled due to ICE.
+    //Indexing 0..Capacity  should pass
+    //t.pass("src/stack_list/raw_stack_list/test/trybuild/get_within_bounds.rs");
+    
+    //get_mut
+    //Expansion of the macro should require an unsafe block.
+    t.compile_fail("src/stack_list/raw_stack_list/test/trybuild/get_mut_out_of_bounds.rs");
+    //Indexing beyond capacity should failt to compile because of the where bound
+    t.compile_fail("src/stack_list/raw_stack_list/test/trybuild/get_mut_is_unsafe.rs");
+    //Temporarily disabled due to ICE.
+    //Indexing 0..Capacity  should pass    
+    //t.pass("src/stack_list/raw_stack_list/test/trybuild/get_mut_within_bounds.rs");
 
+    //clear_to
+    //LIMIT must not be greater than CAPACITY
+    t.compile_fail("src/stack_list/raw_stack_list/test/trybuild/clear_to_out_of_bounds.rs");
+    //Expansion of the macro should require an unsafe block.
+    t.compile_fail("src/stack_list/raw_stack_list/test/trybuild/clear_to_is_unsafe.rs");
+    //A zero literal should be rejected
+    t.compile_fail("src/stack_list/raw_stack_list/test/trybuild/clear_to_zero.rs");
+
+    
+
+
+}
 

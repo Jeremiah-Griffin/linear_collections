@@ -37,9 +37,10 @@ impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
     pub fn clear(&mut self) {
         match NonZero::new(self.length){
             Some(len) => {
+                let ref mut list = self.raw;
                 //SAFETY:
                 //bound by length so will not go out of bounds or into uninit memory
-                unsafe { self.raw.clear_to(len)};
+                unsafe { raw_stack_list::clear_to!(list, len)};
                 self.length = 0;
             },
 

@@ -1,5 +1,25 @@
 use super::RawStackList;
+use crate::stack_list::raw_stack_list::utils;
+use std::num::NonZero;
 use kani::proof;
+
+#[proof]
+//we don't do any branching depending on `limit` so this should be fine.
+///Every value less than or equal to the lenght of the RawStackList must be safe
+/// to clear to.
+fn clear_to(){
+    let array: [u8; 5] = kani::any();
+
+    let length = array.len();
+
+    let mut list = RawStackList::from_array(array);
+
+    let end: NonZero<usize> = kani::any();
+
+    kani::assume(end.get() <= length);
+
+    unsafe{utils::clear_to(&mut list, end)};
+}
 #[proof]
 ///Any insertion at any index < LENGTH must be retrievable.
 pub fn get(){
@@ -24,7 +44,7 @@ pub fn get(){
     let ref list = list;
 
 
-    let got = unsafe { crate::stack_list::raw_stack_list::get!(list, inserted_idx)};
+    let got = unsafe { utils::get(list, inserted_idx)};
 
     assert_eq!(*got, inserted);        
 }
@@ -53,7 +73,7 @@ pub fn get_mut(){
     let ref mut list = list;
 
 
-    let got = unsafe { crate::stack_list::raw_stack_list::get_mut!(list, inserted_idx)};
+    let got = unsafe { utils::get_mut(list, inserted_idx)};
 
     assert_eq!(*got, inserted);        
 }

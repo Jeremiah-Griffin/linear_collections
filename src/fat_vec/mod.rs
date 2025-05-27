@@ -146,8 +146,9 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
         //SAFETY:
         //Ensure that all  elements are dropped. Bounded by array len means this cannot find uninitalized
         //memory.            
-            Some(len) => {                
-                unsafe{ self.stack_list.clear_to(len)};
+            Some(len) => {
+                let ref mut list = self.stack_list;
+                unsafe{raw_stack_list::clear_to!(list, len)}; 
                 self.vec.clear();
                 self.len = 0;
         },

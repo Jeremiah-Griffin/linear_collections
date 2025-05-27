@@ -22,26 +22,6 @@ fn from_maybe_uninit(){
 }
 
 #[proof]
-//we don't do any branching depending on `limit` so this should be fine.
-///Every value less than or equal to the lenght of the RawStackList must be safe
-/// to clear to.
-fn clear_to(){
-    let array: [u8; 5] = kani::any();
-
-    let length = array.len();
-
-    let mut list = RawStackList::from_array(array);
-
-    let end: NonZero<usize> = kani::any();
-
-    kani::assume(end.get() <= length);
-
-    unsafe{list.clear_to(end)};
-}
-
-
-
-#[proof]
 ///Insertation at any idx less than LENGTH is not UB
 fn insert_at(){
 
