@@ -165,7 +165,10 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
         let new_len = self.len.saturating_add(1);
 
         match STACK_CAPACITY > self.len() {
-            true => unsafe { self.stack_list.insert_at(self.len, value) },
+            true => {
+                let ref mut  list = self.stack_list;
+                let old_len = self.len;
+                unsafe { raw_stack_list::insert_at!(list, old_len, value)}},
             false => {
                 //call reserve on the vec as necessary to ensure pushing to it doesn't panic.
                 if self.vec.capacity() < new_len {
@@ -226,18 +229,19 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
 
                 //Shift elements from heap to stack, if necessary.
                 if self.vec.len() > 0 {
+                    let ref mut list = self.stack_list;
+
+                    let idx = STACK_CAPACITY.saturating_sub(1);
+
                     let elem = self.vec.remove(0);
+
                     //SAFETY:
                     //STACK_CAPACITY - 1 is always guaranteed to be last element in the RawStackList.
                     //Further, we know both that that last element is going to be unoccupied - the prior call to remove guarantees that all elements before it have shifted left -
                     //and we also know that the the RawStackList has space for only one element now, because the vec is non empty.
                     //
                     //The only time the RawStackList will have less than STACK_CAPACITY elements is when no elements have overflowed onto the heap.
-                    unsafe {
-                        //Saturing sub used as we can't use a `NonZero<usize>` for `STACK_CAPACITY`.
-                        self.stack_list
-                            .insert_at(STACK_CAPACITY.saturating_sub(1), elem)
-                    };
+                    unsafe{raw_stack_list::insert_at!(list, idx, elem)}
                 }
 
                 r

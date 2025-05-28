@@ -34,14 +34,13 @@ pub fn get(){
     kani::assume(inserted_idx < CAPACITY);
 
 
-    let mut list = RawStackList::<u8,CAPACITY>::uninit();
+    let ref mut list = RawStackList::<u8,CAPACITY>::uninit();
 
     //Note that it *is not* UB to write to a MaybeUninit that is initialized or to write to
     //arbirtrary locations within a raw stack list, just ill advised.
     // Inserting a a random point in the list is a-ok.
-    unsafe { list.insert_at(inserted_idx, inserted)};
+    unsafe { utils::insert_at(list, inserted_idx, inserted)};
 
-    let ref list = list;
 
 
     let got = unsafe { utils::get(list, inserted_idx)};
@@ -63,17 +62,34 @@ pub fn get_mut(){
     kani::assume(inserted_idx < CAPACITY);
 
 
-    let mut list = RawStackList::<u8,CAPACITY>::uninit();
+    let ref mut list = RawStackList::<u8,CAPACITY>::uninit();
 
     //Note that it *is not* UB to write to a MaybeUninit that is initialized or to write to
     //arbirtrary locations within a raw stack list, just ill advised.
     // Inserting a a random point in the list is a-ok.
-    unsafe { list.insert_at(inserted_idx, inserted)};
+    unsafe{ utils::insert_at(list, inserted_idx, inserted)};
 
-    let ref mut list = list;
 
 
     let got = unsafe { utils::get_mut(list, inserted_idx)};
 
     assert_eq!(*got, inserted);        
 }
+
+#[proof]
+///Insertation at any idx less than LENGTH is not UB
+fn insert_at(){
+
+    const LENGTH: usize = 10;
+    let index = kani::any();
+
+    kani::assume(LENGTH > index);
+
+    let value = kani::any();
+
+    let ref mut list  = RawStackList::<u8,LENGTH>::uninit(); 
+
+    unsafe {utils::insert_at(list, index, value)};
+
+}
+

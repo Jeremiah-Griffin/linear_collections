@@ -1,0 +1,11 @@
+error[E0080]: evaluation of `linear_collections::stack_list::RawStackList::<u8, 5>::insert_at::<5>::{constant#0}` failed
+ --> src/stack_list/raw_stack_list/mod.rs
+  |
+  |       pub fn insert_at<const INDEX: usize>(&mut self, value: T) where [(); CAPACITY
+  |  __________________________________________________________________________^
+  | |         //the final index of a list with CAPACITY is CAPACITY - 1.
+  | |         .checked_sub(1)
+  | |         .expect(CAPACITY_NONZERO)
+  | |         .checked_sub(INDEX)
+  | |         .expect(INDEX_LT_CAPACITY)]: {
+  | |__________________________________^ evaluation panicked: INDEX must be less than CAPACITY.

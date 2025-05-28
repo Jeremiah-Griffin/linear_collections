@@ -1,4 +1,5 @@
 use super::RawStackList;
+use crate::stack_list::raw_stack_list;
 use kani::proof;
 
 use std::{num::NonZero,mem::MaybeUninit};
@@ -21,22 +22,6 @@ fn from_maybe_uninit(){
     RawStackList::<u8, 2>::from_maybe_uninit([MaybeUninit::new(kani::any()), MaybeUninit::uninit()]);
 }
 
-#[proof]
-///Insertation at any idx less than LENGTH is not UB
-fn insert_at(){
-
-    const LENGTH: usize = 10;
-    let index = kani::any();
-
-    kani::assume(LENGTH > index);
-
-    let value = kani::any();
-
-    let mut list  = RawStackList::<u8,LENGTH>::uninit(); 
-
-    unsafe {list.insert_at(index, value)};
-
-}
 /*
 Temporarily exempted from proofs
 #[proof]
@@ -74,12 +59,12 @@ fn remove_correct_value(){
     kani::assume(inserted_idx < CAPACITY);
 
 
-    let mut list = RawStackList::<u8,CAPACITY>::uninit();
+    let ref mut list = RawStackList::<u8,CAPACITY>::uninit();
 
     //Note that it *is not* UB to write to a MaybeUninit that is initialized or to write to
     //arbirtrary locations within a raw stack list, just ill advised.
     // Inserting a a random point in the list is a-ok.
-    unsafe { list.insert_at(inserted_idx, inserted)};
+    unsafe { raw_stack_list::insert_at!(list, inserted_idx, inserted)};
 
 
     let got = unsafe { list.remove(inserted_idx, CAPACITY)};

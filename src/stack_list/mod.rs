@@ -86,7 +86,11 @@ impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
     pub fn push(&mut self, value: T) -> Result<(), PushError> {
         match self.length.checked_add(1){
             Some(new) => {
-                unsafe { self.raw.insert_at(self.length, value) };
+                let raw = &mut self.raw;
+                let len = self.length;
+                //SAFETY:
+                //Guaranteed to be in bounds as length is never out of bounds.
+                unsafe { raw_stack_list::insert_at!(raw, len, value) };
                 self.length = new;
                 Ok(())
             },

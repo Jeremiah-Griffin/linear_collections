@@ -70,28 +70,6 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
         unsafe {utils::clear_to(self, limit)}
     }
 
-    /*
-
-    ///SAFETY: UB if `limit` is greater than the length (cum CAPACITY) of the list.
-    ///Drops all elements up to `limit`, exclusive.
-    pub unsafe fn clear_to(&mut self, limit: NonZero<usize>) {
-            let mut i = 0;
-
-            //While it is possible to supply a `limit` > CAPACITY, this is already UB so there is no  utility in checking it.
-            #[cfg_attr(kani, kani::loop_invariant(i < CAPACITY))]
-             while i < limit.get(){
-                 //SAFETY
-                 // Bounds checking of `limit` is upheld by caller.
-                let item = unsafe {self.array.get_unchecked_mut(i)};
-
-                //SAFETY
-                //indexing into only valid items is upheld by caller.
-                unsafe{item.assume_init_drop();}
-
-                i = i.saturating_add(1);             
-             }
-    }*/
-
     ///SAFETY: Undefined Behavior if accessing an uninitialized element.
     ///Retrieves a reference the element at `INDEX`, checking at compile time whether it is within `CAPACITY`.
     ///Note it does not check within the length, which, if tracked, is done at runtime by the parent of this type.
@@ -125,11 +103,25 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
         //SAFETY: bounding to length is upheld by caller.
         unsafe { utils::get_mut(self, INDEX)}
     }
-    ///SAFETY: UB if index >= CAPACITY.
-    pub unsafe fn insert_at(&mut self, index: usize, value: T) {
-        //SAFETY: upheld by caller
-        unsafe { self.array.get_unchecked_mut(index).write(value) };
-    }    
+
+    ///Inserts an element at the supplied `INDEX`.
+    ///Note that this method does not prevent the caller from inserting elements sparsely
+    ///nor does it prevent inserting elements where they already exist; doing so will cause the prior item to
+    ///cease to exist without calling `drop`.
+    /// 
+    ///Performs a bounds check at compile time to ensure `INDEX` < `CAPACITY`.
+    ///If this bounds checking is undesirable or a variable value is necessary, use the `insert_at` macro from this module instead.
+    pub fn insert_at<const INDEX: usize>(&mut self, value: T) where [(); CAPACITY
+        //the final index of a list with CAPACITY is CAPACITY - 1.
+        .checked_sub(1)
+        .expect(CAPACITY_NONZERO)
+        .checked_sub(INDEX)
+        .expect(INDEX_LT_CAPACITY)]: {
+        //SAFETY:
+        //The bounds check in the where bound precludes inserting beyond CAPACITY.
+        unsafe { utils::insert_at(self, INDEX, value)};
+    }
+
   
     ///SAFETY:
     ///It must be guaranteed that all items <= index are initialized.
@@ -176,6 +168,28 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
 
 use crate as linear_collections;
 
+
+
+///`clear_to!(list: ident, limit: ident OR literal)`
+///
+///SAFETY: Undefined Behavior if any element from 0..`limit` is not initialized.
+///if `limit` is an ident, it is Undefined Behavior to supply if `limit` is greater than CAPACITY.
+///If providing an identifier, it must be of the type `NonZero<usize>`. However, literals supplied must be of type `usize`.
+/// 
+///Unfortunately, this macro is unable to bounds check constants, statics, etc; passing the
+///identifier of a constant or static *is* safe, but will not provide compile time bound checking.
+///If this is required use the `RawStackList::clear_to` instead.
+pub macro clear_to {
+    ($list_binding: ident, $limit_literal: literal) => {
+        //We use the fully qualified path be used here to catch type errors with other types which also have a clear_to_bounded method
+        linear_collections::stack_list::raw_stack_list::RawStackList::clear_to::<$limit_literal>($list_binding)
+    },
+    //Note that this will not match constant bindings; those are idents. 
+    ($list_binding: ident, $limit_binding: ident) => {
+        linear_collections::stack_list::raw_stack_list::utils::clear_to($list_binding, $limit_binding)
+    },
+}    
+
 ///`get!(list: ident, index: ident OR literal)`
 ///
 ///SAFETY: Undefined Behavior if accessing an uninitialized element.
@@ -186,11 +200,10 @@ use crate as linear_collections;
 /// 
 ///Unfortunately, this macro is unable to bounds check constants, statics, etc; passing the
 ///identifier of a constant or static *is* safe, but will not provide compile time bound checking.
-///If this is required use the `RawStackList::get_bounded` instead.
+///If this is required use the `RawStackList::get` instead.
 pub macro get {
     ($list_binding: ident, $index_literal: literal) => {
         //We use the fully qualified path be used here to catch type errors with other types which also have a get_bounded method
-        // Wrapped in `{}` to support complex expressions.
         linear_collections::stack_list::raw_stack_list::RawStackList::get::<$index_literal>($list_binding)
     },
     //Note that this will not match constant bindings; those are idents. 
@@ -209,11 +222,10 @@ pub macro get {
 /// 
 ///Unfortunately, this macro is unable to bounds check constants, statics, etc; passing the
 ///identifier of a constant or static *is* safe, but will not provide compile time bound checking.
-///If this is required use the `RawStackList::get_bounded_mut` instead.
+///If this is required use the `RawStackList::get_mut` instead.
 pub macro get_mut {
     ($list_binding: ident, $index_literal: literal) => {
         //We use the fully qualified path be used here to catch type errors with other types which also have a get_mut_bounded method
-        // Wrapped in `{}` to support complex expressions.
         linear_collections::stack_list::raw_stack_list::RawStackList::get_mut::<$index_literal>($list_binding)
     },
     //Note that this will not match constant bindings; those are idents. 
@@ -222,23 +234,26 @@ pub macro get_mut {
     },
 }
 
-///`clear_to!(list: ident, limit: ident OR literal)`
+///`insert_at!(list: ident, index: ident OR literal, item: ident)`
 ///
-///SAFETY: Undefined Behavior if any element from 0..`limit` is not initialized.
-///if `limit` is an ident, it is Undefined Behavior to supply if `limit` is greater than CAPACITY.
-///If providing an identifier, it must be of the type `NonZero<usize>`. However, literals supplied must be of type `usize`.
+///SAFETY:
+///If `item` is provided as a variable, Undefined Behavior will occur if it is greater than or equal to CAPACITY. This macro is unsafe to call.
+///This macro is safe to call when `item` is a literal.
+/// 
+///Retrieves a unique reference to element from `list` at `index`.
+///if `index` is a literal this will run a bounds check to ensure it is less than the `CAPACITY` of `list`.
 /// 
 ///Unfortunately, this macro is unable to bounds check constants, statics, etc; passing the
 ///identifier of a constant or static *is* safe, but will not provide compile time bound checking.
-///If this is required use the `RawStackList::get_bounded_mut` instead.
-pub macro clear_to {
-    ($list_binding: ident, $limit_literal: literal) => {
-        //We use the fully qualified path be used here to catch type errors with other types which also have a clear_to_bounded method
-        // Wrapped in `{}` to support complex expressions.
-        linear_collections::stack_list::raw_stack_list::RawStackList::clear_to::<$limit_literal>($list_binding)
+///If this is required use the `RawStackList::insert_at` instead.
+pub macro insert_at{
+    ($list_binding: ident, $index_literal: literal, $item: ident) => {
+        //We use the fully qualified path be used here to catch type errors with other types which also have a insert_at_bounded method
+        linear_collections::stack_list::raw_stack_list::RawStackList::insert_at::<$index_literal>($list_binding, $item)
     },
     //Note that this will not match constant bindings; those are idents. 
-    ($list_binding: ident, $limit_binding: ident) => {
-        linear_collections::stack_list::raw_stack_list::utils::clear_to($list_binding, $limit_binding)
+    ($list_binding: ident, $index_binding: ident, $item: ident) => {
+        linear_collections::stack_list::raw_stack_list::utils::insert_at($list_binding, $index_binding, $item)
     },
-}    
+}
+

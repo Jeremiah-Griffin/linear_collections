@@ -123,11 +123,11 @@ fn remove_front_is_same_as_vec() {
     let mut arrvec = RawStackList::<&str, 5>::uninit();
 
     unsafe {
-        arrvec.insert_at(0, one);
-        arrvec.insert_at(1, two);
-        arrvec.insert_at(2, three);
-        arrvec.insert_at(3, four);
-        arrvec.insert_at(4, five);
+        arrvec.insert_at::<0>(one);
+        arrvec.insert_at::<1>(two);
+        arrvec.insert_at::<2>(three);
+        arrvec.insert_at::<3>(four);
+        arrvec.insert_at::<4>(five);
 
         let (from_vec, from_arr) = (vec.remove(0), arrvec.remove(0, 5));
 

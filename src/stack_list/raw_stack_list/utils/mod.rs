@@ -29,7 +29,7 @@ pub unsafe fn clear_to<T, const CAPACITY: usize>(list: & mut RawStackList<T, CAP
 ///*This is an unstable implementation detail. Please do not use this method.*
 ///Retrieves a shared reference to the element at `index`.
 ///SAFETY: Undefined Behavior if accessed beyond CAPACITY *OR* into uninitialized element.
-pub unsafe fn get<'a, T, const CAPACITY: usize>(list: & 'a RawStackList<T, CAPACITY>, index: usize) -> & 'a T{
+pub unsafe fn get<T, const CAPACITY: usize>(list: & RawStackList<T, CAPACITY>, index: usize) -> &T{
     //SAFETY: upheld by caller
     unsafe { list.array.get_unchecked(index).assume_init_ref()}
 
@@ -38,9 +38,14 @@ pub unsafe fn get<'a, T, const CAPACITY: usize>(list: & 'a RawStackList<T, CAPAC
 ///*This is an unstable implementation detail. Please do not use this method.*
 ///Retrieves a unique reference to the element at `index`.
 ///SAFETY: Undefined Behavior if accessed beyond CAPACITY *OR* into uninitialized element.
-pub unsafe fn get_mut<'a, T, const CAPACITY: usize>(list: & 'a mut RawStackList<T, CAPACITY>, index: usize) -> & 'a mut T{
+pub unsafe fn get_mut<T, const CAPACITY: usize>(list: & mut RawStackList<T, CAPACITY>, index: usize) -> & mut T{
     //SAFETY: upheld by caller
     unsafe { list.array.get_unchecked_mut(index).assume_init_mut()}
-
 }
 
+
+///SAFETY: UB if index >= CAPACITY.
+pub unsafe fn insert_at<T, const CAPACITY: usize>(list: &mut RawStackList<T, CAPACITY>, index: usize, item: T) {
+    //SAFETY: upheld by caller
+    unsafe { list.array.get_unchecked_mut(index).write(item) };
+}    
