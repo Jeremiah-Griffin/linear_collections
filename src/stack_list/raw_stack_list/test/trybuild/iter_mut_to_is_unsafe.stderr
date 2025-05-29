@@ -1,0 +1,8 @@
+error[E0133]: call to unsafe function `RawStackList::<T, CAPACITY>::iter_mut_to` is unsafe and requires unsafe block
+ --> src/stack_list/raw_stack_list/test/trybuild/iter_mut_to_is_unsafe.rs:8:13
+  |
+8 |     let _ = iter_mut_to!(list, 0);
+  |             ^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+  |
+  = note: consult the function's documentation for information on how to avoid undefined behavior
+  = note: this error originates in the macro `iter_mut_to` (in Nightly builds, run with -Z macro-backtrace for more info)

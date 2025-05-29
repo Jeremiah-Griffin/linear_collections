@@ -50,15 +50,19 @@ impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
 
     ///Returns an iterator over the elements of this `StackList`.
     pub fn iter<'a>(&'a self) -> impl Iterator<Item = &'a T> {
+        let raw = &self.raw;
+        let length = self.length;
         //SAFETY:
         //bound by length so will not go out of bounds or into uninit memory
-        unsafe { self.raw.iter_to(self.length) }
+        unsafe { raw_stack_list::iter_to!(raw, length) }
     }
     ///Returns an iterator over the elements of this `StackList where each element is mutable.
     pub fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut T> {
+        let raw = &mut self.raw;
+        let length = self.length;
         //SAFETY:
         //bound by length so will not go out of bounds or into uninit memory
-        unsafe { self.raw.iter_mut_to(self.length) }
+        unsafe { raw_stack_list::iter_mut_to!(raw, length) }
     }
 
     ///Returns the number of items in this `StackList`.

@@ -117,16 +117,18 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
 
     pub fn iter<'a>(&'a self) -> impl Iterator<Item = &'a T> {
         let len = self.array_len();
+        let list = &self.stack_list;
 
         //SAFETY: len is guaranteed to be within the initialized contents of the RawVec
-        unsafe { self.stack_list.iter_to(len) }.chain(self.vec.iter())
+        unsafe { raw_stack_list::iter_to!(list, len) }.chain(self.vec.iter())
     }
 
     pub fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut T> {
         let len = self.array_len();
+        let list = &mut self.stack_list;
 
         //SAFETY: len is guaranteed to be within the initialized contents of the RawVec
-        unsafe { self.stack_list.iter_mut_to(len) }.chain(self.vec.iter_mut())
+        unsafe { raw_stack_list::iter_mut_to!(list, len) }.chain(self.vec.iter_mut())
     }
 
     #[inline(always)]

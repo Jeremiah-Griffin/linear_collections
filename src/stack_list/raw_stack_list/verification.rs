@@ -94,5 +94,5 @@ fn remove_shifts_left(){
     assert_eq!(unsafe{list.remove(removal_index, LENGTH)}, vec.remove(removal_index));
 
     ///iter_to iterates 
-    assert_eq!(vec, unsafe{list.iter_to(LENGTH - 1)}.map(|i| *i).collect::<Vec<u8>>());    
+    assert_eq!(vec, unsafe{list.iter_to::<{LENGTH - 1}>().map(|i| *i).collect::<Vec<u8>>());    
 }

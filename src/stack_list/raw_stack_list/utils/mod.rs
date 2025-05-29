@@ -48,4 +48,31 @@ pub unsafe fn get_mut<T, const CAPACITY: usize>(list: & mut RawStackList<T, CAPA
 pub unsafe fn insert_at<T, const CAPACITY: usize>(list: &mut RawStackList<T, CAPACITY>, index: usize, item: T) {
     //SAFETY: upheld by caller
     unsafe { list.array.get_unchecked_mut(index).write(item) };
-}    
+}
+
+///SAFETY:
+///It must be guaranteed that all items <= index are initialized.
+///Creates an iterator over all elements 0 to `limit`, *inclusive*.
+pub unsafe fn iter_to<'a, T, const CAPACITY: usize>(list: & 'a RawStackList<T, CAPACITY>, limit: usize) -> impl Iterator<Item = &'a T> {
+    list.array[0..limit]
+        .iter()
+        //SAFETY:
+        //Initializing is tied to the idx. all items <= to idx are guaranteed to be init.
+        .map(|t| unsafe { t.assume_init_ref() })
+}
+
+
+
+///SAFETY:
+///It must be guaranteed that all items <= index are initialized.
+///Creates an iterator over all elements 0 to `limit`, inclusive.
+ pub unsafe fn iter_mut_to<'a, T, const CAPACITY: usize>(list: &'a mut RawStackList<T, CAPACITY>, limit: usize) -> impl Iterator<Item = &'a mut T> {
+    //TODO: This can panic
+    list.array[0..limit]
+        .iter_mut()
+        //SAFETY:
+        //Initializing is tied to the idx. all items <= to idx are guaranteed to be init.
+        .map(|t| unsafe { t.assume_init_mut() })
+}
+
+    

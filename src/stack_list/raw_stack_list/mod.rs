@@ -122,27 +122,31 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
         unsafe { utils::insert_at(self, INDEX, value)};
     }
 
-  
-    ///SAFETY:
-    ///It must be guaranteed that all items <= index are initialized.
-    ///Creates an iterator to `limit`, *inclusive*.
-    pub unsafe fn iter_to<'a>(&'a self, limit: usize) -> impl Iterator<Item = &'a T> {
-        self.array[0..limit]
-            .iter()
-            //SAFETY:
-            //Initializing is tied to the idx. all items <= to idx are guaranteed to be init.
-            .map(|t| unsafe { t.assume_init_ref() })    }
 
     ///SAFETY:
     ///It must be guaranteed that all items <= index are initialized.
-    ///Creates an iterator to `limit`, inclusive.
-     pub unsafe fn iter_mut_to<'a>(&'a mut self, limit: usize) -> impl Iterator<Item = &'a mut T> {
-        //TODO: This can panic
-        self.array[0..limit]
-            .iter_mut()
-            //SAFETY:
-            //Initializing is tied to the idx. all items <= to idx are guaranteed to be init.
-            .map(|t| unsafe { t.assume_init_mut() })
+    ///Creates an iterator to `limit`, *inclusive*.    
+    pub unsafe fn iter_to<'a, const LIMIT: usize>(& 'a self) -> impl Iterator<Item = & 'a T> where [(); CAPACITY
+        //the final index of a list with CAPACITY is CAPACITY - 1.
+        .checked_sub(1)
+        .expect(CAPACITY_NONZERO)
+        .checked_sub(LIMIT)
+        .expect(INDEX_LT_CAPACITY)]: {
+        //SAFETY: upheld by caller
+        unsafe{ utils::iter_to(self, LIMIT)}
+    }
+
+    ///SAFETY:
+    ///It must be guaranteed that all items <= index are initialized.
+    ///Creates an iterator to `limit`, *inclusive*.    
+    pub unsafe fn iter_mut_to<'a, const LIMIT: usize>(& 'a mut self) -> impl Iterator<Item = & 'a mut T> where [(); CAPACITY
+        //the final index of a list with CAPACITY is CAPACITY - 1.
+        .checked_sub(1)
+        .expect(CAPACITY_NONZERO)
+        .checked_sub(LIMIT)
+        .expect(INDEX_LT_CAPACITY)]: {
+        //SAFETY: upheld by caller
+        unsafe{ utils::iter_mut_to(self, LIMIT)}
     }
 
     ///SAFETY: UB if accessed beyond `CAPACITY` *OR* into an uninitialized element.
@@ -256,4 +260,45 @@ pub macro insert_at{
         linear_collections::stack_list::raw_stack_list::utils::insert_at($list_binding, $index_binding, $item)
     },
 }
+
+///`iter_to!(list: ident, limit: ident OR literal)`
+///
+///SAFETY: Undefined Behavior if any element from 0..`limit` is not initialized.
+///if `limit` is an ident, it is Undefined Behavior to supply  a `limit` greater than CAPACITY.
+///If providing an identifier, it must be of the type `NonZero<usize>`. However, literals supplied must be of type `usize`.
+/// 
+///Unfortunately, this macro is unable to bounds check constants, statics, etc; passing the
+///identifier of a constant or static *is* safe, but will not provide compile time bound checking.
+///If this is required use the `RawStackList::iter_to` instead.
+pub macro iter_to {
+    ($list_binding: ident, $limit_literal: literal) => {
+        //We use the fully qualified path be used here to catch type errors with other types which also have a iter_to_bounded method
+        linear_collections::stack_list::raw_stack_list::RawStackList::iter_to::<$limit_literal>($list_binding)
+    },
+    //Note that this will not match constant bindings; those are idents. 
+    ($list_binding: ident, $limit_binding: ident) => {
+        linear_collections::stack_list::raw_stack_list::utils::iter_to($list_binding, $limit_binding)
+    },
+}
+
+///`iter_mut_to!(list: ident, limit: ident OR literal)`
+///
+///SAFETY: Undefined Behavior if any element from 0..`limit` is not initialized.
+///if `limit` is an ident, it is Undefined Behavior to supply `limit` greater than CAPACITY.
+///If providing an identifier, it must be of the type `NonZero<usize>`. However, literals supplied must be of type `usize`.
+/// 
+///Unfortunately, this macro is unable to bounds check constants, statics, etc; passing the
+///identifier of a constant or static *is* safe, but will not provide compile time bound checking.
+///If this is required use the `RawStackList::iter_mut_to` instead.
+pub macro iter_mut_to {
+    ($list_binding: ident, $limit_literal: literal) => {
+        //We use the fully qualified path be used here to catch type errors with other types which also have a iter_mut_to_bounded method
+        linear_collections::stack_list::raw_stack_list::RawStackList::iter_mut_to::<$limit_literal>($list_binding)
+    },
+    //Note that this will not match constant bindings; those are idents. 
+    ($list_binding: ident, $limit_binding: ident) => {
+        linear_collections::stack_list::raw_stack_list::utils::iter_mut_to($list_binding, $limit_binding)
+    },
+}
+
 

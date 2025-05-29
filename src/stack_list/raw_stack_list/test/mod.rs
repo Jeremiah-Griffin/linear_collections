@@ -23,7 +23,7 @@ fn remove_front_shifts_left() {
 
         assert_eq!(from_vec, from_arr);
 
-        let remaining = arrvec.iter_to(4).map(|t| *t).collect::<Vec<&str>>();
+        let remaining = arrvec.iter_to::<4>().map(|t| *t).collect::<Vec<&str>>();
 
         assert_eq!(vec, remaining);
     }
@@ -52,7 +52,7 @@ fn remove_mid_is_same_as_vec() {
 
         assert_eq!(from_vec, from_arr);
 
-        let remaining = arrvec.iter_to(4).map(|t| *t).collect::<Vec<&str>>();
+        let remaining = arrvec.iter_to::<4>().map(|t| *t).collect::<Vec<&str>>();
 
         assert_eq!(vec, remaining);
     }
@@ -81,7 +81,7 @@ fn remove_end_is_same_as_vec() {
 
         assert_eq!(from_vec, from_arr);
 
-        let remaining = arrvec.iter_to(4).map(|t| *t).collect::<Vec<&str>>();
+        let remaining = arrvec.iter_to::<4>().map(|t| *t).collect::<Vec<&str>>();
 
         assert_eq!(vec, remaining);
     }
@@ -128,6 +128,24 @@ pub fn trybuild(){
     //t.pass("src/stack_list/raw_stack_list/test/trybuild/insert_at_literal_index_safe.rs");
     //insertions at a literal index >= CAPACITY should fail
     t.compile_fail("src/stack_list/raw_stack_list/test/trybuild/insert_at_out_of_bounds.rs");
+
+    //iter_to
+    //Expansion of the macro should require an unsafe block.
+    t.compile_fail("src/stack_list/raw_stack_list/test/trybuild/iter_to_out_of_bounds.rs");
+    //Indexing beyond capacity should failt to compile because of the where bound
+    t.compile_fail("src/stack_list/raw_stack_list/test/trybuild/iter_to_is_unsafe.rs");
+    //Temporarily disabled due to ICE.
+    //Indexing 0..Capacity  should pass    
+    //t.pass("src/stack_list/raw_stack_list/test/trybuild/iter_to_within_bounds.rs");
+
+    //iter_mut_to
+    //Expansion of the macro should require an unsafe block.
+    t.compile_fail("src/stack_list/raw_stack_list/test/trybuild/iter_mut_to_out_of_bounds.rs");
+    //Indexing beyond capacity should failt to compile because of the where bound
+    t.compile_fail("src/stack_list/raw_stack_list/test/trybuild/iter_mut_to_is_unsafe.rs");
+    //Temporarily disabled due to ICE.
+    //Indexing 0..Capacity  should pass    
+    //t.pass("src/stack_list/raw_stack_list/test/trybuild/iter_mut_to_within_bounds.rs"); 
     
  }
 

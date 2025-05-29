@@ -133,7 +133,7 @@ fn remove_front_is_same_as_vec() {
 
         assert_eq!(from_vec, from_arr);
 
-        let remaining = arrvec.iter_to(4).map(|t| *t).collect::<Vec<&str>>();
+        let remaining = arrvec.iter_to::<4>().map(|t| *t).collect::<Vec<&str>>();
 
         assert_eq!(vec, remaining);
     }
