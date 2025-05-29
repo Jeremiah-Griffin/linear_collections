@@ -1,5 +1,5 @@
-use std::num::NonZero;
-
+use std::{num::NonZero, mem::MaybeUninit};
+use std::ptr::{addr_of, addr_of_mut};
 use super::RawStackList;
 
 #[cfg(test)]
@@ -75,4 +75,20 @@ pub unsafe fn iter_to<'a, T, const CAPACITY: usize>(list: & 'a RawStackList<T, C
         .map(|t| unsafe { t.assume_init_mut() })
 }
 
-    
+
+///SAFETY: UB if accessed beyond `CAPACITY` *OR* into an uninitialized element.
+pub unsafe fn remove<T, const CAPACITY: usize>(list: &mut RawStackList<T,CAPACITY>, index: usize, length: usize) -> T {
+    //SAFETY: upheld by caller
+    //take value
+    let t = unsafe { list.array.get_unchecked(index).assume_init_read() };
+    //shift values right of `r` left.
+    let elements_after_index = (length.saturating_sub(index)).saturating_sub(1);
+    //SAFETY: upheld by caller
+    unsafe { std::ptr::copy(
+        (addr_of!(list.array) as *const MaybeUninit<T>).add(index + 1),
+        (addr_of_mut!(list.array) as *mut MaybeUninit<T>).add(index),
+        elements_after_index,
+    ) };
+    t
+}
+ 

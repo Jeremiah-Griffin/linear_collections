@@ -149,23 +149,21 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
         unsafe{ utils::iter_mut_to(self, LIMIT)}
     }
 
-    ///SAFETY: UB if accessed beyond `CAPACITY` *OR* into an uninitialized element.
-    pub unsafe fn remove(&mut self, index: usize, length: usize) -> T {
-        //SAFETY: upheld by caller
-        //take value
-        let t = unsafe { self.array.get_unchecked(index).assume_init_read() };
 
-        //shift values right of `r` left.
-        let elements_after_index = (length.saturating_sub(index)).saturating_sub(1);
+    ///SAFETY: Undefined Behavior if accessing an uninitialized element.
+    ///Retrieves a reference the element at `INDEX`, checking at compile time whether it is within `CAPACITY`.
+    ///Note it does not check within the length, which, if tracked, is done at runtime by the parent of this type.
+    ///
+    ///To index by a variable use the `get` macro from this module.
+    pub unsafe fn remove<const INDEX: usize>(&mut self, length: usize) -> T where [(); CAPACITY
+        //the final index of a list with CAPACITY is CAPACITY - 1.
+        .checked_sub(1)
+        .expect(CAPACITY_NONZERO)
+        .checked_sub(INDEX)
+        .expect(INDEX_LT_CAPACITY)]: {
 
-        //SAFETY: upheld by caller
-        unsafe { std::ptr::copy(
-            (addr_of!(self.array) as *const MaybeUninit<T>).add(index + 1),
-            (addr_of_mut!(self.array) as *mut MaybeUninit<T>).add(index),
-            elements_after_index,
-        ) };
-
-        t
+        //SAFETY: bounding to length is upheld by caller.
+        unsafe { utils::remove(self, INDEX, length)}
     }
 }
 
@@ -301,4 +299,34 @@ pub macro iter_mut_to {
     },
 }
 
+///`insert_at!(list: ident, index: ident OR literal, item: ident)`
+///
+///SAFETY:
+///If `item` is provided as a variable, Undefined Behavior will occur if it is greater than or equal to CAPACITY. This macro is unsafe to call.
+///This macro is safe to call when `item` is a literal.
+/// 
+///Retrieves a unique reference to element from `list` at `index`.
+///if `index` is a literal this will run a bounds check to ensure it is less than the `CAPACITY` of `list`.
+/// 
+///Unfortunately, this macro is unable to bounds check constants, statics, etc; passing the
+///identifier of a constant or static *is* safe, but will not provide compile time bound checking.
+///If this is required use the `RawStackList::insert_at` instead.
+pub macro remove{
+    ($list_binding: ident, $index_literal: literal, $length: ident) => {
+        //We use the fully qualified path be used here to catch type errors with other types which also have a remove_bounded method
+        linear_collections::stack_list::raw_stack_list::RawStackList::remove::<$index_literal>($list_binding, $length)
+    },
+    ($list_binding: ident, $index_literal: literal, $length: literal) => {
+        //We use the fully qualified path be used here to catch type errors with other types which also have a remove_bounded method
+        linear_collections::stack_list::raw_stack_list::RawStackList::remove::<$index_literal>($list_binding, $length)
+    },
+    //Note that this will not match constant bindings; those are idents. 
+    ($list_binding: ident, $index_binding: ident, $length: ident) => {
+        linear_collections::stack_list::raw_stack_list::utils::remove($list_binding, $index_binding, $length)
+    },
+    //Note that this will not match constant bindings; those are idents. 
+    ($list_binding: ident, $index_binding: ident, $length: literal) => {
+        linear_collections::stack_list::raw_stack_list::utils::remove($list_binding, $index_binding, $length)
+    },    
+}
 

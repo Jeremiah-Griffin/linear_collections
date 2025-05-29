@@ -1,0 +1,8 @@
+error[E0133]: call to unsafe function `RawStackList::<T, CAPACITY>::remove` is unsafe and requires unsafe block
+ --> src/stack_list/raw_stack_list/test/trybuild/remove_is_unsafe.rs:7:13
+  |
+7 |     let _ = remove!(list, 0, 5);
+  |             ^^^^^^^^^^^^^^^^^^^ call to unsafe function
+  |
+  = note: consult the function's documentation for information on how to avoid undefined behavior
+  = note: this error originates in the macro `remove` (in Nightly builds, run with -Z macro-backtrace for more info)

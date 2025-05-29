@@ -105,10 +105,14 @@ impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
     ///Removes the element at `index` from this `StackList`.
     pub fn remove(&mut self, index: usize) -> Option<T> {
         match CAPACITY > index && self.length > 0 {
-            //SAFETY: we track len and know it is not > CAPACITY in this arm
-            //so there is no possibility of UB
+
             true => {
-                let r = unsafe { self.raw.remove(index, self.length) };
+                let raw = &mut self.raw;
+                let length = self.length;
+
+                //SAFETY: we track len and know it is not > CAPACITY in this arm
+                //so there is no possibility of UB                
+                let r = unsafe { raw_stack_list::remove!(raw, index, length)};
 
                 self.length -= 1;
 

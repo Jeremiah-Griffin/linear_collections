@@ -196,7 +196,12 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
             //resident on stack
             i if i <= STACK_CAPACITY => {
                 self.len = self.len.saturating_sub(1);
-                unsafe { Some(self.stack_list.remove(self.len(), self.array_len())) }
+                let len = self.array_len();
+                let last = self.len;
+                let ref mut list = self.stack_list;
+                ///SAFETY:
+                ///bounded by length
+                unsafe { Some(raw_stack_list::remove!(list, last, len))}
             }
             //resident on heap
             _ => {
@@ -225,9 +230,12 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
         let r = match idx <= STACK_CAPACITY {
             //value is resident on stack
             true => {
+
+                let len = self.array_len();
+                let list = &mut self.stack_list;
                 //SAFETY
                 //upheld by caller. See function documentation.
-                let r = unsafe { self.stack_list.remove(idx, self.array_len()) };
+                let r = unsafe { raw_stack_list::remove!(list, idx, len)};
 
                 //Shift elements from heap to stack, if necessary.
                 if self.vec.len() > 0 {

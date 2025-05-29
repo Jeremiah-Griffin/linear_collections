@@ -19,7 +19,7 @@ fn remove_front_shifts_left() {
         arrvec.insert_at::<3>(four);
         arrvec.insert_at::<4>(five);
 
-        let (from_vec, from_arr) = (vec.remove(0), arrvec.remove(0, 5));
+        let (from_vec, from_arr) = (vec.remove(0), arrvec.remove::<0>(5));
 
         assert_eq!(from_vec, from_arr);
 
@@ -48,7 +48,7 @@ fn remove_mid_is_same_as_vec() {
         arrvec.insert_at::<3>(four);
         arrvec.insert_at::<4>(five);
 
-        let (from_vec, from_arr) = (vec.remove(2), arrvec.remove(2, 5));
+        let (from_vec, from_arr) = (vec.remove(2), arrvec.remove::<2>(5));
 
         assert_eq!(from_vec, from_arr);
 
@@ -77,7 +77,7 @@ fn remove_end_is_same_as_vec() {
         arrvec.insert_at::<3>(four);
         arrvec.insert_at::<4>(five);
 
-        let (from_vec, from_arr) = (vec.remove(4), arrvec.remove(4, 5));
+        let (from_vec, from_arr) = (vec.remove(4), arrvec.remove::<4>(5));
 
         assert_eq!(from_vec, from_arr);
 
@@ -145,7 +145,16 @@ pub fn trybuild(){
     t.compile_fail("src/stack_list/raw_stack_list/test/trybuild/iter_mut_to_is_unsafe.rs");
     //Temporarily disabled due to ICE.
     //Indexing 0..Capacity  should pass    
-    //t.pass("src/stack_list/raw_stack_list/test/trybuild/iter_mut_to_within_bounds.rs"); 
-    
+    //t.pass("src/stack_list/raw_stack_list/test/trybuild/iter_mut_to_within_bounds.rs");
+
+
+    //remove
+    //Expansion of the macro should require an unsafe block.
+    t.compile_fail("src/stack_list/raw_stack_list/test/trybuild/remove_is_unsafe.rs");
+    //Indexing beyond capacity should failt to compile because of the where bound
+    t.compile_fail("src/stack_list/raw_stack_list/test/trybuild/remove_out_of_bounds.rs");
+    //Temporarily disabled due to ICE.
+    //Indexing 0..Capacity  should pass
+    //t.pass("src/stack_list/raw_stack_list/test/trybuild/remove_within_bounds.rs");    
  }
 

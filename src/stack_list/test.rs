@@ -129,7 +129,7 @@ fn remove_front_is_same_as_vec() {
         arrvec.insert_at::<3>(four);
         arrvec.insert_at::<4>(five);
 
-        let (from_vec, from_arr) = (vec.remove(0), arrvec.remove(0, 5));
+        let (from_vec, from_arr) = (vec.remove(0), arrvec.remove::<0>(5));
 
         assert_eq!(from_vec, from_arr);
 
