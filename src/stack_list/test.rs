@@ -3,6 +3,11 @@ use crate::verification_utils::Dropper;
 use super::{RawStackList, StackList};
 
 #[test]
+fn default_is_empty() {
+    assert!(StackList::<u8, 5>::default().is_empty());
+}
+
+#[test]
 fn remove_start_is_same_as_vec() {
     let one = "one";
     let two = "two";
@@ -153,12 +158,11 @@ pub fn clear_is_clear() {
 fn clear_drops_to_length() {
     const CAPACITY: usize = 5;
 
-    for length in 0..=CAPACITY{
+    for length in 0..=CAPACITY {
         let droppers: [Dropper; CAPACITY] = Dropper::new_arr();
         let cloned_droppers = droppers.clone();
 
-
-        let mut list = StackList{
+        let mut list = StackList {
             raw: RawStackList::from_array(cloned_droppers),
             length,
         };
@@ -166,9 +170,10 @@ fn clear_drops_to_length() {
         list.clear();
 
         assert_eq!(list.length, 0);
-            
 
-        droppers.iter().enumerate().for_each(|(i, dropper)| assert_eq!(dropper.dropped(), length > i)); 
-
+        droppers
+            .iter()
+            .enumerate()
+            .for_each(|(i, dropper)| assert_eq!(dropper.dropped(), length > i));
     }
 }

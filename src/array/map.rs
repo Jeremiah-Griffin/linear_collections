@@ -30,7 +30,7 @@ impl<K: Eq, V, const LENGTH: usize> ArrayMap<K, V, LENGTH> {
         LENGTH
     }
 
-    ///Returns true if the store is empty, false otherwise.
+    ///Returns true if the store is empty and false otherwise.
     pub const fn is_empty(&self) -> bool {
         LENGTH == 0
     }

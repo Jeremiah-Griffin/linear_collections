@@ -1,10 +1,10 @@
 #[cfg(feature = "serde")]
 mod serde;
 
+pub mod error;
+pub mod map;
 pub mod raw_stack_list;
 pub mod set;
-pub mod map;
-pub mod error;
 #[cfg(test)]
 mod test;
 #[cfg(kani)]
@@ -14,7 +14,8 @@ use error::PushError;
 pub use raw_stack_list::RawStackList;
 use std::{hash::Hash, num::NonZero};
 
-#[derive(Debug)]
+#[derive(Default, Debug)]
+///Todo: this derive is unsoundpending RawStackList's Arbirtrary implsoundness.
 #[cfg_attr(kani, derive(kani::Arbitrary))]
 ///A list growable to `CAPACITY` which places all its items on the stack.
 pub struct StackList<T, const CAPACITY: usize> {
@@ -35,17 +36,22 @@ impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
 
     ///Calls `drop` on all elements in this list, in place.
     pub fn clear(&mut self) {
-        match NonZero::new(self.length){
+        match NonZero::new(self.length) {
             Some(len) => {
                 let ref mut list = self.raw;
                 //SAFETY:
                 //bound by length so will not go out of bounds or into uninit memory
-                unsafe { raw_stack_list::clear_to!(list, len)};
+                unsafe { raw_stack_list::clear_to!(list, len) };
                 self.length = 0;
-            },
+            }
 
             None => return,
         }
+    }
+
+    ///Returns true if the store is empty and false otherwise.
+    pub fn is_empty(&self) -> bool {
+        self.length == 0
     }
 
     ///Returns an iterator over the elements of this `StackList`.
@@ -80,15 +86,12 @@ impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
 
     ///Removes the last element in this `StackList`, returning `None` if this list is empty.
     pub fn pop(&mut self) -> Option<T> {
-        self.length
-            .checked_sub(1)
-            .and_then(|new| self.remove(new))
-        }
-        //self.remove(self.length)
-    
+        self.length.checked_sub(1).and_then(|new| self.remove(new))
+    }
+    //self.remove(self.length)
 
     pub fn push(&mut self, value: T) -> Result<(), PushError> {
-        match self.length.checked_add(1){
+        match self.length.checked_add(1) {
             Some(new) => {
                 let raw = &mut self.raw;
                 let len = self.length;
@@ -97,7 +100,7 @@ impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
                 unsafe { raw_stack_list::insert_at!(raw, len, value) };
                 self.length = new;
                 Ok(())
-            },
+            }
             None => Err(PushError::WouldExceedCapacity),
         }
     }
@@ -105,14 +108,13 @@ impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
     ///Removes the element at `index` from this `StackList`.
     pub fn remove(&mut self, index: usize) -> Option<T> {
         match CAPACITY > index && self.length > 0 {
-
             true => {
                 let raw = &mut self.raw;
                 let length = self.length;
 
                 //SAFETY: we track len and know it is not > CAPACITY in this arm
-                //so there is no possibility of UB                
-                let r = unsafe { raw_stack_list::remove!(raw, index, length)};
+                //so there is no possibility of UB
+                let r = unsafe { raw_stack_list::remove!(raw, index, length) };
 
                 self.length -= 1;
 
@@ -122,10 +124,10 @@ impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
         }
     }
 
-    ///Retrieves element at `index`, returning `None` if `index` is out of bounsd. 
+    ///Retrieves element at `index`, returning `None` if `index` is out of bounsd.
     pub fn get(&self, index: usize) -> Option<&T> {
         let raw = &self.raw;
-        match CAPACITY > index  && index < self.length {
+        match CAPACITY > index && index < self.length {
             //SAFETY: we track len and know it is not > CAPACITY in this arm
             //so there is no possibility of UB
             true => Some(unsafe { raw_stack_list::get!(raw, index) }),
@@ -133,19 +135,16 @@ impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
         }
     }
 
-
     pub fn get_mut(&mut self, index: usize) -> Option<&mut T> {
         let list = &mut self.raw;
         match CAPACITY > index && index < self.length {
-
-            true => Some(unsafe { raw_stack_list::get_mut!(list, index)}),
+            true => Some(unsafe { raw_stack_list::get_mut!(list, index) }),
             //SAFETY: we track len and know it is not > CAPACITY in this arm
             //so there is no possibility of UB
             //true => Some(unsafe {raw_stack_list::get!(raw, index)}),
             false => None,
         }
     }
-
 }
 
 impl<const CAPACITY: usize, T: PartialEq> PartialEq for StackList<T, CAPACITY> {
