@@ -59,6 +59,17 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
     }
 
     //**methods**//
+
+    ///Retrieves a slice of this `list's contents.
+    pub fn as_slice(&self) -> &[MaybeUninit<T>] {
+        &self.array
+    }
+
+    ///Retrieves a mutable slice of this `list's contents.
+    pub fn as_mut_slice(&mut self) -> &mut [MaybeUninit<T>] {
+        &mut self.array
+    }
+
     ///SAFETY: Undefined Behavior if any element 0..LIMIT is uninitialized.
     ///Drops all elements up to `limit`, *exclusive*.
     ///This may be switched to inclusive in a future release. If so, this method will be deprecated

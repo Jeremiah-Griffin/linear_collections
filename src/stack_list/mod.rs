@@ -12,7 +12,12 @@ mod verification;
 
 use error::PushError;
 pub use raw_stack_list::RawStackList;
-use std::{hash::Hash, num::NonZero};
+use std::{
+    hash::Hash,
+    mem::MaybeUninit,
+    num::NonZero,
+    ops::{Deref, DerefMut},
+};
 
 #[derive(Default, Debug)]
 ///Todo: this derive is unsoundpending RawStackList's Arbirtrary implsoundness.
@@ -32,6 +37,29 @@ impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
             raw: RawStackList::uninit(),
             length: 0,
         }
+    }
+
+    ///TODO: add verification and description
+    pub fn as_slice(&self) -> &[T] {
+        let pointer = self.raw.as_slice().as_ptr() as *const T;
+
+        //SAFETY:
+        //MaybeUninit<T> and T have the same memory layout
+        //Later, when we create the slice reference we bind by the length parameter,
+        //ensuring we only access initialized elements
+        //the length parameter ensures all elements are valid.
+        unsafe { std::slice::from_raw_parts(pointer, self.length) }
+    }
+    ///TODO: add verification and description
+    pub fn as_mut_slice(&mut self) -> &mut [T] {
+        let pointer = self.raw.as_mut_slice().as_mut_ptr() as *mut T;
+
+        //SAFETY:
+        //MaybeUninit<T> and T have the same memory layout
+        //Later, when we create the slice reference we bind by the length parameter,
+        //ensuring we only access initialized elements
+        //the length parameter ensures all elements are valid.
+        unsafe { std::slice::from_raw_parts_mut(pointer, self.length) }
     }
 
     ///Calls `drop` on all elements in this list, in place.
@@ -165,5 +193,19 @@ impl<const CAPACITY: usize, T: Eq> Eq for StackList<T, CAPACITY> {}
 impl<const CAPACITY: usize, T: Hash> Hash for StackList<T, CAPACITY> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.iter().for_each(|t| t.hash(state))
+    }
+}
+
+impl<T, const CAPACITY: usize> Deref for StackList<T, CAPACITY> {
+    type Target = [T];
+
+    fn deref(&self) -> &Self::Target {
+        self.as_slice()
+    }
+}
+
+impl<T, const CAPACITY: usize> DerefMut for StackList<T, CAPACITY> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.as_mut_slice()
     }
 }
