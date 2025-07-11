@@ -97,7 +97,6 @@ fn remove() {
     let mut list = StackList::from_array(arr);
 
     let mut i = 0;
-    #[loop_invariant(i < CAPACITY)]
     while i < num_removals {
         let index: usize = kani::any();
         kani::assume(index < list.len());

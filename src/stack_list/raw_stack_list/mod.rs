@@ -1,9 +1,4 @@
-use std::{
-    array,
-    mem::MaybeUninit,
-    num::NonZero,
-    ptr::{addr_of, addr_of_mut},
-};
+use std::{array, mem::MaybeUninit, num::NonZero};
 
 #[cfg(test)]
 mod test;

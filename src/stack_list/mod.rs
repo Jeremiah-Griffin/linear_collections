@@ -14,7 +14,6 @@ use error::PushError;
 pub use raw_stack_list::RawStackList;
 use std::{
     hash::Hash,
-    mem::MaybeUninit,
     num::NonZero,
     ops::{Deref, DerefMut},
 };
@@ -135,6 +134,7 @@ impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
 
     ///Removes the element at `index` from this `StackList`.
     pub fn remove(&mut self, index: usize) -> Option<T> {
+        //check if index is in bounds
         match CAPACITY > index && self.length > 0 {
             true => {
                 let raw = &mut self.raw;
@@ -144,7 +144,7 @@ impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
                 //so there is no possibility of UB
                 let r = unsafe { raw_stack_list::remove!(raw, index, length) };
 
-                self.length -= 1;
+                self.length = self.length.checked_sub(1)?;
 
                 Some(r)
             }
