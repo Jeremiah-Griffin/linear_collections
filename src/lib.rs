@@ -13,6 +13,7 @@
 
 pub mod array;
 mod fat_vec;
+pub mod list;
 ///Contains the map trait and its related types.
 pub mod map;
 ///Methods used internally throughout the crate.

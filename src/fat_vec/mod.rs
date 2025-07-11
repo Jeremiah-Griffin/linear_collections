@@ -4,7 +4,7 @@ mod serde;
 #[cfg(test)]
 pub mod test;
 
-use crate::stack_list::{raw_stack_list, RawStackList};
+use crate::stack_list::{RawStackList, raw_stack_list};
 use std::{
     array, collections::TryReserveError, hash::Hash, intrinsics::transmute_unchecked,
     mem::MaybeUninit, num::NonZero,
@@ -59,7 +59,8 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
     ///If `ITEMS` is always guaranteed to be identical to `STACK_CAPACITY`, it's best to use `with_array` instead.
     pub fn with_partial_array<const ITEMS: usize>(items: [T; ITEMS]) -> FatVec<T, STACK_CAPACITY>
     where
-        [(); STACK_CAPACITY.checked_sub(ITEMS)
+        [(); STACK_CAPACITY
+            .checked_sub(ITEMS)
             .expect("The length of the items must be less than or equal to STACK_CAPACITY.")]:,
         //Disallow 0 sized `items` as a hedge in case we need to do transmutes which rely on non ZST.
         [(); ITEMS
@@ -143,21 +144,18 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
         self.vec.capacity() + STACK_CAPACITY
     }
     pub fn clear(&mut self) {
-
-        match NonZero::new(self.len){
-        //SAFETY:
-        //Ensure that all  elements are dropped. Bounded by array len means this cannot find uninitalized
-        //memory.            
+        match NonZero::new(self.len) {
+            //SAFETY:
+            //Ensure that all  elements are dropped. Bounded by array len means this cannot find uninitalized
+            //memory.
             Some(len) => {
                 let ref mut list = self.stack_list;
-                unsafe{raw_stack_list::clear_to!(list, len)}; 
+                unsafe { raw_stack_list::clear_to!(list, len) };
                 self.vec.clear();
                 self.len = 0;
-        },
+            }
             None => (),
         }
-
-
     }
 
     ///Appends the element to this `FatVec`, returning an error on failure.
@@ -168,9 +166,10 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
 
         match STACK_CAPACITY > self.len() {
             true => {
-                let ref mut  list = self.stack_list;
+                let ref mut list = self.stack_list;
                 let old_len = self.len;
-                unsafe { raw_stack_list::insert_at!(list, old_len, value)}},
+                unsafe { raw_stack_list::insert_at!(list, old_len, value) }
+            }
             false => {
                 //call reserve on the vec as necessary to ensure pushing to it doesn't panic.
                 if self.vec.capacity() < new_len {
@@ -199,9 +198,9 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
                 let len = self.array_len();
                 let last = self.len;
                 let ref mut list = self.stack_list;
-                ///SAFETY:
-                ///bounded by length
-                unsafe { Some(raw_stack_list::remove!(list, last, len))}
+                //SAFETY:
+                //bounded by length
+                unsafe { Some(raw_stack_list::remove!(list, last, len)) }
             }
             //resident on heap
             _ => {
@@ -230,12 +229,11 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
         let r = match idx <= STACK_CAPACITY {
             //value is resident on stack
             true => {
-
                 let len = self.array_len();
                 let list = &mut self.stack_list;
                 //SAFETY
                 //upheld by caller. See function documentation.
-                let r = unsafe { raw_stack_list::remove!(list, idx, len)};
+                let r = unsafe { raw_stack_list::remove!(list, idx, len) };
 
                 //Shift elements from heap to stack, if necessary.
                 if self.vec.len() > 0 {
@@ -251,7 +249,7 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
                     //and we also know that the the RawStackList has space for only one element now, because the vec is non empty.
                     //
                     //The only time the RawStackList will have less than STACK_CAPACITY elements is when no elements have overflowed onto the heap.
-                    unsafe{raw_stack_list::insert_at!(list, idx, elem)}
+                    unsafe { raw_stack_list::insert_at!(list, idx, elem) }
                 }
 
                 r
@@ -293,13 +291,12 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
     ///SAFETY:
     ///UB if idx is >= the length of this `FatVec`.
     pub unsafe fn get_unchecked(&self, idx: usize) -> &T {
-
         let list = &self.stack_list;
         match STACK_CAPACITY > idx {
             //SAFETY:
             //Because we maintain length seperately of the vec and array, we can rely on IDX not to be out of bounds for
             //either these accesses.
-            true => unsafe {raw_stack_list::get!(list, idx)},
+            true => unsafe { raw_stack_list::get!(list, idx) },
             //subtract as the first element of vec is 0, but in the whole `FatVec`, it's
             //always STACK_CAPACITY + idx. The subtraction accounts for this for this.
             false => unsafe { self.vec.get_unchecked(idx - STACK_CAPACITY) },
@@ -314,8 +311,8 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
         match STACK_CAPACITY > idx {
             //SAFETY:
             //Because we maintain length seperately from the vec and array, we can rely on IDX not to be out of bounds for
-            //either these accesses.            
-            true => unsafe {raw_stack_list::get_mut!(list, idx)},           
+            //either these accesses.
+            true => unsafe { raw_stack_list::get_mut!(list, idx) },
             //subtract as the first element of vec is 0, but in the whole `FatVec`, it's
             //always STACK_CAPACITY + idx. The subtraction accounts for this for this.
             false => unsafe { self.vec.get_unchecked_mut(idx - STACK_CAPACITY) },

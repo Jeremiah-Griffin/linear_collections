@@ -1,9 +1,6 @@
 //Cloning is safe as all is stack allocated. Wether T panics or not is out of scope of this libary.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 ///A map type backed by an Array, stack allocated and fixed in size.
-///
-///ArrayMap is the only map type in linear_collections which does *not* implement either LinearMap nor InfallibleLinearMap, which relies on
-///dynamic memory allocation to function.
 pub struct ArrayMap<K: Eq, V, const LENGTH: usize> {
     array: [(K, V); LENGTH],
 }
