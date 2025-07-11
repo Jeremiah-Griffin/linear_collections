@@ -1,6 +1,6 @@
 use std::collections::TryReserveError;
 
-use crate::{Map, MapIterMut};
+use crate::{Map, map::MapIterMut};
 
 ///A map type backed by a Vector. Useful for small collections whose size can change.
 #[derive(Debug, PartialEq, Eq, Hash, Default)]

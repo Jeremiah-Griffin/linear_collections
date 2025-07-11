@@ -1,7 +1,7 @@
 use crate::{
     Map,
-    stack_list::{error::PushError, StackList},
-    MapIterMut,
+    map::MapIterMut,
+    stack_list::{StackList, error::PushError},
 };
 
 ///A map backed by a `StackList`

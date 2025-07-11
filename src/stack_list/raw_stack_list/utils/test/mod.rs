@@ -1,32 +1,34 @@
 use std::num::NonZero;
 
-use crate::{stack_list::{raw_stack_list::{self, utils}, RawStackList}, verification_utils::Dropper};
+use crate::{
+    stack_list::{
+        RawStackList,
+        raw_stack_list::{self},
+    },
+    verification_utils::Dropper,
+};
 
 #[test]
 pub fn clear_to_drops() {
-    let zeroth =  Dropper::new();
-    let first =  Dropper::new();
-    let second=  Dropper::new();
-    let third=  Dropper::new();
-    let fourth=  Dropper::new();
-    let zeroth_clone =  zeroth.clone();
-    let first_clone =  first.clone();
-    let second_clone =  second.clone();
-    let third_clone =  third.clone();
-    let fourth_clone =  fourth.clone();
-
+    let zeroth = Dropper::new();
+    let first = Dropper::new();
+    let second = Dropper::new();
+    let third = Dropper::new();
+    let fourth = Dropper::new();
+    let zeroth_clone = zeroth.clone();
+    let first_clone = first.clone();
+    let second_clone = second.clone();
+    let third_clone = third.clone();
+    let fourth_clone = fourth.clone();
 
     const LENGTH: usize = 5;
-    
-    let mut list: RawStackList<Dropper, LENGTH> = RawStackList::from_array([
-        zeroth, first, second, third, fourth,
-    ]);
+
+    let mut list: RawStackList<Dropper, LENGTH> =
+        RawStackList::from_array([zeroth, first, second, third, fourth]);
 
     let list_ref = &mut list;
     let limit = NonZero::new(LENGTH).unwrap();
     unsafe { raw_stack_list::clear_to!(list_ref, limit) };
-
-
 
     //clearing should drop all elements
     assert_eq!(zeroth_clone.dropped(), limit.get() > 0);
@@ -47,7 +49,6 @@ pub fn clear_is_clear() {
     assert_eq!(unsafe { svec.iter_to(5) }.nth(0), None);
 }*/
 
-
 //Unaligned tcache chunk detected when running this. Commented out for now.
 /*
 ///Used as a test as kani won't verify the FFI stuff in Dropper.
@@ -60,7 +61,7 @@ pub fn clear_to_drops_broken() {
        let fourth=  Dropper::new();
 
     const LENGTH: usize = 5;
-    
+
     let mut list: RawStackList<Dropper, LENGTH> = RawStackList::from_array([
         zeroth.clone(), first.clone(), second.clone(), third.clone(), fourth.clone(),
     ]);
@@ -88,7 +89,7 @@ pub fn clear_to_drops_broken() {
         second_clone.reset();
         third_clone.reset();
         fourth_clone.reset();
-        
+
 
     }
 }

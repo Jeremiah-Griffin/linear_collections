@@ -1,6 +1,6 @@
 use std::collections::{TryReserveError, VecDeque};
 
-use crate::{Map, MapIterMut};
+use crate::{Map, map::MapIterMut};
 
 pub struct DequeMap<K: Eq, V> {
     deque: VecDeque<(K, V)>,

@@ -19,7 +19,8 @@ use std::{
 };
 
 #[derive(Default, Debug)]
-///Todo: this derive is unsoundpending RawStackList's Arbirtrary implsoundness.
+///TODO: is this unsound? can kani::Arbitrary produce `MaybeUninit<T>` which are both `uninit` and invalid? Or
+/// can `Arbitrary` only produce valid values of it?
 #[cfg_attr(kani, derive(kani::Arbitrary))]
 ///A list growable to `CAPACITY` which places all its items on the stack.
 pub struct StackList<T, const CAPACITY: usize> {

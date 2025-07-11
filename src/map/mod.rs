@@ -1,6 +1,4 @@
-use std::{error::Error, marker::PhantomData};
-
-use crate::{private::NoInterleavedMutation, MapIterMut};
+use std::error::Error;
 
 //Never implement clone: panics on alloc failure.
 ///Provides methods for maps backed by linear data structures like arrays and vectors.
@@ -164,53 +162,11 @@ pub trait Map<K: Eq, V>: MapIterMut<K, V> {
     }
 }
 
-
-
-
-///When expanding the capacity of a `Map` type by a constant factor,
-///a `MapWindow` may be returned. This allows for a certain number of mutating operations
-///to be performed with a guarantee of infallibility.
-///This may have the effect of very slight spatial and runtime optimizations, but its primary utility is in simplifying
-///the return types of functions in which the caller has pre-allocated for a collection.
-///
-///This type holds a mutable reference to its associate map. As such, it must be dropped before
-///mutating the underlying collection.
-pub struct MapPsuedoArray<'a, K: Eq, V, M: Map<K, V> + NoInterleavedMutation, const REMAINING: usize>{
-    map: & 'a mut M,
-    phantom: PhantomData<(K,V)>,
+///Sealed trait to provide mutable iteration without allowing consumers
+///to violate the invariants of the map types
+pub(crate) trait MapIterMut<K, V> {
+    fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut (K, V)>
+    where
+        K: 'a,
+        V: 'a;
 }
-
-
-impl <'a, K: Eq, V, M: Map<K, V> + NoInterleavedMutation, const REMAINING: usize>MapPsuedoArray<'a, K, V, M, REMAINING> where [(); REMAINING.checked_sub(1).expect("REMAINING must be nonzero")]: {
-    ///Inserts a key-value pair into the map.
-    ///If the map did not have this key present, None is returned.
-    ///If the map did have this key present, the value is updated, and the old value is returned. The key is not updated, though; this matters for types that can be == without being identical. See the module-level documentation for more.
-    fn insert(self, key: K, value: V) -> (Option<V>, MapPsuedoArray<'a, K, V, M, {REMAINING - 1}>){
-        let v = self.map.insert(key, value);
-
-        //SAFETY:
-        //The `REMAINING` bound guarantees that there is remaining space `for this type, so insertion will not fail.
-        (unsafe{ v.unwrap_unchecked()}, MapPsuedoArray{map: self.map, phantom: PhantomData::default()}) }
-}
-
-
-impl <'a, K: Eq, V, M: Map<K,V> + NoInterleavedMutation, const REMAINING: usize>MapPsuedoArray<'a, K, V, M, REMAINING> {
-    fn remove(self, key : &K) -> MapRemoveResult<'a, K, V, M, REMAINING> where [(); REMAINING + 1]: {
-        match self.map.remove(key){ Some(value) => MapRemoveResult::Found{psuedo_array: MapPsuedoArray { map: self.map, phantom: PhantomData::default()}, value},
-            None => MapRemoveResult::NotFound(self),
-        }
-    }
-
-    ///Searches for a key == key in the map. If it is present
-    ///replaces its value with "value". If not, it does nothing.    
-    fn replace(&mut self, key: &K, value: V){
-        self.map.replace(key, value)
-    }
-}
-
-pub enum MapRemoveResult<'a, K: Eq, V, M: Map<K,V> + NoInterleavedMutation, const REMAINING: usize> where [(); REMAINING + 1]: {
-    Found{psuedo_array: MapPsuedoArray<'a, K, V, M, {REMAINING + 1}>, value: V},
-    NotFound(MapPsuedoArray<'a, K,V,M,REMAINING>),
-}
-
-

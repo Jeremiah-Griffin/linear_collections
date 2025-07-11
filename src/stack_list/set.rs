@@ -32,8 +32,7 @@ impl<T: Eq, const STACK_CAPACITY: usize> Set<T> for StackSet<T, STACK_CAPACITY> 
     fn insert(
         &mut self,
         value: T,
-    ) -> Result<bool, <Self::Backing as crate::Map<T, ()>>::InsertionError>
-    {
+    ) -> Result<bool, <Self::Backing as crate::Map<T, ()>>::InsertionError> {
         self.map_mut().insert(value, ()).map(|r| r.is_none())
     }
 

@@ -1,4 +1,4 @@
-use crate::{Map, MapIterMut};
+use crate::{Map, map::MapIterMut};
 use std::collections::TryReserveError;
 
 use super::FatVec;
@@ -60,9 +60,7 @@ impl<K: Eq, V, const STACK_CAPACITY: usize> FatMap<K, V, STACK_CAPACITY> {
     }
 }
 
-impl<K: Eq, V, const STACK_CAPACITY: usize> Map<K, V>
-    for FatMap<K, V, STACK_CAPACITY>
-{
+impl<K: Eq, V, const STACK_CAPACITY: usize> Map<K, V> for FatMap<K, V, STACK_CAPACITY> {
     type Backing = FatVec<(K, V), STACK_CAPACITY>;
     type InsertionError = TryReserveError;
 
@@ -116,12 +114,8 @@ impl<K: Eq, V, const STACK_CAPACITY: usize> MapIterMut<K, V> for FatMap<K, V, ST
     }
 }
 #[cfg(feature = "serde")]
-impl<
-        'a,
-        K: Eq + serde::Serialize,
-        V: PartialEq + serde::Serialize,
-        const STACK_CAPACITY: usize,
-    > serde::Serialize for FatMap<K, V, STACK_CAPACITY>
+impl<'a, K: Eq + serde::Serialize, V: PartialEq + serde::Serialize, const STACK_CAPACITY: usize>
+    serde::Serialize for FatMap<K, V, STACK_CAPACITY>
 {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where

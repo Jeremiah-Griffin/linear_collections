@@ -1,5 +1,7 @@
-use std::{ops::{Deref, DerefMut}, sync::{Arc, Mutex}};
-
+use std::{
+    ops::DerefMut,
+    sync::{Arc, Mutex},
+};
 
 #[derive(Clone)]
 ///Just a helper to test drop behavior
@@ -9,19 +11,20 @@ pub struct Dropper {
 
 impl Dropper {
     pub fn new() -> Self {
-        Dropper{reference: Arc::new(Mutex::new(false))}
-
+        Dropper {
+            reference: Arc::new(Mutex::new(false)),
+        }
     }
 
-    pub fn new_arr<const LENGTH: usize>() -> [Dropper;LENGTH]{
+    pub fn new_arr<const LENGTH: usize>() -> [Dropper; LENGTH] {
         std::array::from_fn(|_| Dropper::new())
     }
 
-    pub fn dropped(&self) -> bool{
+    pub fn dropped(&self) -> bool {
         *self.reference.lock().unwrap()
     }
 
-    pub fn reset(&self){
+    pub fn reset(&self) {
         *self.reference.lock().unwrap().deref_mut() = false;
     }
 }
@@ -32,23 +35,15 @@ impl Drop for Dropper {
     }
 }
 
-
-
 #[test]
 ///Ensures that dropper actually works
 fn dropper_checks_drop() {
-
-
     let dropper = Dropper::new();
     let cloned = dropper.clone();
 
     assert_eq!(dropper.dropped(), false);
 
-
     drop(dropper);
-
 
     assert_eq!(cloned.dropped(), true)
 }
-
-
