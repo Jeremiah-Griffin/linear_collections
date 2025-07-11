@@ -1,8 +1,28 @@
-error[E0133]: call to unsafe function `RawStackList::<T, CAPACITY>::get_mut` is unsafe and requires unsafe block
+warning: the feature `generic_arg_infer` has been stable since 1.89.0 and no longer requires an attribute to enable
+ --> src/stack_list/raw_stack_list/test/trybuild/get_mut_is_unsafe.rs:1:12
+  |
+1 | #![feature(generic_arg_infer)]
+  |            ^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(stable_features)]` on by default
+
+error[E0275]: overflow evaluating the requirement `[(); linear_collections::::stack_list::raw_stack_list::{impl#1}::get_mut::{constant#0}] well-formed`
  --> src/stack_list/raw_stack_list/test/trybuild/get_mut_is_unsafe.rs:9:13
   |
 9 |     let _ = get_mut!(list, 0);
-  |             ^^^^^^^^^^^^^^^^^ call to unsafe function
+  |             ^^^^^^^^^^^^^^^^^
   |
-  = note: consult the function's documentation for information on how to avoid undefined behavior
+note: required by a bound in `RawStackList::<T, CAPACITY>::get_mut`
+ --> src/stack_list/raw_stack_list/mod.rs
+  |
+  |       pub unsafe fn get_mut<const INDEX: usize>(&mut self) -> &mut T
+  |                     ------- required by a bound in this associated function
+  |       where
+  | /         [(); CAPACITY
+  | |             //the final index of a list with CAPACITY is CAPACITY - 1.
+  | |             .checked_sub(1)
+  | |             .expect(CAPACITY_NONZERO)
+  | |             .checked_sub(INDEX)
+  | |             .expect(INDEX_LT_CAPACITY)]:,
+  | |_______________________________________^ required by this bound in `RawStackList::<T, CAPACITY>::get_mut`
   = note: this error originates in the macro `get_mut` (in Nightly builds, run with -Z macro-backtrace for more info)

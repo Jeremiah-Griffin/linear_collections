@@ -1,8 +1,24 @@
-error[E0080]: evaluation of `linear_collections::FatVec::<u8, 10>::with_partial_array::<0>::{constant#1}` failed
+error[E0080]: evaluation panicked: The length of `items` must be nonzero
  --> src/fat_vec/mod.rs
   |
   |           [(); ITEMS
   |  ______________^
   | |             .checked_sub(1)
   | |             .expect("The length of `items` must be nonzero")]:,
-  | |____________________________________________________________^ evaluation panicked: The length of `items` must be nonzero
+  | |____________________________________________________________^ evaluation of `linear_collections::FatVec::<u8, 10>::with_partial_array::<0>::{constant#1}` failed here
+
+error[E0275]: overflow evaluating the requirement `[(); linear_collections::::fat_vec::{impl#0}::with_partial_array::{constant#0}] well-formed`
+ --> src/fat_vec/trybuild/empty_items.rs
+  |
+  |     let _fv = FatVec::<u8, 10>::with_partial_array([0; 0]);
+  |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+note: required by a bound in `FatVec::<T, STACK_CAPACITY>::with_partial_array`
+ --> src/fat_vec/mod.rs
+  |
+  |       pub fn with_partial_array<const ITEMS: usize>(items: [T; ITEMS]) -> FatVec<T, STACK_CAPACITY>
+  |              ------------------ required by a bound in this associated function
+  |       where
+  | /         [(); STACK_CAPACITY.checked_sub(ITEMS)
+  | |             .expect("The length of the items must be less than or equal to STACK_CAPACITY.")]:,
+  | |_____________________________________________________________________________________________^ required by this bound in `FatVec::<T, STACK_CAPACITY>::with_partial_array`

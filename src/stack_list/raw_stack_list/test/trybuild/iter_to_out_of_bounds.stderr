@@ -1,11 +1,32 @@
-error[E0080]: evaluation of `linear_collections::stack_list::RawStackList::<u8, 5>::iter_to::<5>::{constant#0}` failed
+error[E0080]: evaluation panicked: INDEX must be less than CAPACITY.
  --> src/stack_list/raw_stack_list/mod.rs
   |
-  |       pub unsafe fn iter_to<'a, const LIMIT: usize>(& 'a self) -> impl Iterator<Item = & 'a T> where [(); CAPACITY
-  |  _________________________________________________________________________________________________________^
-  | |         //the final index of a list with CAPACITY is CAPACITY - 1.
-  | |         .checked_sub(1)
-  | |         .expect(CAPACITY_NONZERO)
-  | |         .checked_sub(LIMIT)
-  | |         .expect(INDEX_LT_CAPACITY)]: {
-  | |__________________________________^ evaluation panicked: INDEX must be less than CAPACITY.
+  |           [(); CAPACITY
+  |  ______________^
+  | |             //the final index of a list with CAPACITY is CAPACITY - 1.
+  | |             .checked_sub(1)
+  | |             .expect(CAPACITY_NONZERO)
+  | |             .checked_sub(LIMIT)
+  | |             .expect(INDEX_LT_CAPACITY)]:,
+  | |______________________________________^ evaluation of `linear_collections::stack_list::RawStackList::<u8, 5>::iter_to::<5>::{constant#0}` failed here
+
+error[E0275]: overflow evaluating the requirement `[(); linear_collections::::stack_list::raw_stack_list::{impl#1}::iter_to::{constant#0}] well-formed`
+ --> src/stack_list/raw_stack_list/test/trybuild/iter_to_out_of_bounds.rs:8:22
+  |
+8 |     let _ = unsafe { iter_to!(list, 5)};
+  |                      ^^^^^^^^^^^^^^^^^
+  |
+note: required by a bound in `RawStackList::<T, CAPACITY>::iter_to`
+ --> src/stack_list/raw_stack_list/mod.rs
+  |
+  |       pub unsafe fn iter_to<'a, const LIMIT: usize>(&'a self) -> impl Iterator<Item = &'a T>
+  |                     ------- required by a bound in this associated function
+  |       where
+  | /         [(); CAPACITY
+  | |             //the final index of a list with CAPACITY is CAPACITY - 1.
+  | |             .checked_sub(1)
+  | |             .expect(CAPACITY_NONZERO)
+  | |             .checked_sub(LIMIT)
+  | |             .expect(INDEX_LT_CAPACITY)]:,
+  | |_______________________________________^ required by this bound in `RawStackList::<T, CAPACITY>::iter_to`
+  = note: this error originates in the macro `iter_to` (in Nightly builds, run with -Z macro-backtrace for more info)

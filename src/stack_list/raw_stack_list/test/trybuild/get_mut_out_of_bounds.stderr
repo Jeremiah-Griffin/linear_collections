@@ -1,11 +1,40 @@
-error[E0080]: evaluation of `linear_collections::stack_list::RawStackList::<u8, 5>::get_mut::<5>::{constant#0}` failed
+warning: the feature `generic_arg_infer` has been stable since 1.89.0 and no longer requires an attribute to enable
+ --> src/stack_list/raw_stack_list/test/trybuild/get_mut_out_of_bounds.rs:1:12
+  |
+1 | #![feature(generic_arg_infer)]
+  |            ^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(stable_features)]` on by default
+
+error[E0080]: evaluation panicked: INDEX must be less than CAPACITY.
  --> src/stack_list/raw_stack_list/mod.rs
   |
-  |       pub unsafe fn get_mut<const INDEX: usize>(& mut self) -> & mut T where [(); CAPACITY
-  |  _________________________________________________________________________________^
-  | |         //the final index of a list with CAPACITY is CAPACITY - 1.
-  | |         .checked_sub(1)
-  | |         .expect(CAPACITY_NONZERO)
-  | |         .checked_sub(INDEX)
-  | |         .expect(INDEX_LT_CAPACITY)]: {
-  | |__________________________________^ evaluation panicked: INDEX must be less than CAPACITY.
+  |           [(); CAPACITY
+  |  ______________^
+  | |             //the final index of a list with CAPACITY is CAPACITY - 1.
+  | |             .checked_sub(1)
+  | |             .expect(CAPACITY_NONZERO)
+  | |             .checked_sub(INDEX)
+  | |             .expect(INDEX_LT_CAPACITY)]:,
+  | |______________________________________^ evaluation of `linear_collections::stack_list::RawStackList::<u8, 5>::get_mut::<5>::{constant#0}` failed here
+
+error[E0275]: overflow evaluating the requirement `[(); linear_collections::::stack_list::raw_stack_list::{impl#1}::get_mut::{constant#0}] well-formed`
+ --> src/stack_list/raw_stack_list/test/trybuild/get_mut_out_of_bounds.rs:9:22
+  |
+9 |     let _ = unsafe { get_mut!(list, 5)};
+  |                      ^^^^^^^^^^^^^^^^^
+  |
+note: required by a bound in `RawStackList::<T, CAPACITY>::get_mut`
+ --> src/stack_list/raw_stack_list/mod.rs
+  |
+  |       pub unsafe fn get_mut<const INDEX: usize>(&mut self) -> &mut T
+  |                     ------- required by a bound in this associated function
+  |       where
+  | /         [(); CAPACITY
+  | |             //the final index of a list with CAPACITY is CAPACITY - 1.
+  | |             .checked_sub(1)
+  | |             .expect(CAPACITY_NONZERO)
+  | |             .checked_sub(INDEX)
+  | |             .expect(INDEX_LT_CAPACITY)]:,
+  | |_______________________________________^ required by this bound in `RawStackList::<T, CAPACITY>::get_mut`
+  = note: this error originates in the macro `get_mut` (in Nightly builds, run with -Z macro-backtrace for more info)

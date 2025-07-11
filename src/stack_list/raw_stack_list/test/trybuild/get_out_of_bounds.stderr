@@ -1,11 +1,32 @@
-error[E0080]: evaluation of `linear_collections::stack_list::RawStackList::<u8, 5>::get::<5>::{constant#0}` failed
+error[E0080]: evaluation panicked: INDEX must be less than CAPACITY.
  --> src/stack_list/raw_stack_list/mod.rs
   |
-  |       pub unsafe fn get<const INDEX: usize>(&self) -> & T where [(); CAPACITY
-  |  ____________________________________________________________________^
-  | |         //the final index of a list with CAPACITY is CAPACITY - 1.
-  | |         .checked_sub(1)
-  | |         .expect(CAPACITY_NONZERO)
-  | |         .checked_sub(INDEX)
-  | |         .expect(INDEX_LT_CAPACITY)]: {
-  | |__________________________________^ evaluation panicked: INDEX must be less than CAPACITY.
+  |           [(); CAPACITY
+  |  ______________^
+  | |             //the final index of a list with CAPACITY is CAPACITY - 1.
+  | |             .checked_sub(1)
+  | |             .expect(CAPACITY_NONZERO)
+  | |             .checked_sub(INDEX)
+  | |             .expect(INDEX_LT_CAPACITY)]:,
+  | |______________________________________^ evaluation of `linear_collections::stack_list::RawStackList::<u8, 5>::get::<5>::{constant#0}` failed here
+
+error[E0275]: overflow evaluating the requirement `[(); linear_collections::::stack_list::raw_stack_list::{impl#1}::get::{constant#0}] well-formed`
+ --> src/stack_list/raw_stack_list/test/trybuild/get_out_of_bounds.rs:8:22
+  |
+8 |     let _ = unsafe { get!(list, 5)};
+  |                      ^^^^^^^^^^^^^
+  |
+note: required by a bound in `RawStackList::<T, CAPACITY>::get`
+ --> src/stack_list/raw_stack_list/mod.rs
+  |
+  |       pub unsafe fn get<const INDEX: usize>(&self) -> &T
+  |                     --- required by a bound in this associated function
+  |       where
+  | /         [(); CAPACITY
+  | |             //the final index of a list with CAPACITY is CAPACITY - 1.
+  | |             .checked_sub(1)
+  | |             .expect(CAPACITY_NONZERO)
+  | |             .checked_sub(INDEX)
+  | |             .expect(INDEX_LT_CAPACITY)]:,
+  | |_______________________________________^ required by this bound in `RawStackList::<T, CAPACITY>::get`
+  = note: this error originates in the macro `get` (in Nightly builds, run with -Z macro-backtrace for more info)

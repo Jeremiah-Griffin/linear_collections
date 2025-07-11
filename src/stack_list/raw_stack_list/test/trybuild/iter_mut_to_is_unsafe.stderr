@@ -1,8 +1,20 @@
-error[E0133]: call to unsafe function `RawStackList::<T, CAPACITY>::iter_mut_to` is unsafe and requires unsafe block
+error[E0275]: overflow evaluating the requirement `[(); linear_collections::::stack_list::raw_stack_list::{impl#1}::iter_mut_to::{constant#0}] well-formed`
  --> src/stack_list/raw_stack_list/test/trybuild/iter_mut_to_is_unsafe.rs:8:13
   |
 8 |     let _ = iter_mut_to!(list, 0);
-  |             ^^^^^^^^^^^^^^^^^^^^^ call to unsafe function
+  |             ^^^^^^^^^^^^^^^^^^^^^
   |
-  = note: consult the function's documentation for information on how to avoid undefined behavior
+note: required by a bound in `RawStackList::<T, CAPACITY>::iter_mut_to`
+ --> src/stack_list/raw_stack_list/mod.rs
+  |
+  |       pub unsafe fn iter_mut_to<'a, const LIMIT: usize>(
+  |                     ----------- required by a bound in this associated function
+...
+  | /         [(); CAPACITY
+  | |             //the final index of a list with CAPACITY is CAPACITY - 1.
+  | |             .checked_sub(1)
+  | |             .expect(CAPACITY_NONZERO)
+  | |             .checked_sub(LIMIT)
+  | |             .expect(INDEX_LT_CAPACITY)]:,
+  | |_______________________________________^ required by this bound in `RawStackList::<T, CAPACITY>::iter_mut_to`
   = note: this error originates in the macro `iter_mut_to` (in Nightly builds, run with -Z macro-backtrace for more info)

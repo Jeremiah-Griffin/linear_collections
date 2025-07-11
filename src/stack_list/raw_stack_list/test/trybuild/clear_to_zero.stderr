@@ -1,5 +1,23 @@
-error[E0080]: evaluation of `linear_collections::stack_list::RawStackList::<u8, 5>::clear_to::<0>::{constant#1}` failed
+error[E0080]: evaluation panicked: LIMIT must be nonzero
  --> src/stack_list/raw_stack_list/mod.rs
   |
-  |         [(); LIMIT.checked_sub(1).expect("LIMIT must be nonzero")]:
-  |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ evaluation panicked: LIMIT must be nonzero
+  |         [(); LIMIT.checked_sub(1).expect("LIMIT must be nonzero")]:,
+  |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ evaluation of `linear_collections::stack_list::RawStackList::<!0, !1>::clear_to::<0>::{constant#1}` failed here
+
+error[E0275]: overflow evaluating the requirement `[(); linear_collections::::stack_list::raw_stack_list::{impl#1}::clear_to::{constant#0}] well-formed`
+ --> src/stack_list/raw_stack_list/test/trybuild/clear_to_zero.rs:8:22
+  |
+8 |     let _ = unsafe { clear_to!(list, 0)};
+  |                      ^^^^^^^^^^^^^^^^^^
+  |
+note: required by a bound in `RawStackList::<T, CAPACITY>::clear_to`
+ --> src/stack_list/raw_stack_list/mod.rs
+  |
+  |       pub unsafe fn clear_to<const LIMIT: usize>(&mut self)
+  |                     -------- required by a bound in this associated function
+  |       where
+  | /         [(); CAPACITY
+  | |             .checked_sub(LIMIT)
+  | |             .expect("LIMIT must not be greater than CAPACITY")]:,
+  | |_______________________________________________________________^ required by this bound in `RawStackList::<T, CAPACITY>::clear_to`
+  = note: this error originates in the macro `clear_to` (in Nightly builds, run with -Z macro-backtrace for more info)
