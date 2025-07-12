@@ -1,8 +1,9 @@
 error[E0080]: evaluation panicked: The length of the items must be less than or equal to STACK_CAPACITY.
  --> src/fat_vec/mod.rs
   |
-  |           [(); STACK_CAPACITY.checked_sub(ITEMS)
+  |           [(); STACK_CAPACITY
   |  ______________^
+  | |             .checked_sub(ITEMS)
   | |             .expect("The length of the items must be less than or equal to STACK_CAPACITY.")]:,
   | |____________________________________________________________________________________________^ evaluation of `linear_collections::FatVec::<u8, 10>::with_partial_array::<11>::{constant#0}` failed here
 
@@ -18,6 +19,7 @@ note: required by a bound in `FatVec::<T, STACK_CAPACITY>::with_partial_array`
   |       pub fn with_partial_array<const ITEMS: usize>(items: [T; ITEMS]) -> FatVec<T, STACK_CAPACITY>
   |              ------------------ required by a bound in this associated function
   |       where
-  | /         [(); STACK_CAPACITY.checked_sub(ITEMS)
+  | /         [(); STACK_CAPACITY
+  | |             .checked_sub(ITEMS)
   | |             .expect("The length of the items must be less than or equal to STACK_CAPACITY.")]:,
   | |_____________________________________________________________________________________________^ required by this bound in `FatVec::<T, STACK_CAPACITY>::with_partial_array`

@@ -1,6 +1,6 @@
 use std::intrinsics::transmute_unchecked;
 
-use crate::stack_list::RawStackList;
+use crate::{list::List, stack_list::RawStackList};
 
 use super::FatVec;
 

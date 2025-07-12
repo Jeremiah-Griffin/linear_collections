@@ -1,4 +1,6 @@
-use serde::{ser::SerializeSeq, Serialize};
+use serde::{Serialize, ser::SerializeSeq};
+
+use crate::list::List;
 
 use super::FatVec;
 

@@ -1,7 +1,8 @@
 use crate::{
     Map,
+    list::List,
     map::MapIterMut,
-    stack_list::{StackList, error::PushError},
+    stack_list::{StackList, error::StackListError},
 };
 
 ///A map backed by a `StackList`
@@ -19,7 +20,7 @@ impl<K: Eq, V, const CAPACITY: usize> StackMap<K, V, CAPACITY> {
 
 impl<K: Eq, V, const CAPACITY: usize> Map<K, V> for StackMap<K, V, CAPACITY> {
     type Backing = StackList<(K, V), CAPACITY>;
-    type InsertionError = PushError;
+    type InsertionError = StackListError;
 
     fn insert(&mut self, key: K, value: V) -> Result<Option<V>, Self::InsertionError> {
         let mut iter = self.stack_list.iter_mut();

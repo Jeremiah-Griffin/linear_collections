@@ -196,7 +196,7 @@ impl<T, const CAPACITY: usize> RawStackList<T, CAPACITY> {
     }
 }
 
-use crate as linear_collections;
+use crate::{self as linear_collections};
 
 ///`clear_to!(list: ident, limit: ident OR literal)`
 ///

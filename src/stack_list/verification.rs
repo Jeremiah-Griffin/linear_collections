@@ -1,3 +1,4 @@
+use crate::list::List;
 use crate::stack_list::{StackList, raw_stack_list::RawStackList};
 use crate::verification_utils::Dropper;
 use std::mem::MaybeUninit;
@@ -27,16 +28,6 @@ fn clear() {
     list.clear();
 
     assert_eq!(list.length, 0);
-}
-
-#[proof]
-fn is_empty() {
-    let list: StackList<u8, 5> = kani::any();
-
-    match list.len() == 0 {
-        true => assert!(list.is_empty()),
-        false => assert!(!list.is_empty()),
-    }
 }
 
 #[proof]
@@ -107,4 +98,10 @@ fn remove() {
 
         i += 1;
     }
+}
+
+#[proof]
+fn is_empty() {
+    let list: StackList<u8, 10> = kani::any();
+    assert_eq!(list.len() == 0, list.is_empty());
 }

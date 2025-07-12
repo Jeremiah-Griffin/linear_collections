@@ -1,4 +1,4 @@
-use crate::{Map, map::MapIterMut};
+use crate::{Map, list::List, map::MapIterMut};
 use std::collections::TryReserveError;
 
 use super::FatVec;

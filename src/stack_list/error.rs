@@ -1,16 +1,16 @@
 use std::{error::Error, fmt::Display};
 
 #[derive(Clone, Copy, Debug)]
-pub enum PushError {
+pub enum StackListError {
     WouldExceedCapacity,
 }
 
-impl Display for PushError {
+impl Display for StackListError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            PushError::WouldExceedCapacity => write!(f, "push would exceed capacity"),
+            StackListError::WouldExceedCapacity => write!(f, "push would exceed capacity"),
         }
     }
 }
 
-impl Error for PushError {}
+impl Error for StackListError {}

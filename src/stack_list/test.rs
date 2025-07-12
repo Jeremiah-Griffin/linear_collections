@@ -1,4 +1,4 @@
-use crate::verification_utils::Dropper;
+use crate::{list::List, verification_utils::Dropper};
 
 use super::{RawStackList, StackList};
 

@@ -4,7 +4,10 @@ mod serde;
 #[cfg(test)]
 pub mod test;
 
-use crate::stack_list::{RawStackList, raw_stack_list};
+use crate::{
+    list::List,
+    stack_list::{RawStackList, raw_stack_list},
+};
 use std::{
     array, collections::TryReserveError, hash::Hash, intrinsics::transmute_unchecked,
     mem::MaybeUninit, num::NonZero,
@@ -28,87 +31,6 @@ pub struct FatVec<T, const STACK_CAPACITY: usize> {
 }
 
 impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
-    //***constructors***
-    ///Creates a new, empty `FatVec`. Without allocating on the heap.
-    ///This can contain up to `STACK_CAPACITY` elements without performing any
-    ///heap allocations.
-    pub fn new() -> Self {
-        Self {
-            stack_list: RawStackList::uninit(),
-            vec: Vec::new(),
-            len: 0,
-        }
-    }
-
-    ///Creates a `FatVec` with the provided array as the stack resident elements.
-    ///The length of the supplied array will become the `STACK_CAPCITY` of the returned `FatVec` *AND* the length of the array.
-    ///There is no interface to mutate the length without manipulating the elements on the stack.
-    pub fn with_array(array: [T; STACK_CAPACITY]) -> FatVec<T, STACK_CAPACITY> {
-        Self {
-            //SAFETY:
-            //MaybeUninit T and T are guaranteed to have the same size, layout, and alignment.
-            //We can't transmute because of a compiler bug [47966](https://github.com/rust-lang/rust/issues/47966)
-            //so we're forced to use transmut_unchecked instead, which doesnt do that broken compile-time check.
-            stack_list: RawStackList::from_array(array),
-            vec: Vec::new(),
-            len: STACK_CAPACITY,
-        }
-    }
-
-    ///Create a `StackList` from an array with fewer elements than `STACK_CAPACITY`, permitting infallible construction.
-    ///If `ITEMS` is always guaranteed to be identical to `STACK_CAPACITY`, it's best to use `with_array` instead.
-    pub fn with_partial_array<const ITEMS: usize>(items: [T; ITEMS]) -> FatVec<T, STACK_CAPACITY>
-    where
-        [(); STACK_CAPACITY
-            .checked_sub(ITEMS)
-            .expect("The length of the items must be less than or equal to STACK_CAPACITY.")]:,
-        //Disallow 0 sized `items` as a hedge in case we need to do transmutes which rely on non ZST.
-        [(); ITEMS
-            .checked_sub(1)
-            .expect("The length of `items` must be nonzero")]:,
-    {
-        //SAFETY:
-        //MaybeUninit<T> and T have identical representation in memory.
-        let mut items =
-            unsafe { transmute_unchecked::<[T; ITEMS], [MaybeUninit<T>; ITEMS]>(items) };
-
-        let stack_list: [MaybeUninit<T>; STACK_CAPACITY] =
-            array::from_fn(|i| match items.get_mut(i) {
-                //SAFETY:
-                // we know all elements in `Items` are valid. The maybe uninit is used to extract the
-                // bytes of the elements into the stack list, but preclude the compiler from running drop on the now duplicated elements of `items`.
-                Some(i) => MaybeUninit::new(unsafe { i.assume_init_read() }),
-                None => MaybeUninit::uninit(),
-            });
-
-        Self {
-            stack_list: RawStackList::from_maybe_uninit(stack_list),
-            vec: Vec::new(),
-            len: ITEMS,
-        }
-    }
-
-    ///Creates a new, empty `FatVec` with space to hold at least `capacity` elements without reallocating
-    ///If `capacity` is less than or equal to `STACK_CAPACITY` the total capacity of this `FatVec` will be equal to `STACK_CAPACITY`.
-    pub fn with_capacity(capacity: usize) -> Result<Self, TryReserveError> {
-        let heap_capacity = capacity.saturating_sub(STACK_CAPACITY);
-
-        Self::with_heap_capacity(heap_capacity)
-    }
-
-    ///Creates a new, empty `FatVec` with space to hold at least `capacity` elements *on the heap* without reallocating.
-    ///Upon return, the total capacity of this `FatVec` will be STACK_CAPACITY + `capacity`
-    ///use `with_capacity` if you need
-    pub fn with_heap_capacity(capacity: usize) -> Result<Self, TryReserveError> {
-        Ok(Self {
-            stack_list: RawStackList::uninit(),
-            vec: Vec::try_with_capacity(capacity)?,
-            len: 0,
-        })
-    }
-
-    //***methods***
-
     pub fn array_len(&self) -> usize {
         match self.len() <= STACK_CAPACITY {
             true => self.len(),
@@ -116,97 +38,60 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
         }
     }
 
-    pub fn iter<'a>(&'a self) -> impl Iterator<Item = &'a T> {
-        let len = self.array_len();
+    ///Returns a shared reference to the item at the requested, returning `None` if idx is outside the range of the `FatVec`.
+    pub fn get(&self, idx: usize) -> Option<&T> {
+        if idx >= self.len {
+            return None;
+        }
+
+        //SAFETY:
+        //the early return above guarantees we do not access
+        //out of bounds
+        unsafe { Some(self.get_unchecked(idx)) }
+    }
+
+    ///Returns a unique reference to the item at `idx`, returning `None` if idx is outside the range of the `FatVec`.
+    pub fn get_mut<'a>(&'a mut self, idx: usize) -> Option<&'a mut T> {
+        if idx >= self.len {
+            return None;
+        }
+        //SAFETY:
+        //the early return above guarantees we do not access
+        //out of bounds
+        unsafe { Some(self.get_unchecked_mut(idx)) }
+    }
+
+    ///Returns a shared reference to the item at `idx`.
+    ///SAFETY:
+    ///UB if idx is >= the length of this `FatVec`.
+    pub unsafe fn get_unchecked(&self, idx: usize) -> &T {
         let list = &self.stack_list;
-
-        //SAFETY: len is guaranteed to be within the initialized contents of the RawVec
-        unsafe { raw_stack_list::iter_to!(list, len) }.chain(self.vec.iter())
-    }
-
-    pub fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut T> {
-        let len = self.array_len();
-        let list = &mut self.stack_list;
-
-        //SAFETY: len is guaranteed to be within the initialized contents of the RawVec
-        unsafe { raw_stack_list::iter_mut_to!(list, len) }.chain(self.vec.iter_mut())
-    }
-
-    #[inline(always)]
-    ///Returns the number of items in this `FatVec`
-    pub const fn len(&self) -> usize {
-        self.len
-    }
-
-    ///Returns the maximum number of items this `FatVec` can hold both on the stack and heap without reallocating.
-    ///Note this is not the remaing space in the `FatVec`, but a count of all capacity, consumed or not.
-    pub fn capacity(&self) -> usize {
-        self.vec.capacity() + STACK_CAPACITY
-    }
-    pub fn clear(&mut self) {
-        match NonZero::new(self.len) {
+        match STACK_CAPACITY > idx {
             //SAFETY:
-            //Ensure that all  elements are dropped. Bounded by array len means this cannot find uninitalized
-            //memory.
-            Some(len) => {
-                let ref mut list = self.stack_list;
-                unsafe { raw_stack_list::clear_to!(list, len) };
-                self.vec.clear();
-                self.len = 0;
-            }
-            None => (),
+            //Because we maintain length seperately of the vec and array, we can rely on IDX not to be out of bounds for
+            //either these accesses.
+            true => unsafe { raw_stack_list::get!(list, idx) },
+            //subtract as the first element of vec is 0, but in the whole `FatVec`, it's
+            //always STACK_CAPACITY + idx. The subtraction accounts for this for this.
+            false => unsafe { self.vec.get_unchecked(idx - STACK_CAPACITY) },
         }
     }
 
-    ///Appends the element to this `FatVec`, returning an error on failure.
-    pub fn push(&mut self, value: T) -> Result<(), TryReserveError> {
-        //We don't need to check if we're within the bounds of the collection as reserve will do this
-        //for us.
-        let new_len = self.len.saturating_add(1);
+    //***methods***
 
-        match STACK_CAPACITY > self.len() {
-            true => {
-                let ref mut list = self.stack_list;
-                let old_len = self.len;
-                unsafe { raw_stack_list::insert_at!(list, old_len, value) }
-            }
-            false => {
-                //call reserve on the vec as necessary to ensure pushing to it doesn't panic.
-                if self.vec.capacity() < new_len {
-                    self.reserve(1)?;
-                }
-
-                self.vec.push(value);
-            }
-        }
-        self.len = new_len;
-        Ok(())
-    }
-
-    /// Removes the last element from a `FatVec` and returns it, or [`None`] if the `FatVec` is empty.
-    pub fn pop(&mut self) -> Option<T> {
-        //we keep this seperate from remove(self.len) as in the
-        //stack resident arm we can avoid having to shift the elements on the array to the left
-        //as we can just decrement the "stack pointer" and leave the type as is. Drop handling is done by moving
-        //the T out of pop. Remove can't do this as it needs to be able to pull elements arbitrarily from within the array
-        //meaning it needs to shift left to keep the values contiguous.
-        match self.len() {
-            0 => None,
-            //resident on stack
-            i if i <= STACK_CAPACITY => {
-                self.len = self.len.saturating_sub(1);
-                let len = self.array_len();
-                let last = self.len;
-                let ref mut list = self.stack_list;
-                //SAFETY:
-                //bounded by length
-                unsafe { Some(raw_stack_list::remove!(list, last, len)) }
-            }
-            //resident on heap
-            _ => {
-                self.len = self.len.saturating_sub(1);
-                self.vec.pop()
-            }
+    ///Returns a unique reference to the item at `idx`.
+    ///SAFETY:
+    ///UB if idx is >= the length of this `FatVec`.
+    pub unsafe fn get_unchecked_mut(&mut self, idx: usize) -> &mut T {
+        let list = &mut self.stack_list;
+        match STACK_CAPACITY > idx {
+            //SAFETY:
+            //Because we maintain length seperately from the vec and array, we can rely on IDX not to be out of bounds for
+            //either these accesses.
+            true => unsafe { raw_stack_list::get_mut!(list, idx) },
+            //subtract as the first element of vec is 0, but in the whole `FatVec`, it's
+            //always STACK_CAPACITY + idx. The subtraction accounts for this for this.
+            false => unsafe { self.vec.get_unchecked_mut(idx - STACK_CAPACITY) },
         }
     }
 
@@ -264,61 +149,6 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
         r
     }
 
-    ///Returns a shared reference to the item at the requested, returning `None` if idx is outside the range of the `FatVec`.
-    pub fn get(&self, idx: usize) -> Option<&T> {
-        if idx >= self.len {
-            return None;
-        }
-
-        //SAFETY:
-        //the early return above guarantees we do not access
-        //out of bounds
-        unsafe { Some(self.get_unchecked(idx)) }
-    }
-
-    ///Returns a unique reference to the item at `idx`, returning `None` if idx is outside the range of the `FatVec`.
-    pub fn get_mut<'a>(&'a mut self, idx: usize) -> Option<&'a mut T> {
-        if idx >= self.len {
-            return None;
-        }
-        //SAFETY:
-        //the early return above guarantees we do not access
-        //out of bounds
-        unsafe { Some(self.get_unchecked_mut(idx)) }
-    }
-
-    ///Returns a shared reference to the item at `idx`.
-    ///SAFETY:
-    ///UB if idx is >= the length of this `FatVec`.
-    pub unsafe fn get_unchecked(&self, idx: usize) -> &T {
-        let list = &self.stack_list;
-        match STACK_CAPACITY > idx {
-            //SAFETY:
-            //Because we maintain length seperately of the vec and array, we can rely on IDX not to be out of bounds for
-            //either these accesses.
-            true => unsafe { raw_stack_list::get!(list, idx) },
-            //subtract as the first element of vec is 0, but in the whole `FatVec`, it's
-            //always STACK_CAPACITY + idx. The subtraction accounts for this for this.
-            false => unsafe { self.vec.get_unchecked(idx - STACK_CAPACITY) },
-        }
-    }
-
-    ///Returns a unique reference to the item at `idx`.
-    ///SAFETY:
-    ///UB if idx is >= the length of this `FatVec`.
-    pub unsafe fn get_unchecked_mut(&mut self, idx: usize) -> &mut T {
-        let list = &mut self.stack_list;
-        match STACK_CAPACITY > idx {
-            //SAFETY:
-            //Because we maintain length seperately from the vec and array, we can rely on IDX not to be out of bounds for
-            //either these accesses.
-            true => unsafe { raw_stack_list::get_mut!(list, idx) },
-            //subtract as the first element of vec is 0, but in the whole `FatVec`, it's
-            //always STACK_CAPACITY + idx. The subtraction accounts for this for this.
-            false => unsafe { self.vec.get_unchecked_mut(idx - STACK_CAPACITY) },
-        }
-    }
-
     /// Tries to reserve the minimum capacity for at least `additional`
     /// elements to be inserted in the given `Vec<T>`.
     /// After calling `reserve`, capacity will be
@@ -332,6 +162,176 @@ impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
     ///Shrinks the heap storage of this `FatVec` to match capacity.
     pub fn shrink_to_fit(&mut self) {
         self.vec.shrink_to_fit()
+    }
+
+    //***constructors***//
+    ///Creates a `FatVec` with the provided array as the stack resident elements.
+    ///The length of the supplied array will become the `STACK_CAPCITY` of the returned `FatVec` *AND* the length of the array.
+    ///There is no interface to mutate the length without manipulating the elements on the stack.
+    pub fn with_array(array: [T; STACK_CAPACITY]) -> FatVec<T, STACK_CAPACITY> {
+        Self {
+            //SAFETY:
+            //MaybeUninit T and T are guaranteed to have the same size, layout, and alignment.
+            //We can't transmute because of a compiler bug [47966](https://github.com/rust-lang/rust/issues/47966)
+            //so we're forced to use transmut_unchecked instead, which doesnt do that broken compile-time check.
+            stack_list: RawStackList::from_array(array),
+            vec: Vec::new(),
+            len: STACK_CAPACITY,
+        }
+    }
+
+    ///Creates a new, empty `FatVec` with space to hold at least `capacity` elements without reallocating
+    ///If `capacity` is less than or equal to `STACK_CAPACITY` the total capacity of this `FatVec` will be equal to `STACK_CAPACITY`.
+    pub fn with_capacity(capacity: usize) -> Result<Self, TryReserveError> {
+        let heap_capacity = capacity.saturating_sub(STACK_CAPACITY);
+
+        Self::with_heap_capacity(heap_capacity)
+    }
+
+    ///Creates a new, empty `FatVec` with space to hold at least `capacity` elements *on the heap* without reallocating.
+    ///Upon return, the total capacity of this `FatVec` will be STACK_CAPACITY + `capacity`
+    ///use `with_capacity` if you need
+    pub fn with_heap_capacity(capacity: usize) -> Result<Self, TryReserveError> {
+        Ok(Self {
+            stack_list: RawStackList::uninit(),
+            vec: Vec::try_with_capacity(capacity)?,
+            len: 0,
+        })
+    }
+
+    ///Create a `StackList` from an array with fewer elements than `STACK_CAPACITY`, permitting infallible construction.
+    ///If `ITEMS` is always guaranteed to be identical to `STACK_CAPACITY`, it's best to use `with_array` instead.
+    pub fn with_partial_array<const ITEMS: usize>(items: [T; ITEMS]) -> FatVec<T, STACK_CAPACITY>
+    where
+        [(); STACK_CAPACITY
+            .checked_sub(ITEMS)
+            .expect("The length of the items must be less than or equal to STACK_CAPACITY.")]:,
+        //Disallow 0 sized `items` as a hedge in case we need to do transmutes which rely on non ZST.
+        [(); ITEMS
+            .checked_sub(1)
+            .expect("The length of `items` must be nonzero")]:,
+    {
+        //SAFETY:
+        //MaybeUninit<T> and T have identical representation in memory.
+        let mut items =
+            unsafe { transmute_unchecked::<[T; ITEMS], [MaybeUninit<T>; ITEMS]>(items) };
+
+        let stack_list: [MaybeUninit<T>; STACK_CAPACITY] =
+            array::from_fn(|i| match items.get_mut(i) {
+                //SAFETY:
+                // we know all elements in `Items` are valid. The maybe uninit is used to extract the
+                // bytes of the elements into the stack list, but preclude the compiler from running drop on the now duplicated elements of `items`.
+                Some(i) => MaybeUninit::new(unsafe { i.assume_init_read() }),
+                None => MaybeUninit::uninit(),
+            });
+
+        Self {
+            stack_list: RawStackList::from_maybe_uninit(stack_list),
+            vec: Vec::new(),
+            len: ITEMS,
+        }
+    }
+}
+
+impl<T, const STACK_CAPACITY: usize> List<T> for FatVec<T, STACK_CAPACITY> {
+    type Error = TryReserveError;
+    //***constructors***//
+    fn new() -> Self {
+        Self {
+            stack_list: RawStackList::uninit(),
+            vec: Vec::new(),
+            len: 0,
+        }
+    }
+
+    fn capacity(&self) -> usize {
+        self.vec.capacity() + STACK_CAPACITY
+    }
+
+    fn clear(&mut self) {
+        match NonZero::new(self.len) {
+            //SAFETY:
+            //Ensure that all  elements are dropped. Bounded by array len means this cannot find uninitalized
+            //memory.
+            Some(len) => {
+                let ref mut list = self.stack_list;
+                unsafe { raw_stack_list::clear_to!(list, len) };
+                self.vec.clear();
+                self.len = 0;
+            }
+            None => (),
+        }
+    }
+
+    fn iter<'a>(&'a self) -> impl Iterator<Item = &'a T>
+    where
+        T: 'a,
+    {
+        let len = self.array_len();
+        let list = &self.stack_list;
+
+        //SAFETY: len is guaranteed to be within the initialized contents of the RawVec
+        unsafe { raw_stack_list::iter_to!(list, len) }.chain(self.vec.iter())
+    }
+
+    fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut T>
+    where
+        T: 'a,
+    {
+        let len = self.array_len();
+        let list = &mut self.stack_list;
+
+        //SAFETY: len is guaranteed to be within the initialized contents of the RawVec
+        unsafe { raw_stack_list::iter_mut_to!(list, len) }.chain(self.vec.iter_mut())
+    }
+
+    fn len(&self) -> usize {
+        self.len
+    }
+
+    fn pop(&mut self) -> Option<T> {
+        match self.len() {
+            0 => None,
+            //resident on stack
+            i if i <= STACK_CAPACITY => {
+                self.len = self.len.saturating_sub(1);
+                let len = self.array_len();
+                let last = self.len;
+                let ref mut list = self.stack_list;
+                //SAFETY:
+                //bounded by length
+                unsafe { Some(raw_stack_list::remove!(list, last, len)) }
+            }
+            //resident on heap
+            _ => {
+                self.len = self.len.saturating_sub(1);
+                self.vec.pop()
+            }
+        }
+    }
+
+    fn push(&mut self, item: T) -> Result<(), Self::Error> {
+        //We don't need to check if we're within the bounds of the collection as reserve will do this
+        //for us.
+        let new_len = self.len.saturating_add(1);
+
+        match STACK_CAPACITY > self.len() {
+            true => {
+                let ref mut list = self.stack_list;
+                let old_len = self.len;
+                unsafe { raw_stack_list::insert_at!(list, old_len, item) }
+            }
+            false => {
+                //call reserve on the vec as necessary to ensure pushing to it doesn't panic.
+                if self.vec.capacity() < new_len {
+                    self.reserve(1)?;
+                }
+
+                self.vec.push(item);
+            }
+        }
+        self.len = new_len;
+        Ok(())
     }
 }
 

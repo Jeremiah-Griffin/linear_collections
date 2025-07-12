@@ -15,15 +15,12 @@ pub trait List<T>: Sized {
     fn capacity(&self) -> usize;
 
     ///Calls `drop` on all elements of this `List`, leaving it empty with a length of 0.
-    fn clear(&mut self) {
-        for _ in 0..self.len() {
-            let item = self.pop();
-            drop(item);
-        }
-    }
+    fn clear(&mut self);
 
-    ///Returns an iterator that, when exhausted, leaves this `List` empty.
-    fn drain<'a>(self) -> impl Iterator<Item = T>;
+    ///Returns true if this `List`'s length is 0. False otherwise.
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
 
     ///Returns an iterator of references of the elements of this `List`.
     fn iter<'a>(&'a self) -> impl Iterator<Item = &'a T>
@@ -47,5 +44,5 @@ pub trait List<T>: Sized {
     }
 
     ///Appends `item` to the end of this `List`.
-    fn push(item: T) -> Result<(), Self::Error>;
+    fn push(&mut self, item: T) -> Result<(), Self::Error>;
 }

@@ -10,13 +10,15 @@ mod test;
 #[cfg(kani)]
 mod verification;
 
-use error::PushError;
+use error::StackListError;
 pub use raw_stack_list::RawStackList;
 use std::{
     hash::Hash,
     num::NonZero,
     ops::{Deref, DerefMut},
 };
+
+use crate::list::List;
 
 #[derive(Default, Debug)]
 ///TODO: is this unsound? can kani::Arbitrary produce `MaybeUninit<T>` which are both `uninit` and invalid? Or
@@ -28,17 +30,7 @@ pub struct StackList<T, const CAPACITY: usize> {
     length: usize,
 }
 
-impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {}
-
 impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
-    ///Creates a new, empty `StackList`.
-    pub fn new() -> Self {
-        Self {
-            raw: RawStackList::uninit(),
-            length: 0,
-        }
-    }
-
     ///TODO: add verification and description
     pub fn as_slice(&self) -> &[T] {
         let pointer = self.raw.as_slice().as_ptr() as *const T;
@@ -62,46 +54,9 @@ impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
         unsafe { std::slice::from_raw_parts_mut(pointer, self.length) }
     }
 
-    ///Calls `drop` on all elements in this list, in place.
-    pub fn clear(&mut self) {
-        match NonZero::new(self.length) {
-            Some(len) => {
-                let ref mut list = self.raw;
-                //SAFETY:
-                //bound by length so will not go out of bounds or into uninit memory
-                unsafe { raw_stack_list::clear_to!(list, len) };
-                self.length = 0;
-            }
-
-            None => return,
-        }
-    }
-
     ///Returns true if the store is empty and false otherwise.
     pub fn is_empty(&self) -> bool {
         self.length == 0
-    }
-
-    ///Returns an iterator over the elements of this `StackList`.
-    pub fn iter<'a>(&'a self) -> impl Iterator<Item = &'a T> {
-        let raw = &self.raw;
-        let length = self.length;
-        //SAFETY:
-        //bound by length so will not go out of bounds or into uninit memory
-        unsafe { raw_stack_list::iter_to!(raw, length) }
-    }
-    ///Returns an iterator over the elements of this `StackList where each element is mutable.
-    pub fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut T> {
-        let raw = &mut self.raw;
-        let length = self.length;
-        //SAFETY:
-        //bound by length so will not go out of bounds or into uninit memory
-        unsafe { raw_stack_list::iter_mut_to!(raw, length) }
-    }
-
-    ///Returns the number of items in this `StackList`.
-    pub const fn len(&self) -> usize {
-        self.length
     }
 
     ////Creates a StaticList from an array, with the StaticList assuming the length of the array as its Capacity.
@@ -109,27 +64,6 @@ impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
         Self {
             raw: RawStackList::from_array(array),
             length: CAPACITY,
-        }
-    }
-
-    ///Removes the last element in this `StackList`, returning `None` if this list is empty.
-    pub fn pop(&mut self) -> Option<T> {
-        self.length.checked_sub(1).and_then(|new| self.remove(new))
-    }
-    //self.remove(self.length)
-
-    pub fn push(&mut self, value: T) -> Result<(), PushError> {
-        match self.length.checked_add(1) {
-            Some(new) => {
-                let raw = &mut self.raw;
-                let len = self.length;
-                //SAFETY:
-                //Guaranteed to be in bounds as length is never out of bounds.
-                unsafe { raw_stack_list::insert_at!(raw, len, value) };
-                self.length = new;
-                Ok(())
-            }
-            None => Err(PushError::WouldExceedCapacity),
         }
     }
 
@@ -172,6 +106,79 @@ impl<T, const CAPACITY: usize> StackList<T, CAPACITY> {
             //so there is no possibility of UB
             //true => Some(unsafe {raw_stack_list::get!(raw, index)}),
             false => None,
+        }
+    }
+}
+
+impl<T, const CAPACITY: usize> List<T> for StackList<T, CAPACITY> {
+    type Error = StackListError;
+
+    fn new() -> Self {
+        Self {
+            raw: RawStackList::uninit(),
+            length: 0,
+        }
+    }
+    fn capacity(&self) -> usize {
+        CAPACITY
+    }
+
+    fn clear(&mut self) {
+        match NonZero::new(self.length) {
+            Some(len) => {
+                let ref mut list = self.raw;
+                //SAFETY:
+                //bound by length so will not go out of bounds or into uninit memory
+                unsafe { raw_stack_list::clear_to!(list, len) };
+                self.length = 0;
+            }
+
+            None => return,
+        }
+    }
+
+    fn iter<'a>(&'a self) -> impl Iterator<Item = &'a T>
+    where
+        T: 'a,
+    {
+        let raw = &self.raw;
+        let length = self.length;
+        //SAFETY:
+        //bound by length so will not go out of bounds or into uninit memory
+        unsafe { raw_stack_list::iter_to!(raw, length) }
+    }
+
+    fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut T>
+    where
+        T: 'a,
+    {
+        let raw = &mut self.raw;
+        let length = self.length;
+        //SAFETY:
+        //bound by length so will not go out of bounds or into uninit memory
+        unsafe { raw_stack_list::iter_mut_to!(raw, length) }
+    }
+
+    fn len(&self) -> usize {
+        self.length
+    }
+
+    fn pop(&mut self) -> Option<T> {
+        self.length.checked_sub(1).and_then(|new| self.remove(new))
+    }
+
+    fn push(&mut self, item: T) -> Result<(), Self::Error> {
+        match self.length.checked_add(1) {
+            Some(new) => {
+                let raw = &mut self.raw;
+                let len = self.length;
+                //SAFETY:
+                //Guaranteed to be in bounds as length is never out of bounds.
+                unsafe { raw_stack_list::insert_at!(raw, len, item) };
+                self.length = new;
+                Ok(())
+            }
+            None => Err(StackListError::WouldExceedCapacity),
         }
     }
 }
