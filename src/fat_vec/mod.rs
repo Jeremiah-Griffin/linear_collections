@@ -12,9 +12,10 @@ use std::{
     array, collections::TryReserveError, hash::Hash, intrinsics::transmute_unchecked,
     mem::MaybeUninit, num::NonZero,
 };
-
 pub mod map;
 pub mod set;
+#[cfg(kani)]
+mod verification;
 
 #[derive(Debug)]
 ///A vector which allocates at least `STACK_CAPACITY` elements onto the stack.
@@ -30,6 +31,26 @@ pub struct FatVec<T, const STACK_CAPACITY: usize> {
     len: usize,
 }
 
+//binding by arbitrary means we don't have to worry about which `MaybeUninit`s are initialized or not:
+//iniitialized or not, all bit patterns of e.g. a u8 are valid.
+#[cfg(kani)]
+impl<T: kani::Arbitrary, const STACK_CAPACITY: usize> kani::Arbitrary
+    for super::FatVec<T, STACK_CAPACITY>
+{
+    fn any() -> Self {
+        let len = kani::any();
+        //using stack_capacity as the bound is arbitrary, but they tend to be small so a good fit.
+        let vec = kani::vec::any_vec::<T, STACK_CAPACITY>();
+
+        kani::assume(len < STACK_CAPACITY + vec.len());
+
+        Self {
+            stack_list: kani::any(),
+            vec,
+            len,
+        }
+    }
+}
 impl<const STACK_CAPACITY: usize, T> FatVec<T, STACK_CAPACITY> {
     pub fn array_len(&self) -> usize {
         match self.len() <= STACK_CAPACITY {
@@ -337,14 +358,14 @@ impl<T, const STACK_CAPACITY: usize> List<T> for FatVec<T, STACK_CAPACITY> {
 
 impl<const STACK_CAPACITY: usize, T: PartialEq> PartialEq for FatVec<T, STACK_CAPACITY> {
     fn eq(&self, other: &Self) -> bool {
-        //just want to explicitly evaluate this first as it's much cheaper.
         if self.len() != other.len() {
             return false;
         }
 
         self.iter()
-            .enumerate()
-            .all(|(i, this)| other.get(i).is_some_and(|o| *o == *this))
+            .zip(other.iter())
+            .find(|(a, b)| a != b)
+            .is_none()
     }
 }
 

@@ -63,8 +63,8 @@ fn clear_to_capacity() {
 #[proof]
 fn get_zero() {
     let array: [u8; 5] = kani::any();
-    let mut list: RawStackList<u8, 5> = RawStackList::from_array(Clone::clone(&array));
-    let mut vec = Vec::from(array);
+    let list: RawStackList<u8, 5> = RawStackList::from_array(Clone::clone(&array));
+    let vec = Vec::from(array);
 
     const INDEX: usize = 0;
     assert_eq!(unsafe { list.get::<INDEX>() }, vec.get(INDEX).unwrap());

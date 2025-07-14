@@ -1,7 +1,7 @@
 use crate::{
     Map,
     list::List,
-    map::MapIterMut,
+    map::MapSealed,
     stack_list::{StackList, error::StackListError},
 };
 
@@ -62,7 +62,7 @@ impl<K: Eq, V, const CAPACITY: usize> Map<K, V> for StackMap<K, V, CAPACITY> {
     }
 }
 
-impl<K: Eq, V, const STACK_CAPACITY: usize> MapIterMut<K, V> for StackMap<K, V, STACK_CAPACITY> {
+impl<K: Eq, V, const STACK_CAPACITY: usize> MapSealed<K, V> for StackMap<K, V, STACK_CAPACITY> {
     fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut (K, V)>
     where
         K: 'a,

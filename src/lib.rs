@@ -37,5 +37,6 @@ pub use vecdeque::{map::*, set::*};
 mod serde;
 #[cfg(test)]
 mod test;
+
 ///Functions and types useful to assit verification with Kani.
 pub(crate) mod verification_utils;

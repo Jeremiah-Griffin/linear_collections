@@ -1,6 +1,6 @@
-use std::collections::TryReserveError;
+use std::{collections::TryReserveError, marker::PhantomData};
 
-use crate::{Map, map::MapIterMut};
+use crate::{Map, map::MapSealed};
 
 ///A map type backed by a Vector. Useful for small collections whose size can change.
 #[derive(Debug, PartialEq, Eq, Hash, Default)]
@@ -81,7 +81,7 @@ impl<K: Eq, V> Map<K, V> for VecMap<K, V> {
     }
 }
 
-impl<K: Eq, V> MapIterMut<K, V> for VecMap<K, V> {
+impl<K: Eq, V> MapSealed<K, V> for VecMap<K, V> {
     fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut (K, V)>
     where
         K: 'a,
@@ -100,5 +100,35 @@ impl<'a, K: Eq + serde::Serialize, V: PartialEq + serde::Serialize> serde::Seria
         S: serde::Serializer,
     {
         crate::serde::serialize_fallible_map(self, serializer)
+    }
+}
+
+pub struct VecMapIterator<K: Eq, V> {
+    map: VecMap<K, V>,
+    phantom: PhantomData<(K, V)>,
+}
+
+impl<K: Eq, V> Iterator for VecMapIterator<K, V> {
+    type Item = (K, V);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        //TODO: nasty impl, too much shifting
+        match self.map.vector.is_empty() {
+            false => Some(self.map.vector.remove(0)),
+            true => None,
+        }
+    }
+}
+
+impl<'a, K: Eq, V> IntoIterator for VecMap<K, V> {
+    type Item = (K, V);
+
+    type IntoIter = VecMapIterator<K, V>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        VecMapIterator {
+            map: self,
+            phantom: PhantomData::default(),
+        }
     }
 }

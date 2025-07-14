@@ -5,9 +5,15 @@ use std::mem::MaybeUninit;
 
 use kani::{loop_invariant, proof};
 #[proof]
-///Soundness
 fn new() {
     StackList::<u8, 5>::new();
+}
+
+#[proof]
+fn capacity() {
+    const CAPACITY: usize = 5;
+    let list: StackList<u8, CAPACITY> = kani::any();
+    assert_eq!(list.capacity(), CAPACITY);
 }
 
 #[proof]

@@ -1,4 +1,4 @@
-use crate::{Map, list::List, map::MapIterMut};
+use crate::{Map, list::List, map::MapSealed};
 use std::collections::TryReserveError;
 
 use super::FatVec;
@@ -104,7 +104,7 @@ impl<K: Eq, V, const STACK_CAPACITY: usize> Map<K, V> for FatMap<K, V, STACK_CAP
     }
 }
 
-impl<K: Eq, V, const STACK_CAPACITY: usize> MapIterMut<K, V> for FatMap<K, V, STACK_CAPACITY> {
+impl<K: Eq, V, const STACK_CAPACITY: usize> MapSealed<K, V> for FatMap<K, V, STACK_CAPACITY> {
     fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut (K, V)>
     where
         K: 'a,

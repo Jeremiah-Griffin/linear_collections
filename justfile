@@ -62,11 +62,10 @@ setup:
 alias t := test
 test PATTERN = "":
 	cargo test {{PATTERN}} --all-features
-	#--randomize-layout randomizes struct layout, ensuring we don't rely on a unstable ordering in unsafe
-	#--force-build runs a fresh incremental compile
-	#-j enables running harnesses multi core
-	#--output-format-terse is required by -j
-	cargo kani --randomize-layout --harness "{{PATTERN}}" --force-build -Z unstable-options -Z loop-contracts -Z concrete-playback -j --output-format=terse
+
+	# TODO: run the below after a kani failure to get concrete playbacks? even better if we can run only those which vailed.
+	cargo kani --randomize-layout --harness "{{PATTERN}}" -Z unstable-options -Z loop-contracts -j --output-format=terse
+	#cargo kani --randomize-layout --harness "{{PATTERN}}" -Z unstable-options -Z loop-contracts -Z concrete-playback --concrete-playback="print" --output-format=terse
 	
 
 update:

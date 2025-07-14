@@ -1,11 +1,11 @@
-use std::error::Error;
+use std::{error::Error, marker::PhantomData};
 
 //Never implement clone: panics on alloc failure.
 ///Provides methods for maps backed by linear data structures like arrays and vectors.
 ///Because arrays may implement this type, we cannot assume that implementors will be dynamically sized.
 ///Only methods which do not require manipulating the length or capacity of the store are provided here:
 ///this is to permit the implementation of fixed sized types backed by arrays.
-pub trait Map<K: Eq, V>: MapIterMut<K, V> {
+pub trait Map<K: Eq, V>: MapSealed<K, V> {
     type Backing;
     //Aliasing the InsertionError allows us to implement this for both heap allocated types which return TryReserveError
     //and the stack allocated ArrayVec which return ArrayVecError.
@@ -162,9 +162,8 @@ pub trait Map<K: Eq, V>: MapIterMut<K, V> {
     }
 }
 
-///Sealed trait to provide mutable iteration without allowing consumers
-///to violate the invariants of the map types
-pub(crate) trait MapIterMut<K, V> {
+///Sealed trait used to implement `Map`
+pub(crate) trait MapSealed<K, V> {
     fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut (K, V)>
     where
         K: 'a,
