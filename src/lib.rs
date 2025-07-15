@@ -27,6 +27,7 @@ pub mod stack_list;
 mod vec;
 mod vecdeque;
 pub use fat_vec::{FatVec, FatVecIterator, map::*, set::*};
+pub use list::List;
 pub use map::Map;
 pub use set::Set;
 pub use stack_list::{map::*, set::*};
