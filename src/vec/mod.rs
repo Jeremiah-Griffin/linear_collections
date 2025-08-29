@@ -17,7 +17,10 @@ impl<T> self::Vec<T> {
             inner: std::vec::Vec::new(),
         }
     }
-
+    pub fn as_slice(&self) -> &[T] {
+        self.inner.as_slice()
+    }
+    ///Creates a `vec` with the ability to hold `capacity` elements without reallocating.
     pub fn with_capacity(capacity: usize) -> Result<Self, TryReserveError> {
         std::vec::Vec::try_with_capacity(capacity).map(|inner| Vec { inner })
     }
