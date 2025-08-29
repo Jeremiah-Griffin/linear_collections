@@ -1,11 +1,11 @@
-use std::{error::Error, marker::PhantomData};
+use std::error::Error;
 
 //Never implement clone: panics on alloc failure.
 ///Provides methods for maps backed by linear data structures like arrays and vectors.
 ///Because arrays may implement this type, we cannot assume that implementors will be dynamically sized.
 ///Only methods which do not require manipulating the length or capacity of the store are provided here:
 ///this is to permit the implementation of fixed sized types backed by arrays.
-pub trait Map<K: Eq, V>: MapSealed<K, V> {
+pub trait Map<K: Eq, V> {
     type Backing;
     //Aliasing the InsertionError allows us to implement this for both heap allocated types which return TryReserveError
     //and the stack allocated ArrayVec which return ArrayVecError.
@@ -18,11 +18,19 @@ pub trait Map<K: Eq, V>: MapSealed<K, V> {
     ///Consumes self, returning the underlying store.
     fn into_inner(self) -> Self::Backing;
 
+    ///Returns an iterator over the keys and values of of this `Map`.
     fn iter<'a>(&'a self) -> impl Iterator<Item = &'a (K, V)>
     where
         K: 'a,
         V: 'a;
 
+    ///Returns an iterator over the keys of the `Map`, with mutable references to its values.
+    fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = (&'a K, &'a mut V)>
+    where
+        K: 'a,
+        V: 'a;
+
+    ///Returns the number of items in this `Map`
     fn len(&self) -> usize;
 
     ///Returns the entry at
@@ -69,7 +77,7 @@ pub trait Map<K: Eq, V>: MapSealed<K, V> {
     where
         K: 'a,
     {
-        self.iter_mut().find(|(k, _)| k == key).map(|(_, v)| v)
+        self.iter_mut().find(|(k, _)| *k == key).map(|(_, v)| v)
     }
 
     ///Returns `true` if this map is empty and `false` otherwise.
@@ -157,15 +165,7 @@ pub trait Map<K: Eq, V>: MapSealed<K, V> {
     ///replaces its value with "value". If not, it does nothing.
     fn replace(&mut self, key: &K, value: V) {
         self.iter_mut()
-            .find(|(k, _)| k == key)
+            .find(|(k, _)| *k == key)
             .map(|(_, v)| *v = value);
     }
-}
-
-///Sealed trait used to implement `Map`
-pub(crate) trait MapSealed<K, V> {
-    fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut (K, V)>
-    where
-        K: 'a,
-        V: 'a;
 }

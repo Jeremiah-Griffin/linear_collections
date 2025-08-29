@@ -1,6 +1,6 @@
 use std::collections::{TryReserveError, VecDeque};
 
-use crate::{Map, map::MapSealed};
+use crate::Map;
 
 pub struct DequeMap<K: Eq, V> {
     deque: VecDeque<(K, V)>,
@@ -80,15 +80,13 @@ impl<K: Eq, V> Map<K, V> for DequeMap<K, V> {
     fn len(&self) -> usize {
         self.deque.len()
     }
-}
 
-impl<K: Eq, V> MapSealed<K, V> for DequeMap<K, V> {
-    fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut (K, V)>
+    fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = (&'a K, &'a mut V)>
     where
         K: 'a,
         V: 'a,
     {
-        self.deque.iter_mut()
+        self.deque.iter_mut().map(|(k, v)| (k as &K, v))
     }
 }
 

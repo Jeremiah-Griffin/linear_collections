@@ -1,6 +1,6 @@
 use std::{collections::TryReserveError, marker::PhantomData};
 
-use crate::{Map, map::MapSealed};
+use crate::Map;
 
 ///A map type backed by a Vector. Useful for small collections whose size can change.
 #[derive(Debug, PartialEq, Eq, Hash, Default)]
@@ -49,6 +49,14 @@ impl<K: Eq, V> Map<K, V> for VecMap<K, V> {
         self.vector.iter()
     }
 
+    fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = (&'a K, &'a mut V)>
+    where
+        K: 'a,
+        V: 'a,
+    {
+        self.vector.iter_mut().map(|(k, v)| (k as &K, v))
+    }
+
     ///Tries to remove the entry associated with the given key, returning None if it is not found.
     fn remove_entry(&mut self, key: &K) -> Option<(K, V)> {
         let idx = self
@@ -78,16 +86,6 @@ impl<K: Eq, V> Map<K, V> for VecMap<K, V> {
 
     fn len(&self) -> usize {
         self.vector.len()
-    }
-}
-
-impl<K: Eq, V> MapSealed<K, V> for VecMap<K, V> {
-    fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut (K, V)>
-    where
-        K: 'a,
-        V: 'a,
-    {
-        self.vector.iter_mut()
     }
 }
 

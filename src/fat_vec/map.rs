@@ -1,4 +1,4 @@
-use crate::{Map, list::List, map::MapSealed};
+use crate::{Map, list::List};
 use std::collections::TryReserveError;
 
 use super::FatVec;
@@ -87,6 +87,13 @@ impl<K: Eq, V, const STACK_CAPACITY: usize> Map<K, V> for FatMap<K, V, STACK_CAP
     {
         self.fatvec.iter()
     }
+    fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = (&'a K, &'a mut V)>
+    where
+        K: 'a,
+        V: 'a,
+    {
+        self.fatvec.iter_mut().map(|(k, v)| (k as &K, v))
+    }
 
     fn remove_entry(&mut self, key: &K) -> Option<(K, V)> {
         let idx = self
@@ -102,8 +109,103 @@ impl<K: Eq, V, const STACK_CAPACITY: usize> Map<K, V> for FatMap<K, V, STACK_CAP
     fn len(&self) -> usize {
         self.fatvec.len()
     }
+
+    fn contains_key(&self, key: &K) -> bool {
+        for (k, _) in self.iter() {
+            if k == key {
+                return true;
+            }
+        }
+        false
+    }
+
+    fn contains_value(&self, value: &V) -> bool
+    where
+        V: PartialEq,
+    {
+        for (_, v) in self.iter() {
+            if v == value {
+                return true;
+            }
+        }
+        false
+    }
+
+    fn get<'a, 'k>(&'a self, key: &'k K) -> Option<&'a V>
+    where
+        K: 'a,
+    {
+        self.iter().find(|(k, _)| k == key).map(|(_, v)| v)
+    }
+
+    fn get_mut<'a, 'k>(&'a mut self, key: &'k K) -> Option<&'a mut V>
+    where
+        K: 'a,
+    {
+        self.iter_mut().find(|(k, _)| *k == key).map(|(_, v)| v)
+    }
+
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    fn keys<'a>(&'a self) -> impl Iterator<Item = &'a K>
+    where
+        K: 'a,
+        V: 'a,
+    {
+        self.iter().map(|(k, _)| k)
+    }
+
+    fn nth_value<'a>(&'a self, index: usize) -> Option<&'a V>
+    where
+        K: 'a,
+    {
+        self.iter().nth(index).map(|(_, v)| v)
+    }
+
+    fn nth_value_mut<'a>(&'a mut self, index: usize) -> Option<&'a mut V>
+    where
+        K: 'a,
+    {
+        self.iter_mut().nth(index).map(|(_, v)| v)
+    }
+
+    fn nth_key<'a>(&'a self, index: usize) -> Option<&'a K>
+    where
+        V: 'a,
+    {
+        self.iter().nth(index).map(|(k, _)| k)
+    }
+
+    fn remove(&mut self, key: &K) -> Option<V> {
+        self.remove_entry(key).map(|(_, v)| v)
+    }
+
+    fn values<'a>(&'a self) -> impl Iterator<Item = &'a V>
+    where
+        K: 'a,
+        V: 'a,
+    {
+        self.iter().map(|(_, v)| v)
+    }
+
+    fn values_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut V>
+    where
+        K: 'a,
+        V: 'a,
+    {
+        self.iter_mut().map(|(_, v)| v)
+    }
+
+    fn replace(&mut self, key: &K, value: V) {
+        self.iter_mut()
+            .find(|(k, _)| *k == key)
+            .map(|(_, v)| *v = value);
+    }
 }
 
+/*
 impl<K: Eq, V, const STACK_CAPACITY: usize> MapSealed<K, V> for FatMap<K, V, STACK_CAPACITY> {
     fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut (K, V)>
     where
@@ -112,7 +214,7 @@ impl<K: Eq, V, const STACK_CAPACITY: usize> MapSealed<K, V> for FatMap<K, V, STA
     {
         self.fatvec.iter_mut()
     }
-}
+}*/
 #[cfg(feature = "serde")]
 impl<'a, K: Eq + serde::Serialize, V: PartialEq + serde::Serialize, const STACK_CAPACITY: usize>
     serde::Serialize for FatMap<K, V, STACK_CAPACITY>

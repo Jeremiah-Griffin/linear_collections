@@ -1,7 +1,6 @@
 use crate::{
     Map,
     list::List,
-    map::MapSealed,
     stack_list::{StackList, error::StackListError},
 };
 
@@ -46,6 +45,13 @@ impl<K: Eq, V, const CAPACITY: usize> Map<K, V> for StackMap<K, V, CAPACITY> {
         self.stack_list.iter()
     }
 
+    fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = (&'a K, &'a mut V)>
+    where
+        K: 'a,
+        V: 'a,
+    {
+        self.stack_list.iter_mut().map(|(k, v)| (k as &K, v))
+    }
     fn remove_entry(&mut self, key: &K) -> Option<(K, V)> {
         let idx = self
             .stack_list
@@ -59,16 +65,6 @@ impl<K: Eq, V, const CAPACITY: usize> Map<K, V> for StackMap<K, V, CAPACITY> {
 
     fn len(&self) -> usize {
         self.stack_list.len()
-    }
-}
-
-impl<K: Eq, V, const STACK_CAPACITY: usize> MapSealed<K, V> for StackMap<K, V, STACK_CAPACITY> {
-    fn iter_mut<'a>(&'a mut self) -> impl Iterator<Item = &'a mut (K, V)>
-    where
-        K: 'a,
-        V: 'a,
-    {
-        self.stack_list.iter_mut()
     }
 }
 
